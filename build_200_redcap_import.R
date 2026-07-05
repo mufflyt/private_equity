@@ -33,17 +33,27 @@ lab$code <- as.integer(str_trim(lab$code))
 lab$npi  <- str_match(lab$label, "NPI:\\s*(\\d+)")[, 2]
 
 fielded_npi <- as.character(sheet200$NPI)
-imp <- lab %>%
-  filter(npi %in% fielded_npi) %>%
+code_by_npi <- lab %>% transmute(npi, code)
+
+# physician_name is a human-readable calling string built from the calling sheet:
+# "Dr. Name, City, State, Phone: <phone>, NPI: <npi>". record_id stays the REDCap
+# dropdown code (mapped by NPI) so records remain traceable to the instrument.
+imp <- sheet200 %>%
+  transmute(
+    npi            = as.character(NPI),
+    physician_name = sprintf("%s, %s, %s, Phone: %s, NPI: %s",
+                             `Provider Name`, City, State, Phone, NPI)
+  ) %>%
+  left_join(code_by_npi, by = "npi") %>%
   arrange(code) %>%
-  transmute(record_id = code, physician_name = code)
+  transmute(record_id = code, physician_name)
 imp[[paste0(FORM, "_complete")]] <- 0L
 
 matched <- sum(fielded_npi %in% lab$npi)
 cat(sprintf("\nFielded physicians: %d | matched to dropdown code: %d | import records: %d\n",
             length(fielded_npi), matched, nrow(imp)))
-if (nrow(imp) != length(fielded_npi))
-  cat("  WARNING: import record count != fielded physician count.\n")
+if (nrow(imp) != length(fielded_npi) || any(is.na(imp$record_id)))
+  cat("  WARNING: some fielded physicians did not map to a dropdown code.\n")
 
 write_csv(imp, "redcap_import_ready_200.csv")
 cat("Wrote pe_obgyn_final_calling_sheet_200.csv and redcap_import_ready_200.csv\n")
