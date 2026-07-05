@@ -42,9 +42,11 @@ pe_matched_all$has_phone <- sapply(1:nrow(pe_matched_all), function(i) has_valid
 pe_matched_all <- pe_matched_all[pe_matched_all$has_phone, ]
 pe_matched_all$has_phone <- NULL
 
-# Filter PE cohort strictly to Generalists only
+# Filter PE cohort strictly to Generalists only using both NPPES Taxonomy and raw Subspecialty
 pe_matched_all$Subspecialty_clean <- sapply(pe_matched_all[["NPPES Taxonomy"]], get_subspecialty_from_tax)
-pe_matched_all <- pe_matched_all[pe_matched_all$Subspecialty_clean == "Generalist", ]
+raw_sub_lower <- tolower(ifelse(is.na(pe_matched_all$Subspecialty), "", pe_matched_all$Subspecialty))
+is_specialist <- grepl("infertility|oncology|maternal|pelvic|urogynecology|migs|rei|onc", raw_sub_lower)
+pe_matched_all <- pe_matched_all[pe_matched_all$Subspecialty_clean == "Generalist" & !is_specialist, ]
 pe_matched_all$Subspecialty_clean <- NULL
 
 cat(sprintf("Loaded %d PE providers, with %d NPI-matched generalist records having valid phone numbers.\n", nrow(pe_df), nrow(pe_matched_all)))
@@ -560,6 +562,10 @@ pe_selected$Practice_State <- toupper(ifelse(!is.na(pe_selected[["DAC State"]]) 
 
 control_df$Practice_City <- control_df[["NPPES City"]]
 control_df$Practice_State <- control_df[["NPPES State"]]
+
+# Overwrite Subspecialty to "Generalist" for all since the cohort is filtered strictly to Generalists only
+pe_selected$Subspecialty <- "Generalist"
+control_df$Subspecialty <- "Generalist"
 
 # Combine the matched cohorts
 matched_only_combined <- rbind(

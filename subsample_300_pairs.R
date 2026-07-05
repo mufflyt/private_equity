@@ -14,7 +14,7 @@ df <- read.csv(input_csv, stringsAsFactors = FALSE, check.names = FALSE)
 cat(sprintf("Loaded matched calling list with %d total records (778 pairs).\n", nrow(df)))
 
 # Set seed for reproducibility
-set.seed(42)
+set.seed(1978)
 
 # Extract unique Matched Pair IDs
 pair_ids <- unique(df[["Matched Pair ID"]])
