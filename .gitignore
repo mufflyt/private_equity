@@ -18,3 +18,6 @@ scraped_texts/
 
 # Transient run logs (figures/_run.log, figures/_simr.log, etc.)
 *.log
+
+# REDCap dropdown choices export (provider data)
+redcap_physician_name_choices.txt
