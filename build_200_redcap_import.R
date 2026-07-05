@@ -46,7 +46,7 @@ imp <- sheet200 %>%
   ) %>%
   left_join(code_by_npi, by = "npi") %>%
   arrange(code) %>%
-  transmute(record_id = code, physician_name)
+  transmute(record_id = row_number(), physician_name)  # fresh contiguous ids 1..N (no gaps)
 imp[[paste0(FORM, "_complete")]] <- 0L
 
 matched <- sum(fielded_npi %in% lab$npi)
