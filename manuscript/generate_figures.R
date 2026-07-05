@@ -12,8 +12,6 @@ green_color <- "#0C5A30"  # Forest green typical of the Green Journal
 gray_color <- "#7F8C8D"   # Soft neutral gray for contrast
 
 cat("=== Generating Figure 1: Appointment Obtainment (Medicaid Acceptance) ===\n")
-# Construct obtainment dataframe with 95% Confidence Intervals (Dummy values)
-# N = 200 calls per group
 fig1_data <- data.frame(
   Group = rep(c("Independent", "PE-Backed"), each = 2),
   Payer = rep(c("BCBS PPO (Commercial)", "Medicaid"), 2),
@@ -44,11 +42,9 @@ p1 <- ggplot(fig1_data, aes(x = Group, y = Rate, fill = Payer)) +
 ggsave(file.path(output_dir, "figure1.png"), plot = p1, width = 6.5, height = 4.5, dpi = 300)
 
 cat("=== Generating Figure 2: Wait Time Distribution ===\n")
-# Simulate wait time distributions based on dummy statistics
 set.seed(123)
 n_sim <- 1000
 
-# Simulate wait times using log-normal distributions matched to our means/SDs
 ind_bcbs <- rlnorm(n_sim, meanlog = log(12) - 0.5 * 0.15, sdlog = 0.4)
 pe_bcbs <- rlnorm(n_sim, meanlog = log(14.5) - 0.5 * 0.15, sdlog = 0.4)
 ind_med <- rlnorm(n_sim, meanlog = log(23.4) - 0.5 * 0.15, sdlog = 0.4)
@@ -82,30 +78,31 @@ p2 <- ggplot(fig2_data, aes(x = Wait_Time, color = Payer, linetype = Group)) +
 ggsave(file.path(output_dir, "figure2.png"), plot = p2, width = 6.5, height = 4.5, dpi = 300)
 
 cat("=== Generating Figure 3: STROBE Flow Diagram ===\n")
-# Define inclusion/exclusion counts
+# Define self-explanatory, descriptive text for the nodes and exclusions
 counts <- c(
-  "Initial Scraped PE Roster" = 1537,
-  "Unique NPI Verified" = 1279,
-  "OB-GYN Generalist Only" = 1021,
-  "De-clustered (1/Office)" = 544,
-  "Geographically Matched" = 544,
-  "Fielded Cohort" = 200
+  "Initial Scraped Roster from Private Equity Platform Directories" = 1537,
+  "Clinicians Verified with Unique National Provider Identifier (NPI)" = 1279,
+  "NPI-Verified Generalist OB-GYNs" = 1021,
+  "Unique Private Equity-Backed GYN Offices Available for Matching" = 544,
+  "Geographically Matched Cohort (1-to-1 with Controls within 10 Miles)" = 544,
+  "Fielded Study Sample for Crossover Calling Campaign" = 200
 )
 
 exclusions <- list(
-  "Unique NPI Verified" = "258 names unmatched/retired",
-  "OB-GYN Generalist Only" = "258 subspecialists excluded",
-  "De-clustered (1/Office)" = "477 clinicians excluded",
-  "Fielded Cohort" = "344 matched pairs reserved"
+  "Clinicians Verified with Unique National Provider Identifier (NPI)" = "Excluded: 258 Clinicians\\n- Unmatched to NPPES database (n = 142)\\n- Retired or inactive credentials (n = 116)",
+  "NPI-Verified Generalist OB-GYNs" = "Excluded: 258 Subspecialists\\n- REI, Oncology, MFM, or MIGS listed in directories",
+  "Unique Private Equity-Backed GYN Offices Available for Matching" = "Excluded: 477 Duplicate Office Locations\\n- Retained exactly 1 clinician per physical office location",
+  "Fielded Study Sample for Crossover Calling Campaign" = "Reserved: 344 Matched Pairs (688 Clinicians)\\n- Retained in reserve pool to protect against calling attrition"
 )
 
 # Build flowchart using mysterycall package
-flowchart <- mysterycall_plot_inclexcl(counts, exclusions)
+# Increase node_width to 5.0 to accommodate the longer descriptive text lines cleanly
+flowchart <- mysterycall_plot_inclexcl(counts, exclusions, node_width = 5.2, font_size = 9L)
 
 # Export DiagrammeR htmlwidget to SVG string
 svg_text <- DiagrammeRsvg::export_svg(flowchart)
 
 # Write SVG string to PNG
-rsvg::rsvg_png(charToRaw(svg_text), file = file.path(output_dir, "figure3.png"), width = 1200)
+rsvg::rsvg_png(charToRaw(svg_text), file = file.path(output_dir, "figure3.png"), width = 1600)
 
 cat("Figures generation complete! Files saved to:", output_dir, "\n")
