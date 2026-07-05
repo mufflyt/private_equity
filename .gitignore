@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+
+# Bulk / derived data — reproducible via the pipeline scripts, not committed
+*.csv
+*.xlsx
+*.json
+
+# Scraped source data
+scraped_texts/
+
+# OS cruft
+.DS_Store
