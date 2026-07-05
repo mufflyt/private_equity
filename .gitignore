@@ -12,3 +12,6 @@ scraped_texts/
 
 # OS cruft
 .DS_Store
+
+# Microsoft Office lock / temp files
+~$*
