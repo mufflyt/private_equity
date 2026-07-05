@@ -5,6 +5,17 @@
 # Step 4: Perform nearest-neighbor PSM matching (1-to-1 match, exact state constraint)
 # Step 5: Save control group, study database, and a clean matched calling list CSV
 
+# Helper to classify subspecialties from taxonomy
+get_subspecialty_from_tax <- function(tax) {
+  if (is.na(tax) || tax == "") return("Generalist")
+  t <- toupper(trimws(tax))
+  if (t == "207VE0102X") return("Reproductive Endocrinology/Infertility")
+  if (t == "207VX0201X") return("Gynecologic Oncology")
+  if (t == "207VM2500X") return("Maternal-Fetal Medicine")
+  if (t == "207VF0040X") return("Female Pelvic Medicine and Reconstructive Surgery")
+  return("Generalist")
+}
+
 cat("=== Loading Cohorts for Propensity Score Matching ===\n")
 pe_csv <- "/Users/tylermuffly/private_equity/pe_obgyn_providers_active.csv"
 candidates_csv <- "/Users/tylermuffly/private_equity/control_candidates_raw.csv"
@@ -31,7 +42,12 @@ pe_matched_all$has_phone <- sapply(1:nrow(pe_matched_all), function(i) has_valid
 pe_matched_all <- pe_matched_all[pe_matched_all$has_phone, ]
 pe_matched_all$has_phone <- NULL
 
-cat(sprintf("Loaded %d PE providers, with %d NPI-matched records having valid phone numbers.\n", nrow(pe_df), nrow(pe_matched_all)))
+# Filter PE cohort strictly to Generalists only
+pe_matched_all$Subspecialty_clean <- sapply(pe_matched_all[["NPPES Taxonomy"]], get_subspecialty_from_tax)
+pe_matched_all <- pe_matched_all[pe_matched_all$Subspecialty_clean == "Generalist", ]
+pe_matched_all$Subspecialty_clean <- NULL
+
+cat(sprintf("Loaded %d PE providers, with %d NPI-matched generalist records having valid phone numbers.\n", nrow(pe_df), nrow(pe_matched_all)))
 
 # Load Candidates
 candidates_df <- read.csv(candidates_csv, stringsAsFactors = FALSE, na.strings = c("NA", "N/A", ""), check.names = FALSE)
@@ -50,7 +66,13 @@ get_clean_phone <- function(raw_phone) {
 
 candidates_df$Phone_formatted <- sapply(candidates_df$phone, get_clean_phone)
 candidates_df <- candidates_df[!is.na(candidates_df$Phone_formatted), ]
-cat(sprintf("Loaded %d Non-PE private practice control candidates with valid phone numbers.\n", nrow(candidates_df)))
+
+# Filter control candidates strictly to Generalists only
+candidates_df$Subspecialty_clean <- sapply(candidates_df$taxonomy, get_subspecialty_from_tax)
+candidates_df <- candidates_df[candidates_df$Subspecialty_clean == "Generalist", ]
+candidates_df$Subspecialty_clean <- NULL
+
+cat(sprintf("Loaded %d Non-PE private practice control generalist candidates with valid phone numbers.\n", nrow(candidates_df)))
 
 # 1. Physical Address Clustering on ALL PE providers first
 cat("\n=== Clustering Physical Practice Locations (office_id) ===\n")
@@ -282,7 +304,10 @@ for (i in 1:nrow(pe_matched_all)) {
   if (is.na(p_city) || p_city == "" || p_city == "N/A" || p_city == "NAN") {
     p_city <- pe_matched_all[["NPPES City"]][i]
   }
-  p_state <- pe_matched_all[["NPPES State"]][i]
+  p_state <- pe_matched_all[["DAC State"]][i]
+  if (is.na(p_state) || p_state == "" || p_state == "N/A" || p_state == "NAN") {
+    p_state <- pe_matched_all[["NPPES State"]][i]
+  }
   coords <- get_coords(p_city, p_state)
   pe_matched_all$latitude[i] <- coords[1]
   pe_matched_all$longitude[i] <- coords[2]
@@ -318,7 +343,10 @@ for (office in pe_unique_offices) {
     phys <- office_subset[idx, ]
     p_coords <- c(phys$latitude, phys$longitude)
     p_score <- phys$propensity_score
-    p_state <- phys[["NPPES State"]]
+    p_state <- phys[["DAC State"]]
+    if (is.na(p_state) || p_state == "" || p_state == "N/A" || p_state == "NAN") {
+      p_state <- phys[["NPPES State"]]
+    }
     p_city <- phys[["NPPES City"]]
     if (is.na(p_city) || p_city == "" || p_city == "N/A" || p_city == "NAN") {
       p_city <- phys[["DAC City"]]
