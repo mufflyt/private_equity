@@ -52,24 +52,18 @@ for (sd_val in sds_to_test) {
     
     for (sim in 1:n_sims) {
       # Create dataset
-      # Each physician has 4 calls: (BCBS vs Medicaid) x (OB vs GYN)
-      physician_ids <- rep(1:n_physicians, each = 4)
-      pe_status <- rep(rep(c(1, 0), each = 2), n_pairs * 4) # 1 = PE, 0 = Non-PE
-      # Wait, let's align the lengths:
-      # n_physicians total, half PE, half Non-PE
-      pe_status <- rep(c(rep(1, n_physicians/2), rep(0, n_physicians/2)), each = 4)
-      
-      insurance_status <- rep(c(0, 1, 0, 1), n_physicians) # 0 = BCBS, 1 = Medicaid
-      scenario_status <- rep(c(0, 0, 1, 1), n_physicians)  # 0 = OB, 1 = GYN (Abnormal Bleeding)
+      # Each physician has 2 calls: (BCBS vs Medicaid) for GYN scenario
+      physician_ids <- rep(1:n_physicians, each = 2)
+      pe_status <- rep(c(rep(1, n_physicians/2), rep(0, n_physicians/2)), each = 2)
+      insurance_status <- rep(c(0, 1), n_physicians) # 0 = BCBS, 1 = Medicaid
       
       # Simulate random intercept for each physician
-      u_j <- rep(rnorm(n_physicians, mean = 0, sd = 0.2), each = 4) # Physician random effect
+      u_j <- rep(rnorm(n_physicians, mean = 0, sd = 0.2), each = 2) # Physician random effect
       
       # Calculate linear predictor
       eta <- beta_0 + 
              beta_pe * pe_status + 
              beta_medicaid * insurance_status + 
-             beta_scenario * scenario_status + 
              beta_interaction * (pe_status * insurance_status) + 
              u_j
       
@@ -83,16 +77,13 @@ for (sd_val in sds_to_test) {
         wait_time = wait_times,
         pe = pe_status,
         insurance = insurance_status,
-        scenario = scenario_status,
         physician = factor(physician_ids)
       )
       
       # Fit negative binomial models
-      # To run quickly in simulation, we use glm.nb instead of glmer.nb
-      # (glm.nb is much more stable and fast in simulations, and we adjust degrees of freedom)
       tryCatch({
-        fit_full <- glm.nb(wait_time ~ pe * insurance + scenario, data = sim_df)
-        fit_reduced <- glm.nb(wait_time ~ insurance + scenario, data = sim_df)
+        fit_full <- glm.nb(wait_time ~ pe * insurance, data = sim_df)
+        fit_reduced <- glm.nb(wait_time ~ insurance, data = sim_df)
         
         # Likelihood Ratio Test (LRT)
         lrt <- anova(fit_reduced, fit_full)
@@ -105,13 +96,13 @@ for (sd_val in sds_to_test) {
     }
     
     power <- significant_lrt_count / n_sims
-    cat(paste("N Pairs:", n_pairs, "| Physicians:", n_physicians, "| Calls:", n_physicians * 4, "| Power:", round(power, 3), "\n"))
+    cat(paste("N Pairs:", n_pairs, "| Physicians:", n_physicians, "| Calls:", n_physicians * 2, "| Power:", round(power, 3), "\n"))
     
     results <- rbind(results, data.frame(
       SD = sd_val,
       Pairs = n_pairs,
       Physicians = n_physicians,
-      Total_Calls = n_physicians * 4,
+      Total_Calls = n_physicians * 2,
       Power = power
     ))
   }
