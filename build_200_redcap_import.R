@@ -61,7 +61,7 @@ write_csv(imp, "redcap_import_ready_200.csv")
 # physician, to copy/paste into the "Choices (one choice per line)" box in the
 # Online Designer. REDCap splits each line on the first comma only, so the label's
 # internal commas (city, state, phone, NPI) are preserved.
-choice_lines <- paste0(imp$record_id, ", ", imp$physician_name)
+choice_lines <- sprintf("id: %s, %s, id: %s", imp$record_id, imp$physician_name, imp$record_id)
 writeLines(choice_lines, "redcap_physician_name_choices.txt")
 cat("Wrote pe_obgyn_final_calling_sheet_200.csv, redcap_import_ready_200.csv, and redcap_physician_name_choices.txt\n")
 cat(sprintf("Calls implied: %d records x 2 calls = %d (<= 800 ceiling: %s)\n",
