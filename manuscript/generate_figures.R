@@ -12,15 +12,19 @@ green_color <- "#0C5A30"  # Forest green typical of the Green Journal
 gray_color <- "#7F8C8D"   # Soft neutral gray for contrast
 
 cat("=== Generating Figure 1: Appointment Obtainment (Medicaid Acceptance) ===\n")
-# Construct obtainment dataframe (Dummy values)
+# Construct obtainment dataframe with 95% Confidence Intervals (Dummy values)
+# N = 200 calls per group
 fig1_data <- data.frame(
   Group = rep(c("Independent", "PE-Backed"), each = 2),
   Payer = rep(c("BCBS PPO (Commercial)", "Medicaid"), 2),
-  Rate = c(0.985, 0.725, 0.990, 0.410)
+  Rate = c(0.985, 0.725, 0.990, 0.410),
+  ymin = c(0.968, 0.663, 0.976, 0.342),
+  ymax = c(1.000, 0.787, 1.000, 0.478)
 )
 
 p1 <- ggplot(fig1_data, aes(x = Group, y = Rate, fill = Payer)) +
   geom_bar(stat = "identity", position = position_dodge(0.8), width = 0.7) +
+  geom_errorbar(aes(ymin = ymin, ymax = ymax), position = position_dodge(0.8), width = 0.2, color = "#2C3E50", linewidth = 0.8) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 1.05)) +
   scale_fill_manual(values = c("BCBS PPO (Commercial)" = green_color, "Medicaid" = gray_color)) +
   labs(
