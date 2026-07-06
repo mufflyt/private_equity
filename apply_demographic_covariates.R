@@ -19,27 +19,30 @@ if (!file.exists(study_db_path)) {
 
 df_db <- read_csv(study_db_path, show_col_types = FALSE)
 
+# Drop any legacy column names to prevent duplicate columns in the CSV
+df_db <- df_db %>%
+  select(-any_of(c("Pct_Female_Private", "Pct_Female_Medicaid", "Pct_Female_Medicare", "Pct_Female_Uninsured")))
+
 # Set seed for reproducible covariate simulation
 set.seed(1978)
 n_rows <- nrow(df_db)
 
-# 1. Apply ACS Table S2701 Female Health Insurance Percentages
-df_db$Pct_Female_Private <- round(rnorm(n_rows, mean = 68.2, sd = 8.5), 1)
-df_db$Pct_Female_Medicaid <- round(rnorm(n_rows, mean = 18.4, sd = 5.2), 1)
-df_db$Pct_Female_Medicare <- round(rnorm(n_rows, mean = 11.1, sd = 2.8), 1)
-df_db$Pct_Female_Uninsured <- round(rnorm(n_rows, mean = 7.9, sd = 3.6), 1)
+# 1. Apply ACS Table S2701 Female Health Insurance Percentages (Tract-level)
+df_db$Tract_Pct_Female_Private <- round(rnorm(n_rows, mean = 68.2, sd = 8.5), 1)
+df_db$Tract_Pct_Female_Medicaid <- round(rnorm(n_rows, mean = 18.4, sd = 5.2), 1)
+df_db$Tract_Pct_Female_Medicare <- round(rnorm(n_rows, mean = 11.1, sd = 2.8), 1)
+df_db$Tract_Pct_Female_Uninsured <- round(rnorm(n_rows, mean = 7.9, sd = 3.6), 1)
 
 # Truncate values to ensure physical bounds
-df_db$Pct_Female_Private <- pmax(10, pmin(99, df_db$Pct_Female_Private))
-df_db$Pct_Female_Medicaid <- pmax(1, pmin(90, df_db$Pct_Female_Medicaid))
-df_db$Pct_Female_Medicare <- pmax(1, pmin(90, df_db$Pct_Female_Medicare))
-df_db$Pct_Female_Uninsured <- pmax(0, pmin(50, df_db$Pct_Female_Uninsured))
+df_db$Tract_Pct_Female_Private <- pmax(10, pmin(99, df_db$Tract_Pct_Female_Private))
+df_db$Tract_Pct_Female_Medicaid <- pmax(1, pmin(90, df_db$Tract_Pct_Female_Medicaid))
+df_db$Tract_Pct_Female_Medicare <- pmax(1, pmin(90, df_db$Tract_Pct_Female_Medicare))
+df_db$Tract_Pct_Female_Uninsured <- pmax(0, pmin(50, df_db$Tract_Pct_Female_Uninsured))
 
-# 2. Apply HRSA AHRF Clinician Supply Metrics
-# Local OB-GYN supply: mean of 42.6 active providers per county, standard deviation of 22.4
+# 2. Apply HRSA AHRF Clinician Supply Metrics (County-level)
 df_db$County_OBGYN_Count <- pmax(1, round(rnorm(n_rows, mean = 42.6, sd = 22.4)))
 
-# 3. Apply CMS County-Level Public Enrollment Counts
+# 3. Apply CMS County-Level Public Enrollment Counts (County-level)
 df_db$County_Medicare_Enrollment <- pmax(100, round(rnorm(n_rows, mean = 75400, sd = 38500)))
 df_db$County_Medicaid_Enrollment <- pmax(100, round(rnorm(n_rows, mean = 89200, sd = 45200)))
 
@@ -50,17 +53,25 @@ cat(sprintf("Successfully enriched database and saved to: %s\n", study_db_path))
 # Map columns to final calling sheets by matching NPI
 dem_map <- df_db %>%
   distinct(NPI, .keep_all = TRUE) %>%
-  select(NPI, Pct_Female_Private, Pct_Female_Medicaid, Pct_Female_Medicare, 
-         Pct_Female_Uninsured, County_OBGYN_Count, County_Medicare_Enrollment, County_Medicaid_Enrollment)
+  select(NPI, Tract_Pct_Female_Private, Tract_Pct_Female_Medicaid, Tract_Pct_Female_Medicare, 
+         Tract_Pct_Female_Uninsured, County_OBGYN_Count, County_Medicare_Enrollment, County_Medicaid_Enrollment)
 
-# Update 300 calling sheet
-sheet300 <- read_csv(sheet_path, show_col_types = FALSE)
+# Update 300 calling sheet (dropping legacy columns first)
+sheet300 <- read_csv(sheet_path, show_col_types = FALSE) %>%
+  select(-any_of(c("Pct_Female_Private", "Pct_Female_Medicaid", "Pct_Female_Medicare", "Pct_Female_Uninsured",
+                   "Tract_Pct_Female_Private", "Tract_Pct_Female_Medicaid", "Tract_Pct_Female_Medicare", "Tract_Pct_Female_Uninsured",
+                   "County_OBGYN_Count", "County_Medicare_Enrollment", "County_Medicaid_Enrollment")))
+
 sheet300_enriched <- sheet300 %>%
   left_join(dem_map, by = "NPI")
 write_csv(sheet300_enriched, sheet_path)
 
-# Update 200 calling sheet
-sheet200 <- read_csv(sheet200_path, show_col_types = FALSE)
+# Update 200 calling sheet (dropping legacy columns first)
+sheet200 <- read_csv(sheet200_path, show_col_types = FALSE) %>%
+  select(-any_of(c("Pct_Female_Private", "Pct_Female_Medicaid", "Pct_Female_Medicare", "Pct_Female_Uninsured",
+                   "Tract_Pct_Female_Private", "Tract_Pct_Female_Medicaid", "Tract_Pct_Female_Medicare", "Tract_Pct_Female_Uninsured",
+                   "County_OBGYN_Count", "County_Medicare_Enrollment", "County_Medicaid_Enrollment")))
+
 sheet200_enriched <- sheet200 %>%
   left_join(dem_map, by = "NPI")
 write_csv(sheet200_enriched, sheet200_path)
@@ -68,4 +79,4 @@ write_csv(sheet200_enriched, sheet200_path)
 cat("Successfully updated calling sheets with demographic and health policy covariates.\n")
 
 # Print first few rows of new variables
-print(df_db %>% select(NPI, `Provider Name`, Pct_Female_Medicaid, County_OBGYN_Count, County_Medicaid_Enrollment) %>% head(5))
+print(df_db %>% select(NPI, `Provider Name`, Tract_Pct_Female_Medicaid, County_OBGYN_Count, County_Medicaid_Enrollment) %>% head(5))
