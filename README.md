@@ -49,6 +49,8 @@ redistributed.
    which caps Florida's over-representation).
 9. `build_balanced_google_sheet.R`: write the caller list in Google Sheets import format
    (`mysterycall_export_gsheet_caller_list()`).
+10. `run_geographic_sensitivity_analysis.R`: run secondary analyses restricted to a tighter three-mile or five-mile matching radius to verify that wait-time results hold in identical local micro-markets.
+11. `calculate_cohort_churn.R`: track historical clinician entries, exits, and annual churn rates at the clinic level from 2013-2024 using address normalized matches in the 83.7 GB DuckDB database.
 
 ### REDCap
 

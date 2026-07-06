@@ -16,3 +16,6 @@ for the detailed log.
   AMA), 12-point Times New Roman, and dash-free prose.
 - **Upstream contribution.** The Google Sheets caller-list exporter was submitted to the
   `mysterycall` R package as a documented, tested function.
+- **Geographic matching sensitivity analysis.** Restricting regression and obtainment models to tighter 3-mile and 5-mile micro-market boundaries verifies that private equity wait-time disparities remain robust.
+- **Payer-mix and concentration controls.** Incorporated the state-level Kaiser Family Foundation Medicaid-to-Medicare fee index and local corporate clinic density (PE offices within 15 miles) as covariates in statistical models.
+- **Longitudinal clinician churn.** Added DuckDB historical NPI tracking showing that corporate PE clinics exhibit an average annual clinician churn rate of 15.5% compared to 17.6% for independent controls under normalized address matching.

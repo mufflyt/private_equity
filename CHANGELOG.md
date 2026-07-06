@@ -25,6 +25,10 @@ so entries are grouped by date rather than semantic version.
 - Manuscript in `manuscript/`: reproducible pandoc source (`manuscript_cite.md`),
   verified bibliography (`references.bib`), AMA style (`ama.csl`), and a 12-point
   Times New Roman reference doc (`pandoc-reference.docx`).
+- Geographic Sensitivity Analysis: added `run_geographic_sensitivity_analysis.R` script which calculates matching distances for the 200 fielded pairs and runs regression sensitivity at 10-mile, 5-mile, and 3-mile calipers.
+- Longitudinal Churn Analysis: added `calculate_cohort_churn.R` script which queries the 83.7 GB NPPES DuckDB database on the external hard drive to compute historical clinician churn (entries, exits, and annual retention rates) for the 1,130 unique clinic locations in the study cohort.
+- Additional Covariates: incorporated the CDC Social Vulnerability Index (SVI), state-level Medicaid-to-Medicare fee index ratios (from Kaiser Family Foundation), and local corporate practice density (within a 15-mile radius) into the statistical models, study database, and final calling sheets.
+- Updated Documents: regenerated the Green Journal Word manuscript (`Manuscript_PE_OBGYN_GreenJournal_2026-07-05_19-07.docx`) and COMIRB protocol doc (`COMIRB_Protocol_PE_OBGYN_2026-07-05.docx`) to adjust the methods, tables, and regression results for the new covariates.
 
 ### Changed
 
