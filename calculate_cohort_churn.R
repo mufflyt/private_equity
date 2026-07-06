@@ -46,8 +46,13 @@ dbDisconnect(con, shutdown = TRUE)
 
 cat(sprintf("Fetched %d raw historical provider-year records from the DuckDB database.\n", nrow(historical_data)))
 
-# Clean addresses for standard matching
-historical_data$addr_clean <- toupper(trimws(historical_data$practice_address_street))
+# Clean and normalize addresses using mysterycall package utilities to ensure robust matching
+cat("Normalizing historical addresses...\n")
+historical_data$addr_norm <- historical_data$practice_address_street %>%
+  mysterycall:::mysterycall_normalize_directionals() %>%
+  mysterycall:::mysterycall_normalize_suffix() %>%
+  mysterycall:::mysterycall_strip_suite()
+
 historical_data$zip_clean <- substr(trimws(historical_data$practice_address_zip), 1, 5)
 
 # Calculate churn for each unique office using the pre-fetched dataset
@@ -55,12 +60,15 @@ office_churn_metrics <- data.frame()
 
 for (i in 1:nrow(unique_offices)) {
   off <- unique_offices[i, ]
-  addr_clean <- toupper(trimws(off$Address))
+  addr_norm_target <- off$Address %>%
+    mysterycall:::mysterycall_normalize_directionals() %>%
+    mysterycall:::mysterycall_normalize_suffix() %>%
+    mysterycall:::mysterycall_strip_suite()
   zip_clean <- substr(trimws(off$Zip), 1, 5)
   
-  # Filter pre-fetched data
+  # Filter pre-fetched data using normalized address and ZIP code
   df <- historical_data %>%
-    filter(addr_clean == !!addr_clean & zip_clean == !!zip_clean)
+    filter(addr_norm == !!addr_norm_target & zip_clean == !!zip_clean)
   
   if (nrow(df) == 0) {
     office_churn_metrics <- rbind(office_churn_metrics, data.frame(
