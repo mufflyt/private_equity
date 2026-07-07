@@ -127,9 +127,11 @@ df_db_enriched <- df_db %>%
 write_csv(df_db_enriched, output_db_path)
 cat(sprintf("Enriched study database saved to: %s\n", output_db_path))
 
-# Map to final calling sheets
-sheet300 <- read_csv("/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_300.csv", show_col_types = FALSE)
-sheet200 <- read_csv("/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_200.csv", show_col_types = FALSE)
+# Map to final calling sheets (dropping any pre-existing churn columns to prevent duplicates)
+sheet300 <- read_csv("/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_300.csv", show_col_types = FALSE) %>%
+  select(-any_of(c("Mean_Annual_Churn", "Total_Exits", "Total_Entries", "Max_Staff_Count")))
+sheet200 <- read_csv("/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_200.csv", show_col_types = FALSE) %>%
+  select(-any_of(c("Mean_Annual_Churn", "Total_Exits", "Total_Entries", "Max_Staff_Count")))
 
 # sheet300 has NPI, which is unique. We can map from df_db_enriched using NPI!
 churn_map_mean <- df_db_enriched %>% 

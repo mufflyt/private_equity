@@ -48,14 +48,16 @@ dist_map <- df_db %>%
   distinct(NPI, .keep_all = TRUE) %>%
   select(NPI, HQ_Distance_Miles)
 
-# Update 300 calling sheet
-sheet300 <- read_csv(sheet_path, show_col_types = FALSE)
+# Update 300 calling sheet (dropping pre-existing HQ distance columns to prevent duplicates)
+sheet300 <- read_csv(sheet_path, show_col_types = FALSE) %>%
+  select(-any_of(c("HQ_Distance_Miles")))
 sheet300_enriched <- sheet300 %>%
   left_join(dist_map, by = "NPI")
 write_csv(sheet300_enriched, sheet_path)
 
-# Update 200 calling sheet
-sheet200 <- read_csv(sheet200_path, show_col_types = FALSE)
+# Update 200 calling sheet (dropping pre-existing HQ distance columns to prevent duplicates)
+sheet200 <- read_csv(sheet200_path, show_col_types = FALSE) %>%
+  select(-any_of(c("HQ_Distance_Miles")))
 sheet200_enriched <- sheet200 %>%
   left_join(dist_map, by = "NPI")
 write_csv(sheet200_enriched, sheet200_path)
