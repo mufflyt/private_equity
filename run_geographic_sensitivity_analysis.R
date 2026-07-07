@@ -145,11 +145,24 @@ run_analysis <- function(data_subset, label) {
   # Standard Z-test
   z_res <- prop.test(c(med_pe_acc, med_ctrl_acc), c(med_pe_tot, med_ctrl_tot))
   
-  # Wait time Negative Binomial model (using package interaction test)
-  model <- glmmTMB(Wait_Time ~ PE_or_Not * Payer + (1|Matched_Pair_ID) + (1|NPI), 
-                    data = data_subset, family = nbinom2)
+  # Wait time mixed models using package wrapper functions
+  model_poisson <- mysterycall_poisson_model(
+    data = data_subset, 
+    outcome = "Wait_Time", 
+    predictors = c("PE_or_Not", "Payer", "PE_or_Not:Payer"), 
+    random_intercept = "Matched_Pair_ID"
+  )
   
-  # Run DHARMa diagnostics on the primary model specification using package function
+  model_nb <- mysterycall_nb_model(
+    data = data_subset, 
+    outcome = "Wait_Time", 
+    predictors = c("PE_or_Not", "Payer", "PE_or_Not:Payer"), 
+    random_intercept = "Matched_Pair_ID"
+  )
+  
+  model <- model_nb$model
+  
+  # Run DHARMa diagnostics and package zero-inflation checks on primary model
   if (label == "10-mile (Primary)") {
     cat("\n=== Running DHARMa Residual Diagnostics for Primary GLMM ===\n")
     dir.create("/Users/tylermuffly/private_equity/figures", showWarnings = FALSE)
@@ -166,10 +179,23 @@ run_analysis <- function(data_subset, label) {
     cat("\n=== Running Likelihood Ratio Test for PE * Payer Interaction ===\n")
     lrt_res <- mysterycall_test_interaction_effect(
       data = data_subset,
-      formula_full = Wait_Time ~ PE_or_Not * Payer + (1|Matched_Pair_ID) + (1|NPI),
-      formula_reduced = Wait_Time ~ PE_or_Not + Payer + (1|Matched_Pair_ID) + (1|NPI)
+      formula_full = Wait_Time ~ PE_or_Not * Payer + (1|Matched_Pair_ID),
+      formula_reduced = Wait_Time ~ PE_or_Not + Payer + (1|Matched_Pair_ID)
     )
     print(lrt_res)
+    
+    # Run package zero inflation check
+    cat("\n=== Running Zero Inflation Diagnostic Test ===\n")
+    zi_check <- mysterycall_check_zero_inflation(model, n_sim = 250L, plot = FALSE)
+    print(zi_check)
+    
+    # Compare Poisson vs Negative Binomial model fits
+    cat("\n=== Comparing Model Fit Table (Poisson vs. NB) ===\n")
+    comp_tbl <- mysterycall_model_comparison_table(list(
+      "Poisson Model" = model_poisson,
+      "Negative Binomial Model" = model_nb
+    ))
+    print(comp_tbl)
   }
   
   interaction_coef <- summary(model)$coefficients$cond["PE_or_NotPE:PayerMedicaid", "Estimate"]
