@@ -145,26 +145,31 @@ run_analysis <- function(data_subset, label) {
   # Standard Z-test
   z_res <- prop.test(c(med_pe_acc, med_ctrl_acc), c(med_pe_tot, med_ctrl_tot))
   
-  # Wait time Negative Binomial model
+  # Wait time Negative Binomial model (using package interaction test)
   model <- glmmTMB(Wait_Time ~ PE_or_Not * Payer + (1|Matched_Pair_ID) + (1|NPI), 
                     data = data_subset, family = nbinom2)
   
-  # Run DHARMa diagnostics on the primary model specification
+  # Run DHARMa diagnostics on the primary model specification using package function
   if (label == "10-mile (Primary)") {
     cat("\n=== Running DHARMa Residual Diagnostics for Primary GLMM ===\n")
-    library(DHARMa)
-    sim_res <- simulateResiduals(fittedModel = model, plot = FALSE)
-    
-    # Save the DHARMa diagnostics plot to the figures directory
     dir.create("/Users/tylermuffly/private_equity/figures", showWarnings = FALSE)
-    png("/Users/tylermuffly/private_equity/figures/dharma_diagnostics.png", width = 800, height = 600)
-    plot(sim_res)
-    dev.off()
-    cat("DHARMa diagnostic plot saved to: /Users/tylermuffly/private_equity/figures/dharma_diagnostics.png\n")
+    dharma_res <- mysterycall_validate_residuals_dharma(
+      model = model, 
+      plot_path = "/Users/tylermuffly/private_equity/figures/dharma_diagnostics.png"
+    )
     
     # Print residuals test summary
     cat("Dispersion test results:\n")
-    print(testDispersion(sim_res, plot = FALSE))
+    print(dharma_res$dispersion_test)
+    
+    # Run Likelihood Ratio Test comparing full interaction model to reduced model
+    cat("\n=== Running Likelihood Ratio Test for PE * Payer Interaction ===\n")
+    lrt_res <- mysterycall_test_interaction_effect(
+      data = data_subset,
+      formula_full = Wait_Time ~ PE_or_Not * Payer + (1|Matched_Pair_ID) + (1|NPI),
+      formula_reduced = Wait_Time ~ PE_or_Not + Payer + (1|Matched_Pair_ID) + (1|NPI)
+    )
+    print(lrt_res)
   }
   
   interaction_coef <- summary(model)$coefficients$cond["PE_or_NotPE:PayerMedicaid", "Estimate"]
