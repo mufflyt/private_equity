@@ -105,7 +105,8 @@ sim_calls <- data.frame(
   NPI = rep(sheet200$NPI, each = 2),
   PE_or_Not = rep(sheet200$PE_or_Not, each = 2),
   Distance = rep(sheet200$Distance, each = 2),
-  Payer = rep(c("Medicaid", "BCBS PPO"), nrow(sheet200))
+  Payer = rep(c("Medicaid", "BCBS PPO"), nrow(sheet200)),
+  Year = sample(2021:2025, nrow(sheet200) * 2, replace = TRUE)
 )
 
 # Simulate Medicaid acceptance (obtainment): PE = 41%, Control = 72.5%
@@ -196,6 +197,57 @@ run_analysis <- function(data_subset, label) {
       "Negative Binomial Model" = model_nb
     ))
     print(comp_tbl)
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # Run No-External-Validation Helper Layer
+    # ═══════════════════════════════════════════════════════════════════
+    cat("\n=== [INTERNAL VALIDATION] Locked Temporal Validation ===\n")
+    temp_val <- mysterycall_temporal_validation(
+      data = data_subset,
+      outcome = "Wait_Time",
+      predictors = c("PE_or_Not", "Payer", "PE_or_Not:Payer"),
+      time_col = "Year",
+      threshold = 2023,
+      family = "nbinom"
+    )
+    print(temp_val$metrics)
+    
+    cat("\n=== [INTERNAL VALIDATION] Recalibration Assessment ===\n")
+    # Fit a standard logistic model to calculate predicted probabilities for appointment offer
+    logistic_fit <- glm(Accepted ~ PE_or_Not + Payer, data = data_subset, family = binomial)
+    data_subset$pred_prob <- predict(logistic_fit, type = "response")
+    recal_res <- mysterycall_recalibration_assessment(
+      observed = data_subset$Accepted,
+      predicted = data_subset$pred_prob,
+      family = "binomial",
+      plot = TRUE
+    )
+    cat(sprintf("Calibration Slope: %.3f (Ideal = 1.0) | Intercept: %.3f (Ideal = 0.0)\n", 
+                recal_res$calibration_slope, recal_res$calibration_intercept))
+    ggplot2::ggsave("/Users/tylermuffly/private_equity/figures/recalibration_diagnostics.png", 
+           plot = recal_res$plot, width = 7.5, height = 4.5, dpi = 300)
+    
+    cat("\n=== [INTERNAL VALIDATION] Site/Provider Split CV Simulation ===\n")
+    split_cv <- mysterycall_provider_split_simulation(
+      data = data_subset,
+      outcome = "Wait_Time",
+      predictors = c("PE_or_Not", "Payer", "PE_or_Not:Payer"),
+      cluster_col = "Matched_Pair_ID",
+      k = 5,
+      family = "nbinom"
+    )
+    print(split_cv)
+    
+    cat("\n=== [INTERNAL VALIDATION] Bootstrap Predictor-Retention Stability ===\n")
+    boot_stability <- mysterycall_bootstrap_predictor_stability(
+      data = data_subset,
+      outcome = "Accepted",
+      predictors = c("PE_or_Not", "Payer"),
+      n_boot = 50,
+      p_threshold = 0.05,
+      family = "binomial"
+    )
+    print(boot_stability)
   }
   
   interaction_coef <- summary(model)$coefficients$cond["PE_or_NotPE:PayerMedicaid", "Estimate"]
