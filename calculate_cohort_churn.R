@@ -119,8 +119,9 @@ for (i in 1:nrow(unique_offices)) {
   ))
 }
 
-# Merge churn metrics back to main database
+# Merge churn metrics back to main database (dropping any pre-existing columns to prevent duplicates)
 df_db_enriched <- df_db %>%
+  select(-any_of(c("Mean_Annual_Churn", "Total_Exits", "Total_Entries", "Max_Staff_Count"))) %>%
   left_join(office_churn_metrics, by = c("NPPES Address 1" = "Address", "NPPES Zip" = "Zip"))
 
 # Save enriched database
