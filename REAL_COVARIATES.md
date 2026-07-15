@@ -9,6 +9,7 @@ They have been replaced with real, geocoded data.
 | Step | Script | Output |
 |---|---|---|
 | 1 | `R/fetch_npi_geography.R` | `data/covariates/npi_geography.csv` — NPI → practice tract + county (NPPES + Census geocoder) |
+| 1b | `R/fetch_npi_geography_fallback.R` | backfills addresses the Census geocoder missed via Nominatim → Census coordinates endpoint (same tract geography) |
 | 2 | `R/fetch_acs_female_insurance.R` | `data/covariates/tract_female_insurance.csv` — female coverage % by tract (ACS 2022 5-yr) |
 | 3 | `R/fetch_county_enrollment.R` | `data/covariates/county_enrollment.csv` — county Medicare + Medicaid |
 | 4 | `R/replace_fake_covariates.R` | rewrites the calling sheet (backs up original to `*.ORIGINAL_FAKE.csv`) |
@@ -33,8 +34,10 @@ Steps 2–4 require `CENSUS_API_KEY` (in `~/.Renviron`).
 ## Coverage & missingness
 
 Addresses that did not geocode to a tract keep **NA** (honest missingness, not a
-random fill): tract columns ~89%, county columns ~97–99.7%. County values were
-recovered from ZIP where the precise tract geocode failed.
+random fill). After the Nominatim fallback (step 1b) tract coverage is **95.7%**
+(590/600 NPIs geocoded; 8 un-geocodable + 2 with no NPPES address remain NA) and
+county columns are **97–99.7%**. County values were recovered from ZIP where the
+precise tract geocode failed.
 
 ## Validation
 
