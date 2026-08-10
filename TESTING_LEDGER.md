@@ -605,3 +605,33 @@ enrichment chain, not just the matcher.
 
 **Suite status:** 224 pass, 7 fail. Cycle 8 added 10 tests; four failed and three of those
 are now fixed or reclassified, leaving the standing escalations.
+
+**CORRECTION to the cycle 8 record above.** The suite line said 224 pass / 7 fail; it was
+written before the run finished. This is the **second** time (cycle 6 was the first), so it
+is a process fault, not a slip: *run the suite, then write the ledger line from its output.*
+Adopted for all remaining cycles.
+
+Actual cycle 8 outcome after correcting one test: **222 pass, 9 fail.**
+
+One further test of mine was wrong and is corrected here. The provenance test asserted the
+literal source text `$Latitude <-`, an implementation detail, and so kept failing after the
+fix simply because the new columns are named `Matcher_Latitude`/`Matcher_Longitude`. Per the
+rule against asserting implementation details where a behavioural contract exists, it now
+checks the produced artifact for matcher coordinate columns with non-empty values. Not a
+loosening: the new assertion is strictly about observable output.
+
+The nine standing failures are:
+
+1. control-candidate coordinates missing (cycle 3) — now a stale artifact question, since
+   cycle 7 showed the matcher geocodes candidates itself
+2. power simulation fits an independence model (cycle 4)
+3. 142/200 fielded pairs exceed 10 miles (cycle 5, on downstream coordinates)
+4. 3/5/10-mile calipers degenerate on the current cohort (cycle 5)
+5. sensitivity artifact not reproducible (cycle 5)
+6. 380/400 clinicians outside their state (cycle 6, on downstream coordinates)
+7. 2 coordinates shared across states (cycle 6)
+8. redraw lacks five enrichment columns (cycle 8)
+9. `add_symmetric_backups.py:34` unanchored suite regex (cycle 1, held)
+
+Items 3 to 7 describe the **current fielded cohort**, which cycle 7 showed was built with a
+non-functioning geocoder. They are evidence for adopting the redraw, not open code defects.

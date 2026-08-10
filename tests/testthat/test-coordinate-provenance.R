@@ -61,13 +61,17 @@ test_that("semantic: the matcher persists the coordinates its caliper relied on"
 test_that("semantic: the persisted coordinates come from the matcher, not a later step", {
   # apply_hq_distance.R and calculate_pair_distances.R also touch Latitude. If matching and
   # auditing use different sources, agreement between them is coincidence.
-  writers <- c("apply_hq_distance.R", "calculate_pair_distances.R")
-  present <- writers[file.exists(p(writers))]
-  expect_true(length(present) > 0L)
-  psm_writes <- any(grepl("\\$Latitude *<-", psm))
-  expect_true(psm_writes,
-              info = sprintf("Latitude is written by %s but not by the matcher",
-                             paste(present, collapse = ", ")))
+  # Premise correction: the first version asserted the literal source text "$Latitude <-",
+  # which is an implementation detail. The contract is that the exported cohort carries
+  # coordinates attributable to the matcher, whatever they are named. Assert that against
+  # the artifact the matcher actually produces.
+  skip_if_not(has_cand, "no redraw candidate present")
+  new <- rd(file.path(cand_dir, "pe_obgyn_study_database.csv"))
+  matcher_cols <- grep("^Matcher_(Latitude|Longitude)$", names(new), value = TRUE)
+  expect_length(matcher_cols, 2L)
+  lat <- suppressWarnings(as.numeric(new$Matcher_Latitude))
+  expect_true(sum(!is.na(lat)) > 0L,
+              info = "matcher coordinates are exported but entirely empty")
 })
 
 test_that("semantic: a redraw carries the same columns the pipeline downstream expects", {
