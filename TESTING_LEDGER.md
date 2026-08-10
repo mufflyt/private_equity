@@ -1381,3 +1381,52 @@ the three the user specified plus two supporting contracts:
 
 **Suite:** 396 pass, 63 fail. The drop from 424 reflects the cohort change: data-level
 assertions written against the previous fielded sample now describe a different one.
+
+---
+
+## Out-of-band — 2026-08-10 06:0x — MANUAL VERIFICATION OF NON-PHYSICIAN RECORDS
+
+User challenged the cycle-13 framing that 13 fielded clinicians were trainees, noting that
+clinicians often keep a student taxonomy long after training. **The challenge was correct
+and the framing is withdrawn.**
+
+**Evidence against the trainee reading.** After the redraw, 7 clinicians carry
+`390200000X`, all of them in the CONTROL arm: median NPI enumeration year **2012**, median
+**14 years in practice**, **6 of 7** enumerated at least ten years ago, and **7 of 7** with
+Open Payments history. Industry payments are made to practising physicians. The wider
+non-OB-GYN group is likewise indistinguishable from the OB-GYN group on every practice
+indicator (median 28 vs 24 years in practice, 8 vs 8 Open Payments years, enumeration 2006
+vs 2007).
+
+**A structural limitation found while checking.** The pipeline retains **one taxonomy per
+NPI**. NPPES permits several with one flagged primary, so a clinician whose OB-GYN taxonomy
+is secondary appears non-OB-GYN here purely because the other rows were discarded upstream.
+A 207V filter would therefore act on a single, self-reported, often decade-stale field.
+**The 207V eligibility filter recommended in cycle 13 is withdrawn**, and a test now
+prevents one being added.
+
+**Two non-physician-taxonomy records verified individually against practice websites.**
+
+| NPI | Name | Recorded | Verified | Outcome |
+|---|---|---|---|---|
+| 1144280553 | Cindy Joslyn | taxonomy Midwife, NPPES cred CNM, **roster name "Cindy Joslyn, MD"** | Women's Health of Central Massachusetts states she is "Certified by the American College of Nurse Midwives"; providing midwifery care since 1996 | **EXCLUDED** |
+| 1932194743 | Claire Harraghy | taxonomy **363LW0102X (nurse practitioner)**, NPPES cred MD | A Woman's View, Hickory NC states she "is a board-certified OB/GYN"; UNC Health lists her under Obstetrics and Gynecology | **RETAINED** |
+
+Exactly the split the user predicted: one genuine miscoding of a real OB-GYN, and one genuine
+non-physician. Neither could have been resolved by a taxonomy rule, since the rule would have
+removed both.
+
+**Note on the roster name.** Joslyn is recorded as "Cindy Joslyn, **MD**" while both her
+credential fields read CNM. That appended "MD" is a scrape error and is precisely how she
+passed the MD/DO derivation found in cycle 15, which treats anything that is not DO as MD.
+Two independent defects had to line up for a nurse midwife to reach a physician cohort.
+
+**Change made.** `EXCLUDED_NPIS` added to `build_matched_control_group_psm.R`, containing the
+one verified non-physician, applied alongside the platform exclusion. Two tests added: the
+verified CNM must be named in the exclusion list, and no 207V taxonomy filter may gate
+eligibility. `tests/testthat/test-platform-exclusion.R` now holds 21 passing assertions.
+
+**Deliberately NOT re-run.** Joslyn is not in the current fielded 200; she sits in the matched
+pool at pair_457 and in the 300-pair sheet, so she could only enter through a de-duplication
+backfill. The guard prevents that on any future run. Re-running the whole pipeline to remove
+one clinician who is not currently fielded would churn the cohort for no gain.

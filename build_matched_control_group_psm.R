@@ -48,8 +48,27 @@ pe_df <- read.csv(pe_csv, stringsAsFactors = FALSE, na.strings = c("NA", "N/A", 
 EXCLUDED_PLATFORMS <- c("CCRM Fertility", "IVI RMA Global", "US Fertility",
                         "Kindbody", "OB Hospitalist Group")
 
+# Individually verified non-physicians. NPPES taxonomy alone is not a defensible eligibility
+# criterion (it is self-reported, often a decade stale, and only one taxonomy per NPI is
+# retained upstream), so these were confirmed one by one against the practice's own website
+# rather than filtered by code. Verified 2026-08-10:
+#   1144280553  Cindy Joslyn  - CNM. Women's Health of Central Massachusetts lists her as
+#                               "Certified by the American College of Nurse Midwives"; the
+#                               roster name "Cindy Joslyn, MD" is a scrape error, which is
+#                               how she passed the MD/DO derivation.
+# Checked and RETAINED (taxonomy wrong, clinician eligible):
+#   1932194743  Claire Harraghy - taxonomy reads 363LW0102X (nurse practitioner) but she is a
+#                               board-certified OB-GYN physician at A Woman's View, Hickory NC.
+EXCLUDED_NPIS <- c("1144280553")
+
 pe_roster_all <- pe_df[!is.na(pe_df$NPI), ]
 pe_matched_all <- pe_roster_all
+
+.npi_norm <- sub("\\.0+$", "", trimws(as.character(pe_matched_all$NPI)))
+if (any(.npi_norm %in% EXCLUDED_NPIS)) {
+  cat(sprintf("  Verified non-physicians excluded by NPI: %d\n", sum(.npi_norm %in% EXCLUDED_NPIS)))
+  pe_matched_all <- pe_matched_all[!(.npi_norm %in% EXCLUDED_NPIS), ]
+}
 
 .plat <- trimws(ifelse(is.na(pe_matched_all[["Platform/Practice"]]), "",
                        pe_matched_all[["Platform/Practice"]]))

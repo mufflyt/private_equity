@@ -92,3 +92,25 @@ test_that("the redraw is a fresh draw, not a patch of the previous sample", {
   expect_equal(nrow(sheet), 400L)
   expect_equal(sum(sheet$PE_or_Not == "PE"), 200L)
 })
+
+# Verified non-physicians -----------------------------------------------------------------
+
+test_that("individually verified non-physicians cannot enter the treated cohort", {
+  # Verified against practice websites on 2026-08-10 rather than filtered by taxonomy, which
+  # is self-reported, frequently stale, and retained only one-per-NPI upstream.
+  VERIFIED_NON_PHYSICIAN <- "1144280553"   # Cindy Joslyn, CNM
+  expect_true(any(grepl("EXCLUDED_NPIS <- c(", psm, fixed = TRUE)),
+              info = "the NPI-level exclusion list must exist in the pipeline")
+  expect_true(any(grepl(VERIFIED_NON_PHYSICIAN, psm, fixed = TRUE)),
+              info = "the verified CNM must be named in the exclusion list")
+})
+
+test_that("a wrong taxonomy alone never removes a verified physician", {
+  # Claire Harraghy carries taxonomy 363LW0102X (nurse practitioner) but is a board-certified
+  # OB-GYN. She must remain eligible: the pipeline must not filter on taxonomy.
+  VERIFIED_PHYSICIAN <- "1932194743"
+  expect_false(any(grepl(sprintf('EXCLUDED_NPIS <- c\\("%s', VERIFIED_PHYSICIAN), psm)),
+               info = "a verified physician must not be excluded for a miscoded taxonomy")
+  expect_false(any(grepl('grepl\\("\\^207V"', psm)),
+               info = "no 207V taxonomy filter may gate eligibility")
+})
