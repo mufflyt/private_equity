@@ -111,3 +111,57 @@ code not written today: `build_matched_control_group_psm.R` (propensity fitting,
 **Carried forward (unresolved):** the cycle-1 suite-regex defect remains unfixed in
 `build_matched_control_group_psm.R:113` and `add_symmetric_backups.py:34`, pending a
 decision on re-drawing the fielded sample.
+
+---
+
+## Out-of-band — 2026-08-09 21:3x — authorized redraw attempt (BLOCKED)
+
+User authorized fixing `build_matched_control_group_psm.R` and re-drawing the fielded
+sample, resolving the cycle-1 escalation.
+
+**Fixes applied to the PSM script (both retained, both test-guarded):**
+
+1. Suite regex corrected to the word-anchored form, matching `R/pe_helpers.R`.
+2. `set.seed(42)` moved out of the per-office loop. Re-seeding inside the loop restarted
+   the same stream at every office, so `sample(seq_len(n))` returned the identical
+   permutation each time and always began at index 1: the "random" selection of one
+   physician per office was deterministically the first-listed physician.
+
+Two tests added (`tests/testthat/test-address-key-parity.R`) pinning the PSM script's
+suite regex to the word-anchored form and asserting the office loop is seeded once,
+outside the loop. Suite: 70 pass, 0 fail.
+
+**The redraw itself FAILED and was rolled back.**
+
+Re-running the PSM script produced **2 matched pairs instead of 511**. The unmodified
+script, restored from git, produces the same 2 pairs. The regression is therefore NOT
+caused by the fixes: **the committed pipeline cannot reproduce its own fielded cohort.**
+
+Diagnosis:
+
+- PE cohort loads fine: 1,033 NPI-matched generalists with valid phones.
+- Control pool loads fine: 29,882 candidates.
+- Matching collapses: `City matches: 2, Caliper Geo Matches: 0`.
+- `control_candidates_raw.csv` contains **no coordinates at all** (columns are npi,
+  gender, cred, city, state, zip_code, facility_name, ...). The script derives coordinates
+  from a hand-maintained gazetteer (`manual_coords`, ~17 entries, plus
+  `lat_long_ref <- city_state_to_lat_long`), so the 10-mile geographic caliper can never
+  fire on this input. Zero geo matches is the expected behaviour of the committed code.
+
+**Consequence.** The 511-pair matched calling list on disk was produced from inputs or a
+geocoding step that are not recoverable from the repository. The manuscript's Methods
+claim of "1-to-1 propensity-score matching within a strict 10-mile, same-state radius"
+cannot currently be reproduced or verified, and the sample cannot be re-drawn with the
+corrected office key until the geocoding path is restored.
+
+**State after rollback.** All six live artifacts verified byte-identical to the pre-redraw
+backup in `backups/pre_redraw_20260809_213418/`: fielded sheet, all three REDCap files,
+matched calling list, study database.
+
+**Casualty.** `pe_obgyn_control_providers.csv` (354,683 bytes) was overwritten by the
+failed runs and was omitted from the backup set. It is a regenerable intermediate and
+nothing live depends on it, but it cannot be regenerated until matching works.
+
+**BLOCKING QUESTION for the user:** where did the geocoded control candidates come from?
+Until that is answered the sample cannot be re-drawn, and the fielded 200 remains the
+one produced by the old, over-merging office key.

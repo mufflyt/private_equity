@@ -108,10 +108,15 @@ get_address_key <- function(row) {
     return(NA)
   }
   
-  adr_clean <- gsub("[^A-Z0-9]", "", toupper(adr))
-  # Strip suites/unit details
-  adr_clean <- gsub("(SUITE|STE|UNIT|APT|FLOOR|FL|ROOM|RM|NUMBER|NO|DEPT|SUITES|STES|BLDG|BUILDING)[0-9A-Z]*", "", adr_clean)
-  
+  # Strip suites/unit details BEFORE collapsing separators. Removing punctuation first
+  # destroys the word boundaries, after which FL matches the start of FLAGLER and the
+  # greedy [0-9A-Z]* consumes the rest of the street name, merging unrelated offices
+  # (100 FLAGLER ST, 100 FLAMINGO AVE and 100 FLORIDA BLVD all collapsed to one key).
+  # Must stay identical to address_key() in R/pe_helpers.R; a test asserts they agree.
+  adr_up <- gsub("[^A-Z0-9]+", " ", toupper(adr))
+  adr_up <- gsub("\\b(SUITES|SUITE|STES|STE|UNIT|APT|FLOOR|FL|ROOM|RM|NUMBER|NO|DEPT|BLDG|BUILDING)\\b *[0-9A-Z]*", "", adr_up)
+  adr_clean <- gsub("[^A-Z0-9]", "", adr_up)
+
   city_clean <- gsub("[^A-Z0-9]", "", toupper(city))
   zip_clean <- substr(gsub("[^0-9]", "", zip_code), 1, 5)
   
@@ -326,6 +331,13 @@ candidates_df$acog_district[is.na(candidates_df$acog_district)] <- 4
 # Sort unique office IDs to be deterministic
 pe_unique_offices <- sort(unique(pe_matched_all$office_id))
 
+# Seed ONCE, outside the loop. Re-seeding inside the loop restarts the same stream for
+# every office, so sample(seq_len(n)) returned the identical permutation at each office
+# of a given size, always beginning with index 1. The selection was therefore not random
+# at all: it deterministically took the first-listed physician per office, which is not
+# what the Methods claims. Seeding here keeps the run reproducible AND random.
+set.seed(42)
+
 for (office in pe_unique_offices) {
   office_subset <- pe_matched_all[pe_matched_all$office_id == office, ]
   
@@ -337,7 +349,6 @@ for (office in pe_unique_offices) {
   if (nrow(office_subset) == 1) {
     shuffled_indices <- 1
   } else {
-    set.seed(42)
     shuffled_indices <- sample(seq_len(nrow(office_subset)))
   }
   
