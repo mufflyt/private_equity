@@ -14,8 +14,11 @@ n_sims <- 200                                 # Number of simulation iterations 
 # - Medicaid main effect: 15 days increase (so Medicaid mean = 30 days)
 # - PE main effect: 0 days (BCBS wait is same for PE and Non-PE, 15 days)
 # - PE * Medicaid interaction: 5 days increase (PE Medicaid mean = 35 days, which is a 5-day difference in the insurance gap!)
-# - GYN Scenario main effect: let's assume GYN has slightly shorter wait times than OB (-2 days, mean GYN BCBS = 13 days)
-# - Random intercept SD (physician-level correlation): 3 days
+# - GYN Scenario main effect: NOT simulated. Only the AUB gynaecology vignette is fielded,
+#   so there is no scenario contrast in this design and no scenario term in the model.
+# - Random intercept SD (physician-level correlation): 0.2 on the LOG scale, matching the
+#   sd used below. It is not 3 days; the linear predictor is log-link, so a days-scale
+#   figure here would be a different quantity entirely.
 
 mu_bcbs_nonpe <- 15.0
 mu_med_nonpe <- 30.0  # 15-day baseline insurance gap
@@ -26,7 +29,6 @@ beta_0 <- log(mu_bcbs_nonpe)                  # Intercept
 beta_medicaid <- log(mu_med_nonpe / mu_bcbs_nonpe) # log(30/15) = 0.693
 beta_pe <- log(mu_bcbs_pe / mu_bcbs_nonpe)         # log(15/15) = 0
 beta_interaction <- log(mu_med_pe / (mu_bcbs_pe * (mu_med_nonpe / mu_bcbs_nonpe))) # log(35/30) = 0.154
-beta_scenario <- log(13 / 15)                      # Scenario GYN effect: log(13/15) = -0.143
 
 # Dispersion parameter theta calculation based on Var = mu + mu^2 / theta
 # Since we want SD = 10 or 20 when mean is around 20-25 days:

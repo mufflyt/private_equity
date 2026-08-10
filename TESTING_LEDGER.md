@@ -226,3 +226,77 @@ named rather than loosened. **This is the suite's only red test and is expected.
    mistyped CMS subspecialty code enters the generalist cohort silently.
 
 **Suite status:** 98 pass, 1 fail (the preserved blocker), 0 warn, 0 skip.
+
+---
+
+## Cycle 4 — 2026-08-09 22:3x — 4 BVA / 3 semantic / 3 adversarial
+
+**Targets.** The power/calibration layer that justified the 200-pair sample size, plus the
+derived truth constants in the dry-run analysis.
+
+**Tests added** (`tests/testthat/test-power-and-calibration.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | NB dispersion | theta explodes as variance approaches the mean, and goes negative below it |
+| 2 | BVA | power constants | hardcoded 6.87 / 1.40 match their stated derivation |
+| 3 | BVA | power grid | the grid covers the sample size actually fielded (200 pairs) |
+| 4 | BVA | `coalesce_cols` | first non-blank in priority order wins; absent column skipped |
+| 5 | semantic | power simulation | the analysis model must match the correlation the simulation generates |
+| 6 | semantic | power constants | every declared effect actually enters the linear predictor |
+| 7 | semantic | dry-run truths | truth constants are derived from cells, never typed separately |
+| 8 | adversarial | shipped artifacts | no consumed artifact stores NPI in lossy float form |
+| 9 | adversarial | docs vs code | documented random-intercept magnitude matches the code |
+| 10 | adversarial | results artifact | the power CSV matches the grid the script declares |
+
+**Failures: 5.** Two were my own test bugs, three were real.
+
+**(a) TEST BUGS — corrected.** `expect_lt`/`expect_gt` do not accept an `info` argument.
+Separately, `is.infinite(theta(10, sqrt(10)))` is FALSE: `sqrt(10)^2 - 10` is 1.78e-15, not
+zero, so theta is a finite 5.6e16. The hazard is the explosion, not the infinity, and a
+float-exact equality was the wrong contract. Both corrected; neither loosened.
+
+**(b) REAL DEFECT — dead declared effect. FIXED (behaviour-preserving).**
+`beta_scenario <- log(13/15)` was computed and documented as a GYN scenario main effect but
+never entered `eta`. The header comment therefore described a design the simulation did not
+implement. Removed the constant and corrected the comment to state that scenario is not
+simulated, since only the AUB vignette is fielded. No numeric behaviour changed.
+
+**(c) REAL DEFECT — documentation on the wrong scale. FIXED (behaviour-preserving).**
+The header said "Random intercept SD (physician-level correlation): 3 days" while the code
+uses `sd = 0.2` on the log scale. A days-scale figure under a log link is a different
+quantity. Comment corrected to match the code. No numeric behaviour changed.
+
+**(d) REAL DEFECT — the power analysis is anticonservative. ESCALATED, NOT SILENTLY FIXED.**
+The simulation draws one random intercept per physician and gives each physician two calls,
+then fits `glm.nb`, which assumes independent observations. Ignoring within-physician
+correlation understates the standard errors and therefore **overstates power**. `library(lme4)`
+is loaded but never used.
+
+*Same bug class search — this is in FOUR scripts, not one:*
+
+| Script | Simulates clustering | Fits mixed model | Fits independence model |
+|---|---|---|---|
+| `run_new_power_analysis.R` | yes | no | yes |
+| `run_maineffect_power.R` | yes | no | yes |
+| `run_interaction_75_power.R` | yes | no | yes |
+| `run_obtainment_power.R` | yes | no | yes |
+| `fig3_simr.R` | yes | **yes** | no |
+
+Only `fig3_simr.R` analyses as it simulates.
+
+**Why this matters.** `power_analysis_new_results.csv` reports **0.83 power at the fielded
+200 pairs** (SD = 10), and that is the number justifying the sample size. It is an
+overstatement. Independent corroboration: cycle-0 dry-run work fitted a correctly specified
+negative-binomial GLMM to the same design and obtained **76.5%** for the wait-time
+interaction, below the 0.83 claimed here and below the conventional 80% threshold.
+
+Not fixed silently because correcting the model changes the reported power and therefore
+the sample-size justification, which is a scientific conclusion. The failing test is
+preserved. **Decision needed:** re-run all four power analyses with `glmer.nb`/`glmmTMB` (or
+cluster-robust standard errors) and restate the power figures in the manuscript.
+
+**Suite status:** 125 pass, 2 fail, 0 warn, 0 skip. Both failures are deliberately
+preserved escalations, not regressions:
+1. control-candidate coordinates missing (reproducibility blocker, cycle 3)
+2. power simulation fits an independence model (this cycle)
