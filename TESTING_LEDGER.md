@@ -1159,3 +1159,72 @@ zeros, which is a real observation rather than missingness.
 **Suite:** recorded from the run below.
 
 **Suite: pass=401  fail=53  warn=0  skip=0**
+
+---
+
+## Cycle 17 — 2026-08-10 05:0x — 3 BVA / 4 semantic / 3 adversarial
+
+**Targets.** The exposure variable itself. `PE_or_Not` is the study's independent variable
+and nothing had tested how it is attributed: which platform owns a clinic, when it was
+acquired, and whether that platform can supply the service the vignette requests.
+
+**Tests added** (`tests/testthat/test-pe-exposure.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | acquisition year | inside the observable window |
+| 2 | BVA | acquisition year | stored as a year, not a float |
+| 3 | BVA | platform count | the PE arm is not one platform |
+| 4 | semantic | exposure timing | every PE clinician has a dated acquisition |
+| 5 | semantic | platform names | canonical, not near-duplicates |
+| 6 | semantic | platform capability | can supply the appointment the vignette requests |
+| 7 | semantic | control arm | carries a sentinel, not platform metadata |
+| 8 | adversarial | temporality | exposure precedes the outcome window |
+| 9 | adversarial | clustering | platform-level clustering is in the analysis plan |
+| 10 | adversarial | leakage | no control attributable to a PE platform |
+
+**5 failures.**
+
+**(a) 18 PE clinicians sit at platforms that cannot provide the appointment being requested.**
+The single fielded vignette is abnormal uterine bleeding, a generalist outpatient GYN visit.
+
+| Platform | n | Why it cannot supply the visit |
+|---|---|---|
+| US Fertility | 6 | fertility practice, subspecialty referral setting |
+| Kindbody | 5 | fertility practice |
+| IVI RMA Global | 5 | fertility practice |
+| **OB Hospitalist Group** | **2** | **inpatient hospitalists, no outpatient clinic at all** |
+
+A caller requesting a new-patient AUB appointment at an OB hospitalist group will be told
+no such appointment exists. That is recorded as failure to obtain, and enters the primary
+obtainment outcome as if it were a refusal. This is independent of the 56 non-OB-GYN
+taxonomies found in cycle 13; the two overlap only partially.
+
+**(b) Platform-level clustering is unmodelled.** The 200 PE clinicians belong to **12
+corporate parents**, the largest (Axia Women's Health) holding **27%** of the arm, and the
+top three holding 66%. Clinics under one parent share scheduling policy, call centres and
+payer contracts, so they are not independent observations. The SAP declares random
+intercepts for matched pair and individual clinician only. This inflates precision on the
+PE side of every estimate.
+
+**(c) 4 PE clinicians have no acquisition year**, so exposure timing is unknown for them.
+
+**(d) Acquisition years are stored as floats** ("2020.0"), the same representation hazard as
+the NPI column found in cycle 3.
+
+**(e) `Unified Women's Healthcare` and `Unified Women's Healthcare / Genesis OBGYN`** are the
+same parent under two spellings, splitting one platform into two.
+
+**Passed and worth recording.** Acquisition years all precede the 2026 calling window, so
+temporality holds. The control arm carries a clean `Control Group` sentinel with no
+acquisition years, so there is no exposure leakage. No clinician appears in both arms.
+
+**A FOURTH FALSE NEGATIVE — and the category is wider than cycle 16 assumed.** Test 9 first
+accepted any occurrence of "platform" anywhere in the manuscript and **passed**, matching the
+Introduction's descriptive use of the word. Cycle 16's guard only covers
+`expect_false(grepl(...))`; this was a *presence* assertion with a permissive disjunction.
+Strengthened to require "platform" inside a line that declares a random intercept. **The
+final audit must widen the category from "unanchored absence assertions" to "any assertion
+whose pattern can be satisfied by text adjacent to the thing being tested".**
+
+**Suite:** 412 pass, 58 fail, 0 warn, 0 skip.
