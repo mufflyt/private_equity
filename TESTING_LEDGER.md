@@ -1667,3 +1667,61 @@ never post-date their source, and every roster row carries a Source of Informati
 **Suite:** see the line below, read from the run.
 
 **Suite: pass=438  fail=75  warn=0  skip=0**
+
+---
+
+## Out-of-band — 2026-08-10 08:0x — ACTIVITY RECENCY EXCLUSION
+
+User asked to remove clinicians "not seen" in over two years, and specifically the 21 fielded
+clinicians last observed in 2019 or earlier.
+
+**The interpretation had to be settled first, because the obvious one destroys the study.**
+`Last Active Year` maxes out at **2021**, so "within two years" measured against the 2026
+calling year requires activity in 2024 or later and **keeps 0 of 1,032 clinicians**. The
+threshold is therefore anchored to the newest activity year present in the data, which asks
+the answerable question, "was this clinician still practising at the end of the observation
+window", and self-calibrates if the source is ever refreshed.
+
+```
+MAX_INACTIVE_YEARS      <- 2
+ACTIVITY_REFERENCE_YEAR <- max(Last Active Year)      # 2021, read from the data
+cutoff                  <- reference - (MAX_INACTIVE_YEARS - 1)   # 2020
+```
+
+Applied before clustering, propensity estimation and matching, alongside the platform
+exclusion. A guard aborts the run if the rule would remove more than half the cohort, so a
+future empty or stale activity column fails loudly instead of silently emptying the study.
+
+**Clinicians with no recorded activity year are RETAINED.** Absent evidence of activity is
+not evidence of absence, and excluding them would drop 246 PE and 1,187 control candidates on
+a missing value rather than an observation.
+
+**A second defect found while verifying: the rule was asymmetric.** The first implementation
+filtered only the treated arm. The fielded set still contained **10 controls last active
+before 2020, and 0 such PE clinicians** — the arms had different eligibility criteria, so any
+difference in reachability between them would partly reflect the filter rather than ownership.
+This is the same shape as the asymmetric imputation found in cycle 15. The rule now applies
+to `candidates_df` with the identical cutoff.
+
+**Effect**
+
+| | Before | After |
+|---|---:|---:|
+| Study-eligible PE cohort | 1,063 | **992** |
+| PE excluded as inactive | — | **151** |
+| Control candidates excluded as inactive | — | **2,036** |
+| Matched pairs | 494 | **470** |
+| Fielded clinicians last active before 2020 | 21 | **0** |
+| Fielded states | 23 | 23 |
+
+Full chain regenerated: PSM, 300-pair sample, enrichment, de-duplication, 200-pair sample and
+all REDCap artifacts. De-duplication reapplied (131 retained, 69 backfilled, 0 shared phones).
+Enrichment coverage 87%, the missing rows all new controls absent from the previous enriched
+database.
+
+**Tests added** (`tests/testthat/test-activity-recency.R`, 11 assertions, all passing): no
+fielded clinician outside the window in either arm; the threshold is anchored to the data
+rather than the calling year; a missing activity year is not treated as inactivity; the
+runaway guard exists; and the exclusion precedes clustering.
+
+**Suite:** 450 pass, 74 fail.

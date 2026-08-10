@@ -70,6 +70,43 @@ if (any(.npi_norm %in% EXCLUDED_NPIS)) {
   pe_matched_all <- pe_matched_all[!(.npi_norm %in% EXCLUDED_NPIS), ]
 }
 
+# ---------------------------------------------------------------------------------------
+# ACTIVITY RECENCY EXCLUSION
+#
+# Drop clinicians not observed practising within MAX_INACTIVE_YEARS. A clinician who has
+# left is recorded as a failure to contact, which enters the primary obtainment outcome as
+# if it were a refusal to see the patient.
+#
+# The threshold is anchored to the NEWEST activity year present in the data, not to the
+# calling year. The activity source stops at 2021, so measuring against 2026 would require
+# activity in 2024 or later and would remove every clinician in the cohort. Anchoring to the
+# data's own currency asks the answerable question, "was this clinician still practising at
+# the end of the observation window", and self-calibrates if the source is ever refreshed.
+#
+# Clinicians with NO recorded activity year are RETAINED: absent evidence of activity is not
+# evidence of absence, and excluding them would drop a further 505 roster rows on a missing
+# value rather than an observation.
+MAX_INACTIVE_YEARS <- 2
+
+.last_active <- suppressWarnings(as.numeric(trimws(ifelse(
+  is.na(pe_matched_all[["Last Active Year"]]), "", pe_matched_all[["Last Active Year"]]))))
+ACTIVITY_REFERENCE_YEAR <- suppressWarnings(max(.last_active, na.rm = TRUE))
+
+if (is.finite(ACTIVITY_REFERENCE_YEAR)) {
+  .cutoff <- ACTIVITY_REFERENCE_YEAR - (MAX_INACTIVE_YEARS - 1L)
+  .stale  <- !is.na(.last_active) & .last_active < .cutoff
+  cat("\n=== Activity recency exclusion ===\n")
+  cat(sprintf("  newest activity year in source: %d | keeping clinicians active %d or later\n",
+              ACTIVITY_REFERENCE_YEAR, .cutoff))
+  cat(sprintf("  excluded as inactive: %d | retained with no activity year recorded: %d\n",
+              sum(.stale), sum(is.na(.last_active))))
+  if (sum(.stale) > 0.5 * sum(!is.na(.last_active))) {
+    stop("Activity recency exclusion would remove more than half the cohort; ",
+         "check that Last Active Year is populated and current before proceeding.")
+  }
+  pe_matched_all <- pe_matched_all[!.stale, ]
+}
+
 .plat <- trimws(ifelse(is.na(pe_matched_all[["Platform/Practice"]]), "",
                        pe_matched_all[["Platform/Practice"]]))
 cat("\n=== Platform-level eligibility exclusion ===\n")
@@ -137,6 +174,19 @@ candidates_df$Subspecialty_clean <- NULL
 if (.n_pe_in_ctl > 0) {
   cat(sprintf("Removing %d PE-owned clinicians from the control candidate pool.\n", .n_pe_in_ctl))
   candidates_df <- candidates_df[!(.cand_npi %in% .pe_all_npi), ]
+}
+
+# Apply the SAME activity recency rule to controls. Filtering only the treated arm would
+# give the two arms different eligibility criteria: PE clinicians would be guaranteed
+# recently active while controls would not, so any difference in reachability between arms
+# would partly reflect the filter rather than ownership. The 10 fielded controls last active
+# before 2020 that this catches were invisible while the rule ran on one arm only.
+if (is.finite(ACTIVITY_REFERENCE_YEAR) && "last_active_year" %in% names(candidates_df)) {
+  .cand_last <- suppressWarnings(as.numeric(trimws(as.character(candidates_df$last_active_year))))
+  .cand_stale <- !is.na(.cand_last) & .cand_last < .cutoff
+  cat(sprintf("  control candidates excluded as inactive (same rule, cutoff %d): %d | retained with no year: %d\n",
+              .cutoff, sum(.cand_stale), sum(is.na(.cand_last))))
+  candidates_df <- candidates_df[!.cand_stale, ]
 }
 
 cat(sprintf("Loaded %d Non-PE private practice control generalist candidates with valid phone numbers.\n", nrow(candidates_df)))
