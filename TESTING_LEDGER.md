@@ -2091,3 +2091,78 @@ completed three times (cycles 6, 8, 24), each corrected in place.
 (`build_matched_control_group_psm.R`, `match_all_providers.py`,
 `build_200_redcap_import.R`, `dedup_offices_and_backfill_200.R`,
 `run_new_power_analysis.R`, `dry_run_analysis.R`, `manuscript/manuscript_cite.md`).
+
+---
+
+## Post-audit — 2026-08-10 — ITEMS 2 AND 3
+
+### Item 2: the Methods now describes the matching that actually happens
+
+The claim of "provider gender (exact match), credential (MD vs. DO), years in practice
+(within a five-year band)" was replaced with a description of the implemented design: state,
+gender and a 10-mile radius enforced as hard constraints on the candidate pool, requiring at
+least two candidates inside the radius, with the closest propensity score selected among
+them; credential, years in practice and Open Payments entering through the score rather than
+as separate calipers. The three eligibility rules are now stated, and the pool size and
+geography corrected to 459 pairs across 23 states, including the abstract.
+
+**Two cycle-22 contracts were realigned rather than weakened.** The gender test moved from the
+old phrase to the behaviour plus the new wording; gender is still enforced exactly, so the
+assertion still bites. The five-year band test was **inverted**: the claim was removed rather
+than the band implemented, so the test now fails if the claim returns while the matcher does
+not enforce it. One of my own keyword checks ("inactive") was corrected to match the
+description rather than my shorthand.
+
+### Item 3: the power analysis, re-run with the model the SAP specifies
+
+`run_new_power_analysis.R` now fits `glmmTMB(... + (1 | physician), family = nbinom2)`.
+Full grid re-run: 6 sample sizes x 2 dispersions x 200 simulations x 2 mixed fits.
+
+**Two corrections, and the first reverses a claim I made in cycle 4.**
+
+**(a) The direction was wrong.** Cycle 4 asserted that ignoring clustering "understates the
+standard errors and therefore OVERSTATES power". That holds for between-cluster effects. It
+is **false for this estimand**: ownership varies BETWEEN physicians while insurance varies
+WITHIN, so a random intercept absorbs between-physician variance and *sharpens* the
+within-physician interaction. Measured at 200 pairs, SD 10: marginal 0.57, mixed 0.65. The
+mixed model is **more** powerful here, not less.
+
+**(b) The reported number answered a different question.** The old test compared
+`~ pe * insurance` against `~ insurance`, dropping the ownership main effect **and** the
+interaction: a 2-degree-of-freedom joint test of "any ownership effect". The SAP's primary
+wait-time estimand is the interaction alone. The headline 0.83 was power for the joint test.
+
+**Corrected grid** (200 simulations per cell):
+
+| Pairs | Calls | Power, interaction (SAP estimand) | Power, joint 2-df (old figure) |
+|---:|---:|---:|---:|
+| 100 | 400 | 0.340 | 0.535 |
+| 150 | 600 | 0.615 | 0.785 |
+| **200** | **800** | **0.660** | **0.820** |
+| 250 | 1000 | 0.790 | 0.905 |
+| 300 | 1200 | 0.855 | 0.975 |
+| 400 | 1600 | 0.945 | 1.000 |
+
+At SD 20 the design is badly underpowered throughout: 0.245 at 200 pairs, reaching only 0.375
+at 400 pairs.
+
+**What this means for the sample size.** The old 0.83 is essentially reproduced by the mixed
+model as the joint test (0.820), so that figure was not inflated by the modelling error. But
+it was never power for the estimand the SAP names. **Power for the primary wait-time
+interaction at the fielded 200 pairs is 0.66**, and 250 pairs would be needed for 0.79 and
+300 for 0.86. Note also that this script assumes an interaction IRR of 35/30 = 1.167 while the
+manuscript's Table 3 cells imply 1.31, which is why the earlier dry run reported 76.5%: the
+two documents assume different effect sizes.
+
+**Three tests added** (`test-power-and-calibration.R`, 35 assertions, all passing): the
+simulation must analyse the clustering it generates and no marginal fit may remain; power must
+be reported for the SAP's estimand alongside the joint test, with the joint test never below
+the single-parameter test it contains; and power at the fielded design is pinned below 0.80 so
+no 80% claim can rest on this grid.
+
+**Not done:** `run_maineffect_power.R`, `run_interaction_75_power.R` and
+`run_obtainment_power.R` still fit marginal models. The main-effect script tests the ownership
+term, which IS a between-physician contrast, so for that one the original cycle-4 direction
+does apply and its power is likely overstated.
+
+**Suite:** 520 pass, 79 fail, 0 warn, 0 skip.

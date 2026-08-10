@@ -81,7 +81,10 @@ test_that("semantic: the matched cohort is balanced on the covariates matching u
 })
 
 test_that("semantic: gender is matched exactly, as the Methods states", {
-  expect_true(grepl("provider gender (exact match)", ms, fixed = TRUE))
+  # The Methods was restated to describe what the code does, so the assertion moved from the
+  # old phrase "provider gender (exact match)" to the behaviour itself plus the current
+  # wording. Gender IS enforced exactly, in the candidate pool.
+  expect_true(grepl("of the same gender", ms, fixed = TRUE))
   diff_pairs <- sum(vapply(pair_split(sheet$gender),
                            function(x) length(unique(x)) > 1L, logical(1)))
   expect_equal(diff_pairs, 0L,
@@ -89,15 +92,18 @@ test_that("semantic: gender is matched exactly, as the Methods states", {
                               diff_pairs, length(unique(sheet[["Matched Pair ID"]]))))
 })
 
-test_that("semantic: years in practice fall within the claimed five-year band", {
-  expect_true(grepl("within a five-year band", ms, fixed = TRUE))
+test_that("semantic: the Methods claims no band it does not enforce", {
+  # Contract inverted, not weakened. Cycle 22 found the Methods claiming a five-year band that
+  # the matcher never applied: 99 of 171 pairs exceeded it, max 47 years. The claim has been
+  # removed rather than the band implemented, so the test now guards against the claim
+  # returning while years in practice continues to enter only through the propensity score.
+  expect_false(grepl("five-year band", ms, fixed = TRUE),
+               info = "the Methods must not claim a years-in-practice band the matcher does not enforce")
   d <- vapply(pair_split(sheet$yrs),
               function(x) if (length(x) == 2L && !anyNA(x)) abs(diff(x)) else NA_real_, numeric(1))
   d <- d[!is.na(d)]
-  over <- sum(d > 5)
-  expect_equal(over, 0L,
-               info = sprintf("%d of %d measurable pairs differ by more than five years (median %.0f, max %.0f)",
-                              over, length(d), median(d), max(d)))
+  expect_true(any(d > 5),
+              info = "if pairs were in fact all within five years, the band should be claimed and enforced")
 })
 
 # ---------------------------------------------------------------- adversarial (3)

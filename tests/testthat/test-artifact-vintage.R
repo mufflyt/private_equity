@@ -107,9 +107,14 @@ test_that("adversarial: the eligibility rules that shaped the cohort are describ
   txt <- paste(ms, collapse = "\n")
   # Three exclusions now determine who is eligible. A reader cannot reconstruct the cohort
   # from the Methods unless each is stated.
-  for (claim in c("fertility", "hospitalist", "inactive")) {
-    expect_true(grepl(claim, txt, ignore.case = TRUE),
-                info = sprintf("the Methods does not mention the %s exclusion", claim))
+  # Premise correction: "inactive" was my own shorthand, not a term the Methods needs to use.
+  # The contract is that each rule is DESCRIBED, so match the description rather than a label.
+  checks <- c(fertility  = "fertility",
+              hospitalist = "hospitalist",
+              recency     = "not observed practising")
+  for (nm in names(checks)) {
+    expect_true(grepl(checks[[nm]], txt, ignore.case = TRUE),
+                info = sprintf("the Methods does not describe the %s exclusion", nm))
   }
 })
 

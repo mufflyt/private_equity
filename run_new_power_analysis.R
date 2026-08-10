@@ -1,5 +1,20 @@
 library(MASS)
-library(lme4)
+suppressMessages(library(glmmTMB))
+
+# Simulation generates a per-physician random intercept and gives each physician two calls,
+# so the analysis must model that clustering. The previous version fitted glm.nb, which
+# assumes independence. Two corrections, both documented in TESTING_LEDGER.md:
+#
+# 1. MODEL. Refitted with glmmTMB(... + (1 | physician), family = nbinom2), matching the SAP.
+#    For this design the mixed model is MORE powerful, not less: ownership varies BETWEEN
+#    physicians but insurance varies WITHIN, so a random intercept absorbs between-physician
+#    variance and sharpens the within-physician interaction. The earlier assumption that
+#    ignoring clustering must overstate power holds for between-cluster effects, not this one.
+#
+# 2. HYPOTHESIS. The old test compared `~ pe * insurance` against `~ insurance`, dropping the
+#    ownership main effect AND the interaction: a 2-degree-of-freedom joint test of "any
+#    ownership effect". The SAP's primary wait-time estimand is the interaction alone. Both
+#    are now reported so the old figure remains comparable.
 
 # Set seed for reproducibility
 set.seed(42)
@@ -51,6 +66,7 @@ for (sd_val in sds_to_test) {
   for (n_pairs in ns_to_test) {
     n_physicians <- 2 * n_pairs
     significant_lrt_count <- 0
+    significant_int_count <- 0
     
     for (sim in 1:n_sims) {
       # Create dataset
@@ -84,28 +100,40 @@ for (sd_val in sds_to_test) {
       
       # Fit negative binomial models
       tryCatch({
-        fit_full <- glm.nb(wait_time ~ pe * insurance, data = sim_df)
-        fit_reduced <- glm.nb(wait_time ~ insurance, data = sim_df)
-        
-        # Likelihood Ratio Test (LRT)
+        fit_full <- glmmTMB(wait_time ~ pe * insurance + (1 | physician),
+                            family = nbinom2, data = sim_df)
+        fit_reduced <- glmmTMB(wait_time ~ insurance + (1 | physician),
+                               family = nbinom2, data = sim_df)
+
+        # PRIMARY: the interaction alone, which is the SAP's wait-time estimand.
+        co <- summary(fit_full)$coefficients$cond
+        p_int <- if ("pe:insurance" %in% rownames(co)) co["pe:insurance", "Pr(>|z|)"] else NA_real_
+        if (!is.na(p_int) && p_int < 0.05) {
+          significant_int_count <<- significant_int_count + 1
+        }
+
+        # SECONDARY: the 2-df joint test the previous version reported, kept for comparison.
         lrt <- anova(fit_reduced, fit_full)
-        p_val <- lrt$`Pr(Chi)`[2]
-        
+        p_val <- lrt$`Pr(>Chisq)`[2]
+
         if (!is.na(p_val) && p_val < 0.05) {
-          significant_lrt_count <- significant_lrt_count + 1
+          significant_lrt_count <<- significant_lrt_count + 1
         }
       }, error = function(e) {})
     }
     
-    power <- significant_lrt_count / n_sims
-    cat(paste("N Pairs:", n_pairs, "| Physicians:", n_physicians, "| Calls:", n_physicians * 2, "| Power:", round(power, 3), "\n"))
+    power <- significant_int_count / n_sims          # PRIMARY: interaction
+    power_joint <- significant_lrt_count / n_sims     # secondary: 2-df joint test
+    cat(sprintf("N Pairs: %d | Calls: %d | Power(interaction): %.3f | Power(joint 2df): %.3f\n",
+                n_pairs, n_physicians * 2, power, power_joint))
     
     results <- rbind(results, data.frame(
       SD = sd_val,
       Pairs = n_pairs,
       Physicians = n_physicians,
       Total_Calls = n_physicians * 2,
-      Power = power
+      Power = power,
+      Power_Joint_2df = power_joint
     ))
   }
 }

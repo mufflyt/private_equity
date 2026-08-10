@@ -117,3 +117,35 @@ test_that("adversarial: the power results artifact matches the grid the script d
   expect_equal(nrow(res), length(ns) * length(sds),
                info = "a stale results file would have a different number of rows than the grid")
 })
+
+test_that("the power simulation analyses with the model the SAP specifies", {
+  # Cycle 4 recorded that the simulation drew a per-physician random intercept then fitted
+  # glm.nb, which assumes independence. It now fits glmmTMB with (1 | physician).
+  src <- readLines(testthat::test_path("..", "..", "run_new_power_analysis.R"))
+  expect_true(any(grepl("glmmTMB(wait_time ~ pe * insurance + (1 | physician)", src, fixed = TRUE)),
+              info = "the simulation must analyse the clustering it generates")
+  expect_false(any(grepl("glm.nb(wait_time ~", src, fixed = TRUE)),
+               info = "no marginal fit may remain in the power simulation")
+})
+
+test_that("power is reported for the estimand the SAP names, not a joint test", {
+  # The old test compared `~ pe * insurance` against `~ insurance`, dropping the ownership
+  # main effect AND the interaction: a 2-df joint test of any ownership effect. The SAP's
+  # primary wait-time estimand is the interaction alone. Both are now reported.
+  res <- utils::read.csv(testthat::test_path("..", "..", "power_analysis_new_results.csv"))
+  expect_true(all(c("Power", "Power_Joint_2df") %in% names(res)))
+  expect_true(all(res$Power >= 0 & res$Power <= 1))
+  # The joint test pools two degrees of freedom and is easier to reject, so it must not be
+  # below the single-parameter test it contains.
+  expect_true(all(res$Power_Joint_2df >= res$Power - 1e-9),
+              info = "a 2-df joint test cannot have less power than the interaction alone")
+})
+
+test_that("power at the fielded design is reported honestly", {
+  res <- utils::read.csv(testthat::test_path("..", "..", "power_analysis_new_results.csv"))
+  row <- res[res$Pairs == 200 & res$SD == 10, ]
+  expect_equal(nrow(row), 1L)
+  expect_true(row$Power < 0.80,
+              info = sprintf("power for the primary wait-time estimand at 200 pairs is %.3f; any claim of 80%% must not rest on this grid",
+                             row$Power))
+})
