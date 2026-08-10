@@ -377,3 +377,75 @@ falls within its stated state.
 3. 142/200 fielded pairs exceed the 10-mile radius (this cycle)
 4. 3/5/10-mile calipers are degenerate (this cycle)
 5. sensitivity artifact not reproducible from coordinates (this cycle)
+
+---
+
+## Cycle 6 — 2026-08-09 23:3x — 3 BVA / 3 semantic / 4 adversarial
+
+**Targets.** The contract cycle 5 identified as missing: coordinate-to-state consistency.
+
+**Tests added** (`tests/testthat/test-coordinate-integrity.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | bounding boxes | a border point is accepted; a clearly-outside point is rejected |
+| 2 | BVA | coordinate granularity | coordinates are shared, so precision has a floor well above address level |
+| 3 | BVA | haversine | resolves separations below one mile |
+| 4 | semantic | cohort coordinates | every fielded clinician's coordinate lies inside their stated state |
+| 5 | semantic | state lookup | the abbreviation map is correct and has no shadowed duplicates |
+| 6 | semantic | `HQ_Distance_Miles` | non-negative and within CONUS scale |
+| 7 | adversarial | coordinates | one point is never shared across different states |
+| 8 | adversarial | `PE_Concentration_15mi` | count-like, never negative |
+| 9 | adversarial | SAP-revision truths | derived from cell constants, never typed literals |
+| 10 | adversarial | artifact agreement | fielded sheet and study database agree on state |
+
+**Failures: 3 new** (plus 4 carried).
+
+**(a) MY TEST BUG, THIRD OCCURRENCE — corrected.** `expect_lt` does not take an `info`
+argument, the same slip made in cycle 4 with `expect_lt`/`expect_gt`. Recording it as a
+pattern in my own test writing rather than a one-off: testthat's comparison expectations
+(`expect_lt`, `expect_gt`, `expect_lte`, `expect_gte`) accept no `info`; only
+`expect_true`/`expect_equal`-family do. Future cycles should use `expect_true(x < y, info=)`
+when a message is wanted.
+
+**(b) DECISIVE ROOT CAUSE — the geocoding is broken, not merely coarse. ESCALATED.**
+
+Cycle 5 inferred this from three extreme pairs. Measured directly against padded state
+bounding boxes for all 26 cohort states:
+
+> **380 of 400 fielded clinicians (95%) are geocoded outside the state they practise in.**
+
+Only 20 of 400 land in the right state. Example: a Michigan clinician at (39.147, -93.208),
+which is Missouri. Two coordinates are shared by clinicians in *different* states, the
+signature of a city-name lookup that is not honouring state.
+
+The 400 fielded clinicians resolve to 235 distinct points, so the data is city-level at
+best even where it is not simply wrong.
+
+**Consequence, restated with the measurement behind it.** Every distance-derived quantity in
+the study is unusable: the 10-mile caliper (cycle 5: 142/200 pairs exceed it), the
+geographic sensitivity analysis (cycle 5: vacuous, and its artifact reports 200 pairs where
+coordinates give 58), `HQ_Distance_Miles`, and `PE_Concentration_15mi`. The Methods sentence
+"matched within a strict 10-mile radius in the same state" is supported only in its
+same-state half, which cycle 5 verified holds at 200/200.
+
+**Passed and worth recording.** The state abbreviation lookup in
+`build_matched_control_group_psm.R` is correct: full-name to abbreviation, no duplicates,
+Pennsylvania to PA, Colorado to CO. So the defect is not in that mapping. `HQ_Distance_Miles`
+and `PE_Concentration_15mi` are within plausible ranges and non-negative, and the fielded
+sheet and study database agree on state for every clinician, which is why the same-state
+constraint survived while the distances did not. The defect therefore lies in the
+`city_state_to_lat_long` lookup from the `mysterycall` package or in how rows are joined to
+it, not in the abbreviation table or the state columns.
+
+**Suite status:** 168 pass, 6 fail, 0 warn, 0 skip. All six are preserved escalations:
+1. control-candidate coordinates missing (cycle 3)
+2. power simulation fits an independence model (cycle 4)
+3. 142/200 fielded pairs exceed the 10-mile radius (cycle 5)
+4. 3/5/10-mile calipers are degenerate (cycle 5)
+5. sensitivity artifact not reproducible from coordinates (cycle 5)
+6. 380/400 clinicians geocoded outside their state (this cycle)
+
+Items 3 to 6 are one defect with four symptoms. **Next cycle should test the
+`mysterycall::city_state_to_lat_long` join directly** to isolate whether the lookup data or
+the join key is at fault.
