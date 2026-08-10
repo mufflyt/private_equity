@@ -1430,3 +1430,68 @@ eligibility. `tests/testthat/test-platform-exclusion.R` now holds 21 passing ass
 pool at pair_457 and in the 300-pair sheet, so she could only enter through a de-duplication
 backfill. The guard prevents that on any future run. Re-running the whole pipeline to remove
 one clinician who is not currently fielded would churn the cohort for no gain.
+
+---
+
+## Cycle 19 — 2026-08-10 06:2x — 4 BVA / 3 semantic / 3 adversarial
+
+**Targets.** Provider-name and credential parsing, following the manual verification: the
+roster name "Cindy Joslyn, MD" contradicted her own CNM credential, and that appended "MD"
+is how she passed the MD/DO derivation. How far does that parsing failure extend?
+
+**Tests added** (`tests/testthat/test-name-credential-parsing.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | provider name | non-empty on every roster row |
+| 2 | BVA | name credentials | a non-physician-only name credential never reaches the cohort |
+| 3 | BVA | suffixes | a generational suffix is not absorbed into the credential token |
+| 4 | BVA | parsed names | first and last populated wherever a name exists |
+| 5 | semantic | credential conflict | a name claiming MD/DO never contradicts a mid-level credential |
+| 6 | semantic | board suffixes | FACOG and friends are not treated as conflicts |
+| 7 | semantic | parsing fidelity | the parsed surname appears in the source name |
+| 8 | adversarial | NPI format | the roster stores NPI without a float suffix |
+| 9 | adversarial | identity | no clinician appears twice under different NPIs |
+| 10 | adversarial | auditability | credential conflicts are bounded and enumerable |
+
+**4 failures, and the headline result is reassuring: the parsing failure is a singleton.**
+
+Of 1,537 roster rows, 961 carry a credential appended to the name and 724 have both that
+token and an NPPES credential. **216 look like conflicts, but almost all are board
+memberships**: MDFACOG against NPPES MD, DOFACOG against DO. Once those are stripped:
+
+> **Exactly one row claims a physician credential in the name against a non-physician
+> credential in NPPES: Cindy Joslyn, already excluded.**
+
+That bounds the defect the manual check uncovered. It is not a systemic parsing failure.
+
+**Three non-physician records exist in the roster and none reached the cohort.** Carli
+Chapman ELD (ABB) at Kindbody (embryology laboratory director), T.J. Maresca LCGC at Women's
+Care Enterprises (genetic counsellor), and Alissa Hosein LD (dietitian). **All three carry no
+NPI**, so the NPI-matching requirement excluded them before matching. Worth recording as a
+place where the pipeline's own guard did its job.
+
+**Real defects found:**
+
+1. **Generational suffixes are absorbed into the credential token.** "Name, Jr, MD" collapses
+   to `JRMD`, so the suffix and credential are no longer separable and the credential no
+   longer compares equal to NPPES. Two rows.
+2. **The roster stores NPI with a float suffix** (`1144280553.0`), a fresh instance of the
+   representation hazard first found in cycle 3. This is the upstream source, so it seeds
+   every consumer.
+
+**Two test premises of mine — corrected.**
+- Test 2 first enumerated a closed vocabulary of credential tokens and failed on legitimate
+  extra degrees (MDJD, MDMIGS, MDFPMRS, DOESQ, MDIBCLC). Enumerating every valid degree is
+  unbounded and was not the contract; rewritten to assert that a name claiming ONLY a
+  non-physician credential never carries an NPI.
+- Test 9 reported "3 names map to more than one NPI". They were a named clinician paired with
+  their own NPI-less row, which is one person. Corrected to exclude blank NPIs; **zero true
+  duplicates remain.**
+
+**Passed and worth recording.** Every roster row has a name; parsed first and last names are
+populated throughout; the parsed surname appears in the source name for more than 95% of
+rows; board suffixes correctly reduce 216 apparent conflicts to a handful; and no clinician
+appears under two NPIs.
+
+**Suite:** 409 pass, 67 fail, 0 warn, 0 skip.
