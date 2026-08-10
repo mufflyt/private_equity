@@ -696,3 +696,61 @@ control pool contains no PE clinicians; matching is seeded once before the offic
 no path depends on the working directory.
 
 **Suite status:** 250 pass, 9 fail, 0 warn, 0 skip.
+
+---
+
+## Cycle 10 — 2026-08-10 01:3x — 4 BVA / 3 semantic / 3 adversarial
+
+**Targets.** Cycle 9's lesson as a bug-class hunt: every site that recovers a value by NPI
+after the fact rather than recording it at the point of use.
+
+**Tests added** (`tests/testthat/test-key-joins.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | NPI form | exactly ten digits or absent, never partial |
+| 2 | BVA | empty key | the blank key is not equal to any real key |
+| 3 | BVA | enrichment | reaches every fielded clinician, not merely most |
+| 4 | BVA | `HQ_Distance_Miles` | zero is a real value, not a converted NA |
+| 5 | semantic | NPI-less rows | are not treated as one clinician by a keyed join |
+| 6 | semantic | fielded artifacts | contain no NPI-less clinician |
+| 7 | semantic | `distinct(NPI)` | safe only because real NPIs are unique; state the precondition |
+| 8 | adversarial | site inventory | every by-key recovery site stays inventoried |
+| 9 | adversarial | order independence | enrichment does not depend on source row order |
+| 10 | adversarial | `cross_reference_phones.py` | first-row-on-duplicate is detected, not silent |
+
+**All 10 pass. No new failures.**
+
+**Bug-class sweep result.** Seven sites recover a value by NPI after the fact:
+`apply_hq_distance.R:48`, `apply_demographic_covariates.R:55`,
+`calculate_cohort_churn.R:139`, `dedup_offices_and_backfill_200.R:75,77`,
+`cross_reference_phones.py:17,35`, plus the `iloc[0]` reads in `add_symmetric_backups.py`
+and `add_backup_physicians.py`.
+
+**Measured verdict: the pattern is currently safe, and the reason is worth recording.**
+Of 2,048 rows in the enriched study database, **1,790 carry a well-formed ten-digit NPI and
+none is duplicated**. The `distinct(NPI, .keep_all = TRUE)` pattern therefore has nothing to
+choose between. This is a precondition none of those seven sites states or checks; test 7
+now states it, so a future source with genuine duplicates fails loudly here instead of
+silently picking a row, which is exactly how the cycle-9 defect behaved.
+
+**CORRECTION TO MY OWN INTERIM CLAIM.** While inventorying I reported "257 duplicated NPIs".
+That was wrong. `sum(duplicated(k))` counted **258 rows that share a blank key**, not
+duplicated real NPIs. The distinct-duplicated-key count is 1, and it is the empty string.
+Real NPIs have zero duplication. Recorded because the erroneous figure briefly made a safe
+pattern look like an active defect.
+
+**LATENT DEFECT — the blank key joins to itself. Documented, not fixed.**
+258 PE-arm rows carry a provider name but no NPI, having failed NPPES matching. They all
+share the empty key, so any by-NPI join collapses them onto whichever blank-keyed row
+survives a `distinct()` step: 258 clinicians would receive one clinician's enrichment. That
+is 25% of the 1,033 PE generalists.
+
+It is latent rather than active because **nothing NPI-less is fielded** — all 400 fielded
+clinicians have well-formed distinct NPIs, asserted by test 6. Any future analysis over the
+full PE cohort rather than the fielded subset would hit it. Not fixed because the correct
+remedy is to exclude blank keys from these joins at each of seven sites, which touches
+enrichment values the current cohort depends on.
+
+**Suite status:** 272 pass, 9 fail, 0 warn, 0 skip. No change to the nine standing
+escalations; cycle 10 added no new ones.
