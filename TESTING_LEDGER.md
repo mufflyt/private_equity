@@ -1958,4 +1958,136 @@ matching-description decision from cycle 22 is settled, not piecemeal edits to i
 numbers. Correcting the pool size while leaving the exact-match and five-year-band claims
 standing would produce a document that is accurate in its arithmetic and wrong in its method.
 
-**Suite:** 498 pass, 86 fail, 0 warn, 0 skip.
+**Suite:** 505 pass, 87 fail, 0 warn, 0 skip. (Corrected: the line was first written before the run completed, the third such occurrence; the process fix adopted at cycle 8 was not followed here.)
+
+---
+
+# FINAL AUDIT — 2026-08-10
+
+## Scale
+
+**24 cycles completed.** 257 `test_that` blocks across 27 files, containing **592 assertions**.
+The prompt asked for 240 tests (10 per cycle); the surplus is the 17 assertions added
+out-of-band for the platform, NPI and activity-recency exclusions the user authorised.
+
+| Category | Tests |
+|---|---:|
+| BVA | 80 |
+| Semantic | 81 |
+| Adversarial | 81 |
+| Out-of-band eligibility contracts | 15 |
+
+## Final suite status
+
+**505 pass, 87 fail, 0 warnings, 0 skips.**
+
+- **Deterministic**: three consecutive runs gave identical counts.
+- **Order-independent**: running the files in reverse order gave identical counts (505/87).
+- **Reproducible in a fresh session**: the determinism and matching-invariant files pass
+  22/22 and 27/27 with an empty environment.
+- **No skipped tests.** Nothing was disabled to obtain green.
+
+## The 87 failures are 8 distinct assertions, not 87 problems
+
+All 87 failing expectations come from **8 test blocks**, every one an open finding awaiting a
+decision rather than a regression:
+
+| Location | Finding | Blocked on |
+|---|---|---|
+| `artifact-vintage:61,72,81` | Figure 1 says 544 pairs, Methods says 511, cohort has 459; 26 states vs 23 | manuscript revision |
+| `artifact-vintage:95,103` | analysis artifacts and figures predate the cohort by five weeks | regeneration after cohort is final |
+| `artifact-vintage:111` (×3) | Methods describes none of the three eligibility rules now in force | manuscript revision |
+| `cohort-definition:54,63` | STROBE internal counts, credential set | manuscript revision |
+
+Everything else that failed during the exercise has been fixed.
+
+## Defects discovered and fixed (13)
+
+| # | Defect | Cycle | Evidence |
+|---|---|---|---|
+| 1 | Suite regex stripped street names: FLAGLER, FLAMINGO, FLORIDA collapsed to one office key | 1 | fixed, word-anchored |
+| 2 | `set.seed` inside the office loop, so "random" selection was always the first-listed physician | 1 | fixed, seeded once |
+| 3 | Geocoding gazetteer silently emptied: state vocabulary mismatch dropped all 31,909 rows | 7 | fixed; caliper went 0 to 318 matches |
+| 4 | `get_coords` read `latitude`/`longitude` where the table has `lat`/`long` — masked by #3 | 7 | fixed |
+| 5 | No guard on the emptied gazetteer; the run reported success having matched almost nothing | 7 | fixed, `stop()` added |
+| 6 | Matcher discarded the coordinates its caliper used, making the geographic claim unauditable | 8 | fixed, persisted |
+| 7 | Control coordinates recovered by a non-unique key, so 19% were wrong | 9 | fixed, recorded at selection |
+| 8 | `Sys.Date()` drove the study year, so the cohort would change on 1 January | 3 | fixed, pinned |
+| 9 | Float NPI (`1003038688.0`) broke every raw join: 0 of 400 matched | 19 | fixed at source; now 400/400 |
+| 10 | `beta_scenario` declared and documented but never entered the linear predictor | 4 | fixed |
+| 11 | Random-intercept SD documented as "3 days" against code using 0.2 log units | 4 | fixed |
+| 12 | Run clock written into control rows, making the study database non-reproducible and asserting a scrape that never happened | 23 | fixed, sidecar |
+| 13 | Activity recency applied to one arm only, leaving 10 stale controls against 0 stale PE | out-of-band | fixed, symmetric |
+
+## Eligibility changes the user authorised (4)
+
+Platform exclusion (215 physicians, 140 offices across five fertility and hospitalist
+platforms); one individually verified CNM; activity recency (151 PE, 2,036 control
+candidates); exact gender matching (79 mismatched pairs to 0).
+
+## Unresolved — scientific decisions, not code defects (7)
+
+1. **The power analysis is anticonservative.** All four power scripts simulate a physician
+   random intercept then fit `glm.nb`, which assumes independence. The artifact claims 0.83
+   power at 200 pairs; a correctly specified GLMM gave 76.5%.
+2. **Three of four named matching constraints are not implemented.** Gender is now exact, but
+   the five-year band is not enforced (99 of 171 pairs exceed it, max 47 years) and credential
+   is not exact. Restating the Methods is the cheaper fix.
+3. **Balance fails on three covariates**: MD vs DO -0.316, Open Payments -0.181, Years in
+   Practice -0.128, against the conventional 0.10 threshold.
+4. **The REDCap instrument cannot reliably record its primary outcome**: `appdate` is neither
+   required nor conditionally shown, `physician_name` carries the only arm identifier and is
+   not required, and no field has branching logic.
+5. **The control arm is not independent private practice**: 86% of controls with a recorded
+   size belong to organisations larger than 10 clinicians, median 252, maximum 7,694.
+6. **Advantia Health** is traceable to neither the PitchBook universe nor the scrape stats.
+7. **Enrichment is 82% complete**; the CDC SVI adjuster in the SAP is missing for the controls
+   added by the redraws.
+
+## Test-quality review
+
+**Duplicates**: none. Each file targets a distinct subsystem; the closest pair
+(`coordinate-integrity` and `coordinate-provenance`) test different contracts, state
+membership versus which coordinate source was persisted.
+
+**Flaky**: none across three runs and a reverse-order run.
+
+**Order-dependent**: none.
+
+**Contradictory expectations**: one, resolved. `matching-provenance` originally asserted the
+raw NPI join matched *nothing*, pinning the float hazard. After the hazard was fixed at source
+the assertion was inverted to require the join to succeed. Pinning a defect is right while it
+stands; leaving the pin afterwards would be a test asserting brokenness.
+
+**Excessively implementation-specific**: five were found and rewritten to assert observable
+output instead of source text, after two of them broke when the implementation moved.
+
+**Tests of mine that passed while their target was broken — 5 occurrences.** Cycles 5, 13, 15,
+17 and 23. Four were unanchored or permissive patterns; the fifth (cycle 23) was worse, a test
+asking the wrong *kind* of question — it asserted seed placement, which is a proxy for
+reproducibility, when running the pipeline twice was the thing itself. Two guards now close
+the pattern mechanically: absence assertions must be anchored, and no assertion may be
+satisfiable by text adjacent to its target.
+
+**My own recurring process fault**: the ledger's suite line was written before the run
+completed three times (cycles 6, 8, 24), each corrected in place.
+
+## Most consequential defects
+
+1. **The geocoding chain (#3, #4, #5).** The 10-mile caliper never fired. The Methods' central
+   design claim was unimplemented, and the failure was invisible because the script reported
+   success. Fixing it took the caliper from 0 to 318 geographic matches.
+2. **Cohort eligibility.** 215 physicians at platforms that structurally cannot supply the
+   appointment being requested, plus one nurse midwife, would have been called and counted as
+   refusals.
+3. **The float NPI (#9).** A raw join between the two central artifacts matched nothing, and
+   the pipeline worked only because every consumer happened to normalise.
+4. **The power analysis.** The number justifying the sample size overstates power.
+
+## Files changed
+
+39 files across 32 commits on `adversarial-testing-loop`: 27 test files, `R/pe_helpers.R`,
+`tests/run_tests.R`, the ledger, and seven pipeline scripts
+(`build_matched_control_group_psm.R`, `match_all_providers.py`,
+`build_200_redcap_import.R`, `dedup_offices_and_backfill_200.R`,
+`run_new_power_analysis.R`, `dry_run_analysis.R`, `manuscript/manuscript_cite.md`).
