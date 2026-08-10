@@ -1228,3 +1228,67 @@ final audit must widen the category from "unanchored absence assertions" to "any
 whose pattern can be satisfied by text adjacent to the thing being tested".**
 
 **Suite:** 412 pass, 58 fail, 0 warn, 0 skip.
+
+---
+
+## Cycle 18 — 2026-08-10 05:3x — 3 BVA / 3 semantic / 4 adversarial
+
+**Targets.** The comparator. Cycle 17 tested the exposure; the Methods claims controls were
+"restricted to independent private practices (excluding academic and hospital-system
+settings)", which is the counterfactual the study rests on.
+
+**Tests added** (`tests/testthat/test-control-independence.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | organisation size | positive count with a floor of one |
+| 2 | BVA | provenance | every fielded control resolves in its source pool |
+| 3 | BVA | classifier | practice-setting categories assigned exhaustively |
+| 4 | semantic | independence | controls are independent private practices |
+| 5 | semantic | classifier | positively confirms private practice rather than failing open |
+| 6 | semantic | claim vs code | the exclusion the manuscript claims is the one implemented |
+| 7 | adversarial | unnamed facilities | not silently called independent |
+| 8 | adversarial | scale | no control inside a very large organisation |
+| 9 | adversarial | bug class | fail-open classifiers inventoried repo-wide |
+| 10 | adversarial | this suite | no assertion satisfiable by adjacent text |
+
+**6 failures. The control arm is not what the manuscript describes.**
+
+> **148 of the 172 fielded controls with a recorded organisation size (86%) belong to
+> organisations larger than 10 clinicians. Median 252. Maximum 7,694.**
+
+| Organisation size | Fielded controls |
+|---|---|
+| 1 to 10 | 24 |
+| 11 to 50 | 25 |
+| 51 to 500 | 72 |
+| 501 to 1,000 | 28 |
+| **over 1,000** | **23** |
+
+A 7,694-member organisation is a health system. Twenty-three controls sit in organisations
+with more than a thousand clinicians. "Independent private practice" does not describe this
+arm, and the comparison is therefore not PE-backed versus independent but PE-backed versus
+mostly-large-group.
+
+**Root cause: a third fail-open classifier.** `get_practice_setting()` in
+`export_control_candidates.py` returns `'Private Practice'` when the facility name is empty
+**and** again when it matches none of the academic, government or community keyword lists.
+Exclusion is by name keyword only; **organisation size is never tested**. **28 fielded
+controls have no facility name at all** and were admitted as independent by that default.
+
+*Bug class, now three sites:* subspecialty classifier (cycles 3 and 13, 56 victims),
+MD-vs-DO default (cycle 15), practice setting (here, 148+ victims). Every one defaults to
+the category that ADMITS a record. Test 9 keeps the inventory visible.
+
+**Passed and worth recording.** Organisation sizes are well-formed positive counts, every
+fielded control resolves in the candidate pool it was drawn from, and all four
+practice-setting categories are assigned somewhere in the code.
+
+**The widened false-negative guard works, and caught itself.** Test 10 extends cycle 16's
+guard from absence assertions to presence assertions whose pattern can be satisfied by
+adjacent text, the cycle-17 shape. On first run its only hit was the example
+`grepl("platform", ms)` inside its own explanatory comment. Corrected to skip comment lines,
+which is a scoping fix rather than a loosening: comments are prose, not assertions. No real
+offenders remain.
+
+**Suite:** 424 pass, 65 fail, 0 warn, 0 skip.
