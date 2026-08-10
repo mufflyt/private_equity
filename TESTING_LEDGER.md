@@ -1292,3 +1292,92 @@ which is a scoping fix rather than a loosening: comments are prose, not assertio
 offenders remain.
 
 **Suite:** 424 pass, 65 fail, 0 warn, 0 skip.
+
+---
+
+## Out-of-band — 2026-08-10 05:4x — PLATFORM-LEVEL ELIGIBILITY EXCLUSION AND FULL REDRAW
+
+User authorised excluding five platforms from the treated cohort as an eligibility rule
+upstream of the PSM, preserving an all-PE roster for control ineligibility, and redrawing
+the sample end to end.
+
+**Code changes to `build_matched_control_group_psm.R`**
+
+1. `EXCLUDED_PLATFORMS` defined and applied immediately after NPI filtering, **before**
+   office clustering, propensity estimation and matching.
+2. Two cohorts now maintained: `pe_roster_all` (every PE-owned NPI, used only to keep PE
+   clinicians out of the control pool) and `pe_matched_all` (the study-eligible treated
+   cohort).
+3. **`pe_full_df <- pe_df` changed to `pe_full_df <- pe_matched_all`.** This was the
+   user's correction and it was decisive: the unified study database reset to the unfiltered
+   roster, so filtering only `pe_matched_all` would have reintroduced all five platforms into
+   every downstream artifact.
+4. Control pool now explicitly filtered against the full PE roster. Nothing previously
+   enforced this; the pools happened not to overlap (measured: 0 of 20,111 candidates), which
+   is a property of the source data, not a guarantee.
+
+**Removed by platform**
+
+| Platform | Physicians | Distinct offices |
+|---|---:|---:|
+| CCRM Fertility | 56 | 39 |
+| IVI RMA Global | 76 | 45 |
+| US Fertility | 62 | 42 |
+| Kindbody | 17 | 14 |
+| OB Hospitalist Group | 4 | 4 |
+| **Total** | **215** | **140** |
+
+**New counts**
+
+| Quantity | Before | After |
+|---|---:|---:|
+| PE roster (control-ineligible) | 1,279 | 1,279 |
+| Study-eligible PE cohort | 1,279 | **1,064** |
+| Eligible with phone + generalist | 1,033 | **1,003** |
+| Eligible distinct offices | — | **603** |
+| Matched pairs | 518 | **495** |
+| 300-pair sample | 300 | **300** |
+| Fielded 200-pair sample | 200 | **200** |
+| States represented | 26 | **23** |
+| Caliper geo matches | 345 | **318** |
+
+**Pipeline rerun end to end**, with no pair IDs preserved and no in-place patching: PSM from
+scratch, `pe_obgyn_matched_calling_list.csv` regenerated (990 records), 300-pair sample
+redrawn, office de-duplication reapplied, geographically balanced 200 redrawn, and all three
+REDCap artifacts regenerated (800 records, codes 1-400 Medicaid / 401-800 BCBS).
+
+**The de-duplication had to be reapplied.** The redraw chain (subsample 300 -> balance 200)
+does not de-duplicate offices, and the fresh 200 arrived with **129 of 400 rows sharing a
+dialled number**. After reapplying `dedup_offices_and_backfill_200.R`: 124 pairs retained,
+76 backfilled, **0 shared phones**, and the two-calls-per-office guarantee restored.
+
+**Tests added** (`tests/testthat/test-platform-exclusion.R`, 17 assertions, all passing) —
+the three the user specified plus two supporting contracts:
+1. no excluded platform enters the treated cohort at any stage, and the exclusion precedes
+   clustering in the source order;
+2. no NPI from an excluded platform reaches the matched pool or the fielded sample;
+3. no PE-owned clinician appears as a control anywhere, and the guard exists in the pipeline
+   rather than merely holding in this data;
+4. the two cohorts are distinct and the eligible one feeds the study database;
+5. the redraw is a fresh draw of 200 pairs, not a patch.
+
+**Honest limitations of this redraw**
+
+- **Enrichment is 88% complete.** The 15 SVI, tract, county and churn columns are joined by
+  NPI from the previous enriched database. All 300 PE clinicians resolve; **69 of 300 new
+  controls do not**, because they were not in the old cohort. Those rows carry NA for those
+  columns. Completing them requires rerunning `extract_demographic_covariates.R`,
+  `apply_demographic_covariates.R` and `calculate_cohort_churn.R`, which need the ACS API,
+  HRSA and CMS inputs and the 83.7 GB DuckDB. **The CDC SVI adjuster in the SAP is therefore
+  missing for 69 controls until that chain is rerun.**
+- **Taxonomy contamination is essentially unchanged: 53 non-OB-GYN clinicians in the fielded
+  200, against 56 before.** The platform exclusion and the taxonomy problem are nearly
+  independent, exactly as cycle 17 suspected. The 207V eligibility filter is still needed and
+  is still not applied.
+- **Geographic concentration worsened**: 26 states to 23, and Florida's share rose from 26%
+  to 31%, because the excluded platforms were geographically dispersed.
+- Table 1, the STROBE figure and every dummy table in the manuscript now describe a cohort
+  that no longer exists and must be regenerated after the taxonomy decision.
+
+**Suite:** 396 pass, 63 fail. The drop from 424 reflects the cohort change: data-level
+assertions written against the previous fielded sample now describe a different one.

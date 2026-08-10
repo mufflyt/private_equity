@@ -25,7 +25,42 @@ calling_list_csv <- "/Users/tylermuffly/private_equity/pe_obgyn_matched_calling_
 
 # Load PE active cohort (check.names = FALSE to preserve spaces in headers)
 pe_df <- read.csv(pe_csv, stringsAsFactors = FALSE, na.strings = c("NA", "N/A", ""), check.names = FALSE)
-pe_matched_all <- pe_df[!is.na(pe_df$NPI), ]
+
+# ---------------------------------------------------------------------------------------
+# PLATFORM-LEVEL ELIGIBILITY EXCLUSION
+#
+# Five platforms cannot supply the appointment the study requests. The fielded vignette is
+# abnormal uterine bleeding, a generalist outpatient GYN visit. Four are fertility practices
+# (subspecialty referral settings) and one is an inpatient hospitalist group with no
+# outpatient clinic at all. A caller asking them for this appointment is told none exists,
+# which would enter the obtainment outcome as a refusal.
+#
+# This is an eligibility exclusion at the PLATFORM level, applied before office clustering,
+# propensity estimation and matching. A taxonomy filter cannot do this job: a physician at a
+# fertility platform can carry a generalist OB-GYN taxonomy and pass every subspecialty test.
+#
+# TWO COHORTS ARE MAINTAINED:
+#   pe_roster_all  every PE-owned NPI, including excluded platforms. Used ONLY to keep all
+#                  PE clinicians out of the control pool. Excluding a platform from the
+#                  treated arm must not make its clinicians eligible as "independent".
+#   pe_matched_all the study-eligible treated cohort, which feeds clustering, matching and
+#                  the unified study database.
+EXCLUDED_PLATFORMS <- c("CCRM Fertility", "IVI RMA Global", "US Fertility",
+                        "Kindbody", "OB Hospitalist Group")
+
+pe_roster_all <- pe_df[!is.na(pe_df$NPI), ]
+pe_matched_all <- pe_roster_all
+
+.plat <- trimws(ifelse(is.na(pe_matched_all[["Platform/Practice"]]), "",
+                       pe_matched_all[["Platform/Practice"]]))
+cat("\n=== Platform-level eligibility exclusion ===\n")
+for (px in EXCLUDED_PLATFORMS) {
+  n_phys <- sum(.plat == px)
+  cat(sprintf("  %-22s excluded: %4d physicians\n", px, n_phys))
+}
+pe_matched_all <- pe_matched_all[!(.plat %in% EXCLUDED_PLATFORMS), ]
+cat(sprintf("  PE roster (all, control-ineligible): %d | study-eligible after exclusion: %d\n",
+            nrow(pe_roster_all), nrow(pe_matched_all)))
 
 # Filter out PE providers with no valid phone numbers (Scraped, NPPES, or DAC)
 has_valid_phone <- function(row) {
@@ -73,6 +108,17 @@ candidates_df <- candidates_df[!is.na(candidates_df$Phone_formatted), ]
 candidates_df$Subspecialty_clean <- sapply(candidates_df$taxonomy, get_subspecialty_from_tax)
 candidates_df <- candidates_df[candidates_df$Subspecialty_clean == "Generalist", ]
 candidates_df$Subspecialty_clean <- NULL
+
+# Every PE-owned NPI is ineligible as a control, including clinicians at the five platforms
+# excluded from the treated arm above. Nothing previously enforced this; the pools happened
+# not to overlap, which is a property of the source data rather than a guarantee.
+.pe_all_npi <- sub("\\.0+$", "", trimws(as.character(pe_roster_all$NPI)))
+.cand_npi   <- sub("\\.0+$", "", trimws(as.character(candidates_df$npi)))
+.n_pe_in_ctl <- sum(.cand_npi %in% .pe_all_npi)
+if (.n_pe_in_ctl > 0) {
+  cat(sprintf("Removing %d PE-owned clinicians from the control candidate pool.\n", .n_pe_in_ctl))
+  candidates_df <- candidates_df[!(.cand_npi %in% .pe_all_npi), ]
+}
 
 cat(sprintf("Loaded %d Non-PE private practice control generalist candidates with valid phone numbers.\n", nrow(candidates_df)))
 
@@ -635,7 +681,10 @@ cat(sprintf("Matched calling list exported to: %s (%d records)\n", calling_list_
 # 8. Save unified study database files
 # In study database, we want to include the full integrated active PE cohort (1,537 rows)
 # and union it with the matched controls (778 rows) to ensure downstream regression scripts compile properly.
-pe_full_df <- pe_df
+# The unified study database must be built from the STUDY-ELIGIBLE cohort. Resetting this to
+# pe_df would reintroduce all five excluded platforms downstream, silently undoing the
+# eligibility exclusion for every artifact derived from this database.
+pe_full_df <- pe_matched_all
 pe_full_df$PE_or_Not <- "PE"
 
 # Map office_id and Matched_Pair_Group back to the full PE cohort

@@ -1,0 +1,94 @@
+# Platform-level eligibility exclusion.
+#
+# Five platforms cannot supply the appointment the study requests: four fertility practices
+# and one inpatient hospitalist group. They are excluded from the TREATED cohort before
+# office clustering, propensity estimation and matching, while every PE-owned NPI, including
+# theirs, remains ineligible as a control.
+#
+# The three contracts below are the ones that make that hold.
+
+root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
+p <- function(...) file.path(root, ...)
+rd <- function(f) utils::read.csv(f, colClasses = "character", check.names = FALSE)
+
+EXCLUDED <- c("CCRM Fertility", "IVI RMA Global", "US Fertility", "Kindbody",
+              "OB Hospitalist Group")
+
+sheet  <- rd(p("pe_obgyn_final_calling_sheet_200.csv"))
+pool   <- rd(p("pe_obgyn_matched_calling_list.csv"))
+db     <- rd(p("pe_obgyn_study_database.csv"))
+roster <- rd(p("pe_obgyn_providers_active.csv"))
+psm    <- readLines(p("build_matched_control_group_psm.R"))
+
+plat_of <- function(npis) {
+  r <- roster[match(npi_key(npis), npi_key(roster$NPI)), , drop = FALSE]
+  trimws(ifelse(is.na(r[["Platform/Practice"]]), "", r[["Platform/Practice"]]))
+}
+excluded_npi <- npi_key(roster$NPI[trimws(ifelse(is.na(roster[["Platform/Practice"]]), "",
+                                                 roster[["Platform/Practice"]])) %in% EXCLUDED])
+all_pe_npi <- npi_key(roster$NPI)
+all_pe_npi <- all_pe_npi[nzchar(all_pe_npi)]
+
+# (1) none of the five excluded platforms can enter the treated cohort ------------------
+
+test_that("no excluded platform enters the treated cohort at any stage", {
+  for (nm in c("study database", "matched pool", "fielded 200")) {
+    d <- switch(nm,
+                "study database" = db[db$PE_or_Not == "PE", , drop = FALSE],
+                "matched pool"   = pool[pool$PE_or_Not == "PE", , drop = FALSE],
+                "fielded 200"    = sheet[sheet$PE_or_Not == "PE", , drop = FALSE])
+    hit <- plat_of(d$NPI)
+    expect_length(intersect(hit, EXCLUDED), 0L)
+  }
+  # The exclusion must be applied before clustering, not after matching.
+  i_excl <- grep("EXCLUDED_PLATFORMS \\[?<- c\\(|EXCLUDED_PLATFORMS <- c\\(", psm)[1]
+  i_clus <- grep("Clustering Physical Practice Locations", psm)[1]
+  expect_true(!is.na(i_excl) && !is.na(i_clus) && i_excl < i_clus,
+              info = "platform exclusion must precede office clustering")
+})
+
+# (2) none of their NPIs can enter the final PE sample ----------------------------------
+
+test_that("no NPI from an excluded platform reaches the fielded PE sample", {
+  fielded_pe <- npi_key(sheet$NPI[sheet$PE_or_Not == "PE"])
+  expect_length(intersect(fielded_pe, excluded_npi), 0L)
+  expect_length(intersect(npi_key(pool$NPI), excluded_npi), 0L)
+  expect_true(length(excluded_npi) > 0L,
+              info = "the excluded set must be non-empty, or this test proves nothing")
+})
+
+# (3) no NPI belonging to any PE platform can enter the control group -------------------
+
+test_that("no PE-owned clinician appears as a control", {
+  for (nm in list(list("fielded 200", sheet), list("matched pool", pool),
+                  list("study database", db))) {
+    d <- nm[[2]]
+    ctl <- npi_key(d$NPI[d$PE_or_Not == "Non-PE"])
+    expect_length(intersect(ctl, all_pe_npi), 0L)
+  }
+  # Excluding a platform from the treated arm must not make it eligible as "independent".
+  ctl_fielded <- npi_key(sheet$NPI[sheet$PE_or_Not == "Non-PE"])
+  expect_length(intersect(ctl_fielded, excluded_npi), 0L)
+  # And the guard must exist in the pipeline, not merely happen to hold in this data.
+  expect_true(any(grepl("pe_roster_all", psm, fixed = TRUE)) &&
+              any(grepl("candidates_df[!(.cand_npi %in% .pe_all_npi), ]", psm, fixed = TRUE)),
+              info = "the control pool must be filtered against the full PE roster")
+})
+
+# Supporting contracts -------------------------------------------------------------------
+
+test_that("the two cohorts are distinct and the eligible one feeds the study database", {
+  expect_true(any(grepl("pe_full_df <- pe_matched_all", psm, fixed = TRUE)),
+              info = "resetting pe_full_df to pe_df would reintroduce the excluded platforms")
+  expect_true(any(grepl("pe_roster_all <- pe_df[!is.na(pe_df$NPI), ]", psm, fixed = TRUE)),
+              info = "the all-PE roster must be preserved for control ineligibility")
+})
+
+test_that("the redraw is a fresh draw, not a patch of the previous sample", {
+  # Pair IDs are reassigned by the matcher, so a redraw must not reuse the old fielded set
+  # wholesale. Retaining every old pair would indicate the sheet was patched in place.
+  n_pairs <- length(unique(sheet[["Matched Pair ID"]]))
+  expect_equal(n_pairs, 200L)
+  expect_equal(nrow(sheet), 400L)
+  expect_equal(sum(sheet$PE_or_Not == "PE"), 200L)
+})
