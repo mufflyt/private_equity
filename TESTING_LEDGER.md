@@ -449,3 +449,17 @@ it, not in the abbreviation table or the state columns.
 Items 3 to 6 are one defect with four symptoms. **Next cycle should test the
 `mysterycall::city_state_to_lat_long` join directly** to isolate whether the lookup data or
 the join key is at fault.
+
+**CORRECTION to the cycle 6 record above.** The suite line was written before the final
+run completed. Actual status is **167 pass, 7 fail**, not 168/6. The list of preserved
+escalations omitted one test from this cycle. The complete list of seven is:
+
+1. control-candidate coordinates missing (cycle 3)
+2. power simulation fits an independence model (cycle 4)
+3. 142/200 fielded pairs exceed the 10-mile radius (cycle 5)
+4. 3/5/10-mile calipers are degenerate (cycle 5)
+5. sensitivity artifact not reproducible from coordinates (cycle 5)
+6. 380/400 clinicians geocoded outside their state (cycle 6)
+7. **2 coordinates shared by clinicians in different states (cycle 6)** — omitted above
+
+Items 3 to 7 are one defect with five symptoms.
