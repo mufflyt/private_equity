@@ -816,3 +816,77 @@ and paste the current 800-line choices file into the Online Designer.
 
 **Suite status:** 292 pass, 20 fail, 0 warn, 0 skip. Nine standing escalations plus the
 eleven instrument findings above.
+
+---
+
+## Cycle 12 — 2026-08-10 02:3x — 3 BVA / 3 semantic / 4 adversarial
+
+**Targets.** Who is actually in the cohort, and the public-facing STROBE figure describing
+how they got there.
+
+**Tests added** (`tests/testthat/test-cohort-definition.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | STROBE funnel | never widens between stages |
+| 2 | BVA | STROBE annotations | equal the gaps they describe |
+| 3 | BVA | credentials | fall in the allowed physician set |
+| 4 | semantic | STROBE counts | match the artifacts they describe |
+| 5 | semantic | text vs figure | manuscript and Figure 1 agree on the matched pool |
+| 6 | semantic | cohort definition | no mid-level provider in a physician cohort |
+| 7 | adversarial | credentials | every fielded clinician has one recorded |
+| 8 | adversarial | subspecialty | fielded cohort is generalist OB-GYN only |
+| 9 | adversarial | matcher | the exclusion list is applied, not merely declared |
+| 10 | adversarial | caller sheet | export cannot mangle NPIs or phone numbers |
+
+**5 failures after correcting two of my own test premises.**
+
+**(a) A MID-LEVEL PROVIDER IS IN THE FIELDED COHORT. ESCALATED.**
+**Dr. Cindy Joslyn, CNM, Worcester MA, PE arm, pair_472** is scheduled to be called. The
+study is defined as OB-GYN physicians, matched on "MD vs. DO". Her record:
+
+| Field | Value |
+|---|---|
+| Provider Name | Cindy Joslyn, **MD** |
+| Input Credentials | **CNM** |
+| NPPES Credentials | **CNM** |
+| **MD vs. DO** | **MD** |
+| NPPES Taxonomy | **Midwife** |
+| Subspecialty | OB-GYN |
+
+Two independent defects let her through, and **both were already on the ledger as
+abstract risks**:
+
+1. *The fail-open subspecialty mapper* (cycle 3, finding 2). `get_subspecialty_from_tax()`
+   returns "Generalist" for any taxonomy it does not recognise. Taxonomy "Midwife" is not
+   one of the four subspecialty codes, so a midwife is classified a generalist OB-GYN.
+2. *The MD/DO derivation treats anything that is not DO as MD*
+   (`build_matched_control_group_psm.R:155`: `ifelse(grepl("DO", cred), "DO", "MD")`). A CNM
+   is therefore stamped MD and passes every physician filter downstream.
+
+`EXCLUDED_CREDENTIALS` in `match_all_providers.py` does list CNM and is referenced in four
+places, so the exclusion is implemented upstream; it is these two downstream derivations
+that readmit her. **Not fixed: removing a clinician changes the fielded sample.**
+
+**(b) 41 of 400 fielded clinicians have no credential recorded**, so MD/DO cannot be
+verified for 10% of the cohort, and Table 1's credential row cannot be complete.
+
+**(c) FIGURE 1 CONTRADICTS THE MANUSCRIPT TEXT. ESCALATED.**
+`strobe_diagram.R` states **544** matched pairs; the calling list holds **511** and the
+Methods now says 511. It also states 1,021 OB-GYN generalists where the matcher reports
+1,033. The figure is internally consistent (its exclusion annotations equal its own gaps)
+but describes a cohort that no longer exists. This is the 544-pair figure the user already
+flagged to the co-investigator as outdated; it is still in the figure source.
+
+**(d) TWO TEST PREMISES OF MINE — corrected.** The STROBE stage parser used the stage name
+as a regex, and "De-clustered (1/Office)" contains metacharacters, yielding NA; now matched
+with `fixed = TRUE`. And test 9 grepped for `MIDLEVEL` when the identifier is
+`EXCLUDED_CREDENTIALS`; corrected, and it passes.
+
+**Passed and worth recording.** The fielded cohort is Generalist-only by the Subspecialty
+column, the caller sheet export reads everything as character so NPIs and phones cannot be
+mangled, and the STROBE annotations are internally consistent.
+
+**Suite status:** see the line recorded from the run below.
+
+**Suite: pass=304  fail=25  warn=0  skip=0**
