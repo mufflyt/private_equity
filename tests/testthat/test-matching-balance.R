@@ -132,3 +132,25 @@ test_that("adversarial: balance is not an artefact of imputed covariate values",
               info = sprintf("matching imputes missing years and %d of %d fielded clinicians lack the value, undisclosed",
                              n_missing, nrow(sheet)))
 })
+
+test_that("the gender constraint binds in the candidate pool, not only in the score", {
+  # Enforced after cycle 22 found 79 of 200 pairs gender-mismatched while the marginal SMD
+  # read as well balanced. The constraint must sit where candidates are selected.
+  i0 <- grep("state_cands <- candidates_df\\[", psm)
+  expect_length(i0, 1L)
+  blk <- paste(psm[i0:(i0 + 2)], collapse = " ")
+  expect_true(grepl("Gender_clean == p_gender", blk, fixed = TRUE),
+              info = "the candidate pool must be restricted to the same gender")
+})
+
+test_that("tightening one covariate is not allowed to silently loosen another", {
+  # Constraining the pool on gender shrinks the candidate set, so the propensity match on the
+  # remaining covariates can only get harder. Record the cost rather than discover it later.
+  res <- c(`Years in Practice` = smd(sheet$yrs),
+           `Open Payments`     = smd(sheet$op),
+           `MD vs DO`          = smd(as.numeric(sheet$mdo == "MD")))
+  worst <- names(res)[which.max(abs(res))]
+  expect_true(abs(res[[worst]]) < 0.25,
+              info = sprintf("worst remaining covariate is %s at SMD %+.3f after the gender constraint",
+                             worst, res[[worst]]))
+})

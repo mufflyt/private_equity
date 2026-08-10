@@ -513,7 +513,19 @@ for (office in pe_unique_offices) {
     if (is.na(p_coords[1])) next # skip if coords missing
     
     # Get candidates in the same State
-    state_cands <- candidates_df[toupper(trimws(candidates_df$state)) == toupper(trimws(p_state)) & 
+    # EXACT GENDER MATCH. The Methods states clinicians were matched "on provider gender
+    # (exact match)". Gender previously entered only through the propensity score, which
+    # balances the marginal distribution but not the pairs: 79 of 200 fielded pairs had
+    # members of different gender while the marginal SMD was a well-balanced -0.011.
+    # Aggregate balance and pair-level matching are different properties, so the constraint
+    # is enforced here, in the candidate pool, where it can actually bind.
+    #
+    # Gender_clean defaults a missing value to "Female" (27 of 1,537 PE clinicians, none of
+    # the controls), so those clinicians are matched to women by that default rather than by
+    # an observation. Recorded rather than silently relied upon.
+    p_gender <- phys$Gender_clean
+    state_cands <- candidates_df[toupper(trimws(candidates_df$state)) == toupper(trimws(p_state)) &
+                                  candidates_df$Gender_clean == p_gender &
                                   !(candidates_df$npi %in% used_npis), ]
     if (nrow(state_cands) == 0) next
     

@@ -1795,3 +1795,56 @@ caliper. **Decision needed**, and it is the cheaper of the two.
 **Suite:** see the line recorded from the run below.
 
 **Suite: pass=465  fail=80  warn=0  skip=0**
+
+---
+
+## Out-of-band — 2026-08-10 09:1x — EXACT GENDER MATCHING ENFORCED
+
+User asked to balance gender. Cycle 22 had found that gender entered only through the
+propensity score, giving a well-balanced marginal SMD of -0.011 while **79 of 200 pairs had
+members of different gender**. The constraint is now enforced where it can bind: in the
+candidate pool, alongside the state and prior-use filters.
+
+**Result: gender is now exactly matched.**
+
+| | Before | After |
+|---|---:|---:|
+| Pairs with mismatched gender | **79 / 200** | **0 / 200** |
+| Female SMD | -0.011 | **+0.000** |
+| Female share, PE vs control | 66% vs 67% | **68% vs 68%** |
+
+**The cost, recorded rather than discovered later.** Constraining the pool shrinks the
+candidate set for every PE clinician, so the propensity match on the remaining covariates can
+only get harder. It did:
+
+| Covariate | Before | After |
+|---|---:|---:|
+| Female | -0.011 | **+0.000** |
+| Years in Practice | -0.122 | -0.128 |
+| Open Payments Years | -0.171 | -0.181 |
+| **MD vs DO** | **-0.235** | **-0.316** |
+| Matched pairs available | 470 | **459** |
+
+This is the standard matching trade-off, not a defect: exact matching on one covariate spends
+candidate supply that the score was using elsewhere. **MD vs DO is now the worst-balanced
+covariate at -0.316**, PE 85% MD against control 94% MD.
+
+**Gender_clean defaults a missing value to "Female"** (27 of 1,537 PE clinicians, none of the
+controls). Those clinicians are now matched to women by that default rather than by an
+observation. Recorded in the code comment rather than silently relied upon.
+
+Full chain regenerated: PSM, 300-pair, enrichment, de-duplication (135 retained, 65
+backfilled, 0 shared phones), 200-pair, all REDCap artifacts. 200 pairs across 23 states.
+
+**Two tests added**: the gender constraint must sit in the candidate pool rather than only in
+the score, and a guard that fails if tightening one covariate pushes another past |SMD| 0.25.
+
+**Open decision.** The Methods also claims credential matching and a five-year band on years
+in practice. Enforcing credential exactly would repeat this trade-off against a smaller pool
+again. The alternative remains restating the Methods to describe propensity-score matching
+within a 10-mile, same-state caliper with exact gender matching, which is now what the code
+does.
+
+**Suite:** see the line below.
+
+**Suite: pass=469  fail=79  warn=0  skip=0**
