@@ -961,3 +961,68 @@ the fielded sample, the matched pairs, and every downstream artifact. That is th
 call, and it compounds with the redraw decision already pending.
 
 **Suite:** 313 pass, 33 fail, 0 warn, 0 skip.
+
+---
+
+## Cycle 14 — 2026-08-10 03:3x — 3 BVA / 4 semantic / 3 adversarial
+
+**Targets.** Table 1, the baseline balance table: the first thing a reviewer reads and the
+evidence for the claim that propensity matching worked.
+
+**Tests added** (`tests/testthat/test-table1-balance.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | Table 1 counts | sum to the arm size |
+| 2 | BVA | Table 1 percentages | agree with its own counts |
+| 3 | BVA | dispersion | SDs positive, means plausible |
+| 4 | semantic | credentials | match the fielded cohort |
+| 5 | semantic | gender | matches the fielded cohort |
+| 6 | semantic | years in practice | matches the fielded cohort |
+| 7 | semantic | open payments | matches the fielded cohort |
+| 8 | adversarial | missingness | disclosed, not silently averaged over |
+| 9 | adversarial | imputation | a covariate imputed for matching is disclosed |
+| 10 | adversarial | provenance | Table 1 is generated, not typed |
+
+**11 failures. Table 1 does not describe the fielded cohort on any row.**
+
+| Row | Table 1 states | Cohort actually has |
+|---|---|---|
+| Independent MD | 187 (93.5%) | **182** |
+| Independent DO | 13 (6.5%) | **18** |
+| PE MD | 183 (91.5%) | **170** |
+| PE DO | 16 (8.0%) | **30** |
+| Independent female | 121 (60.5%) | **126** |
+| PE female | 137 (68.5%) | **138** |
+| PE years in practice | 23.0 | **21.9** |
+| Independent Open Payments | 6.7 | **6.2** |
+| PE Open Payments | 6.4 | **5.7** |
+
+Independent years in practice (24.6) is the only figure that matches. The credential rows
+are the largest divergence: the PE arm has nearly twice the DOs Table 1 reports. Note also
+that these cohort counts are computed from `MD vs. DO`, the derived column cycle 12 showed
+stamps a CNM as MD, so even the "correct" figures inherit that defect.
+
+**Undisclosed missingness.** 31 PE clinicians have no years in practice and 24 have no Open
+Payments years. Table 1 reports means with no denominators and the manuscript never mentions
+missingness, so a reader cannot tell the PE mean rests on 169 observations rather than 200.
+
+**Undisclosed imputation.** `build_matched_control_group_psm.R` replaces missing years with
+the cohort median before fitting the propensity model. Matching therefore used an imputed
+covariate for 31 PE clinicians, roughly 15% of the arm, and the Methods does not say so.
+
+**No script generates Table 1**, so its numbers cannot track the cohort and will drift again
+after any redraw. This is the mechanism behind every row above.
+
+**A TEST PREMISE OF MINE — corrected.** My parser looked for rows labelled `| - MD |`. The
+real rows are `| MD |`. The hyphenated form came from `manuscript_content.txt`, the stale
+scratch copy at the repo root that cycle 8 already flagged for deletion. I had read the wrong
+file. Corrected to parse `manuscript/manuscript_cite.md`, the README's stated source of
+truth.
+
+**Not fixed.** Correcting Table 1 means regenerating it from the cohort, which is worth doing
+only after the eligibility and redraw decisions land, since both change every number in it.
+
+**Suite:** recorded from the run below.
+
+**Suite: pass=333  fail=44  warn=0  skip=0**
