@@ -890,3 +890,74 @@ mangled, and the STROBE annotations are internally consistent.
 **Suite status:** see the line recorded from the run below.
 
 **Suite: pass=304  fail=25  warn=0  skip=0**
+
+---
+
+## Cycle 13 — 2026-08-10 03:0x — 4 BVA / 3 semantic / 3 adversarial
+
+**Targets.** Cycle 12's CNM traced to its source: the taxonomy behind the Subspecialty label.
+
+**Tests added** (`tests/testthat/test-taxonomy-eligibility.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | taxonomy values | every one is a well-formed CMS code |
+| 2 | BVA | prefix | the OB-GYN boundary is 207V, not 207 |
+| 3 | BVA | completeness | taxonomy present for every fielded clinician |
+| 4 | BVA | arms | exactly 200 per arm |
+| 5 | semantic | eligibility | every fielded clinician practises obstetrics and gynecology |
+| 6 | semantic | Subspecialty column | reflects the taxonomy it claims to summarise |
+| 7 | semantic | classifier | positively confirms OB-GYN rather than failing open |
+| 8 | adversarial | trainees | no student is fielded as a practising physician |
+| 9 | adversarial | non-physicians | no NP or midwife taxonomy is fielded |
+| 10 | adversarial | differential bias | contamination is not concentrated in one arm |
+
+**THE MOST CONSEQUENTIAL FINDING OF THE RUN. 8 failures, all real.**
+
+> **56 of 400 fielded clinicians (14%) do not have an OB-GYN taxonomy.**
+
+What is actually in the cohort Taylor is about to call:
+
+| Taxonomy | n | What it is |
+|---|---|---|
+| 390200000X | **13** | **Student in an organised health care training program** |
+| 174400000X | 10 | Specialist (unspecified) |
+| 208800000X | 5 | Urology |
+| 208000000X | 4 | Pediatrics |
+| 207P00000X | 3 | Emergency medicine |
+| "Obstetrics & Gynecology" | 3 | free text, not a code |
+| 207Q00000X | 2 | Family medicine |
+| 208600000X | 2 | Surgery |
+| 12 further codes | 1 each | dermatology, internal medicine, allergy, haematology-oncology, infectious disease, genetics, adolescent medicine, neurology, diagnostic radiology, colon and rectal surgery, **thoracic surgery**, obesity medicine |
+| 363LW0102X | 1 | **Nurse practitioner, women's health** |
+| Midwife | 1 | the CNM found in cycle 12 |
+
+A thoracic surgeon cannot offer a new-patient gynaecology appointment for abnormal uterine
+bleeding. Thirteen of the cohort are trainees. Two are non-physicians.
+
+**Root cause, and it was already on the ledger.** `get_subspecialty_from_tax()` tests for
+exactly four subspecialty codes and returns `"Generalist"` for everything else. There is no
+positive test that the taxonomy belongs to the 207V OB-GYN family. This is the fail-open
+classifier recorded as an abstract risk in cycle 3, finding 2. It has 56 victims, not the
+one found in cycle 12. The `Subspecialty` column consequently reads "Generalist" for all
+400, which is why no earlier check caught it: **cycle 12's test 8 asserted exactly that
+column and passed.**
+
+*Same bug class:* `build_matched_control_group_psm.R:10,16` and again at `:470,476`, and
+`add_backup_physicians.py:14,24`. Four sites, same fail-open shape.
+
+**Differential by arm: PE 32, control 24.** Contamination that differs between arms biases
+the comparison rather than merely adding noise.
+
+**A WEAK TEST OF MY OWN — strengthened.** Test 7 initially asserted `grepl("207V", blk)` and
+**passed**, because the four subspecialty codes in the function body begin with 207V. It
+would have certified a fail-open classifier as safe. Rewritten to require an explicit prefix
+test (`substr(...,1,4) == "207V"`, `grepl("^207V")`, or `startsWith`). This is the second
+time a test of mine passed while the defect it targeted was present (cycle 5's transposition
+test was the first); both are recorded so the final audit can look for more.
+
+**Not fixed.** Adding a positive 207V test removes 56 clinicians from the cohort and changes
+the fielded sample, the matched pairs, and every downstream artifact. That is the user's
+call, and it compounds with the redraw decision already pending.
+
+**Suite:** 313 pass, 33 fail, 0 warn, 0 skip.
