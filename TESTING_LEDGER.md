@@ -165,3 +165,64 @@ nothing live depends on it, but it cannot be regenerated until matching works.
 **BLOCKING QUESTION for the user:** where did the geocoded control candidates come from?
 Until that is answered the sample cannot be re-drawn, and the fielded 200 remains the
 one produced by the old, over-merging office key.
+
+---
+
+## Cycle 3 — 2026-08-09 22:0x — 3 BVA / 3 semantic / 4 adversarial
+
+**Targets.** Off today's code and into the matching/provenance layer, as cycle 2 directed.
+
+**Tests added** (`tests/testthat/test-matching-provenance.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `address_key` | an address that is only a designator must yield NA, not a shared empty key |
+| 2 | BVA | `address_key` | ZIP must be five *digits*; non-numeric rejected, leading zero preserved |
+| 3 | BVA | geocoding | within-city coordinate multiplicity has a real floor of 1 (the zero-distance case) |
+| 4 | semantic | geocoding vs Methods | a 10-mile caliper cannot discriminate when a city has one coordinate |
+| 5 | semantic | `get_subspecialty_from_tax` | unknown taxonomies fail open into the generalist cohort |
+| 6 | semantic | cohort integrity | no clinician appears in both ownership arms |
+| 7 | adversarial | pipeline determinism | results must not depend on the wall-clock year |
+| 8 | adversarial | input contract | control candidates must carry the coordinates matching requires |
+| 9 | adversarial | vintage | every fielded clinician resolves in the study database |
+| 10 | adversarial | manuscript | Table 4 stays consistent with Tables 2 and 3 |
+
+**Failures: 3.**
+
+**(a) REAL DEFECT — wall-clock dependence. FIXED.**
+`build_matched_control_group_psm.R:157` computed `study_year` from `Sys.Date()`. The cohort
+would therefore change on 1 January: years-in-practice imputation, and any matching that
+depends on it, drift with the calendar, so a re-run in a later year cannot reproduce the
+fielded sample. Pinned to `STUDY_YEAR <- 2026`, the year the cohort was built, which
+preserves current behaviour exactly while making future runs reproducible.
+*Same bug class search:* `Sys.Date()` appears in exactly one place repo-wide. The
+`Sys.time()` at line 452 records when a run happened and is legitimate provenance; the
+test was narrowed to that distinction rather than banning both.
+
+**(b) TEST PREMISE WRONG — corrected.**
+Test 9 asserted `sheet$NPI` appears in `db$NPI` raw. It does not: **0 of 400 match.** The
+study database was written by pandas with float NPIs (`1003038688.0`) while the calling
+sheets carry integers. Under `npi_key()` the match is **400 of 400**. The contract is
+clinician identity, so the test now normalises, and additionally pins the raw-join hazard
+(`expect_equal(sum(sheet$NPI %in% db$NPI), 0)`) so nobody joins on the bare column and
+silently gets an empty frame. This is the cycle-1 float-vs-int hazard surfacing in a
+second location.
+
+**(c) KNOWN BLOCKER — preserved failing, not weakened.**
+Test 8 fails: `control_candidates_raw.csv` has no latitude column, so the 10-mile caliper
+cannot fire. This is the reproducibility blocker from the out-of-band entry. Fixing it
+requires input data the repository does not contain, so the test is left red and clearly
+named rather than loosened. **This is the suite's only red test and is expected.**
+
+**Unresolved scientific findings (no code changed, decisions needed):**
+
+1. **Geocoding is city-centroid, not address-level.** Of 378 city/state groups in the study
+   database, **273 (72%) have every clinician at one identical coordinate** (Worcester MA:
+   all 34). For those, the "strict 10-mile radius" is arithmetically equivalent to
+   same-city matching. The Methods claim overstates the geographic precision actually
+   achieved. Wording should be corrected before submission.
+2. **The subspecialty filter fails open.** `get_subspecialty_from_tax()` returns
+   "Generalist" for any taxonomy it does not recognise, with no warning. Any new or
+   mistyped CMS subspecialty code enters the generalist cohort silently.
+
+**Suite status:** 98 pass, 1 fail (the preserved blocker), 0 warn, 0 skip.

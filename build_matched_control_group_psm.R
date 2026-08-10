@@ -154,7 +154,13 @@ pe_matched_all$MD_vs_DO <- ifelse(is.na(pe_matched_all[["MD vs. DO"]]), "MD", pe
 candidates_df$MD_vs_DO <- ifelse(is.na(candidates_df$cred), "MD", 
                                  ifelse(grepl("DO", toupper(candidates_df$cred)), "DO", "MD"))
 
-study_year <- as.numeric(format(Sys.Date(), "%Y"))
+# Pinned, not read from the clock. Deriving the study year from Sys.Date() means the
+# cohort silently changes on 1 January: years-in-practice imputation and any downstream
+# matching shift with wall-clock time, so a re-run in a later year cannot reproduce the
+# fielded sample. 2026 is the year the cohort was constructed, so pinning it preserves
+# current behaviour exactly while making the run reproducible from here on.
+STUDY_YEAR <- 2026
+study_year <- STUDY_YEAR
 pe_matched_all$Years_in_Practice <- as.numeric(pe_matched_all[["Years in Practice"]])
 pe_years_med <- median(pe_matched_all$Years_in_Practice, na.rm = TRUE)
 pe_matched_all$Years_in_Practice[is.na(pe_matched_all$Years_in_Practice)] <- pe_years_med
