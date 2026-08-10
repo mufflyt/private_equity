@@ -1495,3 +1495,54 @@ rows; board suffixes correctly reduce 216 apparent conflicts to a handful; and n
 appears under two NPIs.
 
 **Suite:** 409 pass, 67 fail, 0 warn, 0 skip.
+
+---
+
+## Out-of-band — 2026-08-10 06:5x — FLOAT NPI FIXED AT SOURCE
+
+The representation hazard first found in cycle 3 (`1003038688.0` vs `1003038688`) is
+repaired at its origin rather than worked around downstream.
+
+**Root cause.** `match_all_providers.py:528` did `int(float(x)) ... else None`. The value is
+correct, but a pandas column of integers containing `None` is promoted to `float64`, so
+`to_csv` writes `1003038688.0`. Every consumer then joins on a key that does not match the
+integer NPIs in the calling sheets: cycle 3 measured a raw join of the fielded sheet against
+the study database at **0 of 400 rows**.
+
+**Fix.** `df['NPI'] = df['NPI'].astype('Int64')` after the cast. Int64 is pandas' nullable
+integer type and writes the value with no decimal while preserving missingness.
+
+**Existing artifacts normalised**, with backups in `backups/npi_normalize_20260810_065x/`:
+
+| File | NPI values normalised |
+|---|---:|
+| pe_obgyn_providers_active.csv | 1,279 |
+| pe_obgyn_providers_npi.csv | 1,279 |
+| auto_not_in_gs_v2.csv | 749 |
+| auto_not_in_gs.csv | 427 |
+| gs_missing_with_npi.csv | 182 |
+| optimal_coverage_sample_100.csv | 100 |
+| new_physicians_with_npi.csv | 27 |
+| optimal_coverage_sample_72.csv | 72 |
+| strict_equal_sample_reduced.csv | 72 |
+
+Verified cell by cell against the backups: shape unchanged in every file and **zero non-NPI
+cells altered**.
+
+**Pipeline rerun.** The roster is the matcher's input, so the whole chain was regenerated:
+PSM, 300-pair sample, enrichment, office de-duplication, 200-pair sample and all REDCap
+artifacts. The Joslyn NPI exclusion also took effect on this run, so the matched pool moved
+from 495 to **494 pairs** and the fielded 200 was redrawn (134 retained, 66 backfilled,
+0 shared phones, 23 states).
+
+**Verification.** The raw join of the fielded sheet against the study database now matches
+**400 of 400**, against 0 before. No CSV in the repository retains a decimal NPI.
+
+**A test contract inverted, not weakened.** The cycle-3 test asserted
+`sum(sheet$NPI %in% db$NPI) == 0`, pinning the hazard so nobody joined on the bare column.
+That assertion described a defect that no longer exists, so it now asserts the opposite: the
+raw join must match every fielded clinician, and neither artifact may contain a decimal NPI.
+Pinning a defect is right while it stands; leaving the pin in place after the fix would be a
+test asserting brokenness.
+
+**Suite:** 413 pass, 65 fail, 0 warn, 0 skip.

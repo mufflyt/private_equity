@@ -102,15 +102,17 @@ test_that("adversarial: the control-candidate input carries the columns matching
 })
 
 test_that("adversarial: every fielded clinician exists in the study database", {
-  # Premise correction: the contract is clinician identity, which requires the key to be
-  # normalised. The raw columns disagree because the study database was written by pandas
-  # with a float NPI ("1003038688.0") while the calling sheets carry integers. Both facts
-  # are pinned: the semantic contract holds under npi_key, and the raw-join hazard is
-  # asserted so nobody joins on the bare column and silently gets an empty result.
+  # This test previously PINNED the float-vs-int hazard, asserting that a raw join matched
+  # nothing. The hazard has since been fixed at source: match_all_providers.py now casts NPI
+  # to pandas' nullable Int64 so it is written without a decimal, and the nine affected
+  # artifacts were normalised. The contract is therefore inverted: the raw join must now
+  # succeed, and normalising must remain a no-op rather than a repair.
   expect_length(setdiff(npi_key(sheet$NPI), npi_key(db$NPI)), 0L)
   expect_length(setdiff(sheet$`Matched Pair ID`, db$Matched_Pair_Group), 0L)
-  expect_equal(sum(sheet$NPI %in% db$NPI), 0L,
-               info = "raw join matches nothing; this is the float-vs-int hazard, not a coincidence")
+  expect_false(any(grepl(".", sheet$NPI, fixed = TRUE)))
+  expect_false(any(grepl(".", db$NPI, fixed = TRUE)))
+  expect_equal(sum(sheet$NPI %in% db$NPI), nrow(sheet),
+               info = "the raw join must now match every fielded clinician")
 })
 
 test_that("adversarial: manuscript Table 4 stays consistent with its own Tables 2 and 3", {
