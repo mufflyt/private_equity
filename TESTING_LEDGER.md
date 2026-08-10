@@ -300,3 +300,80 @@ cluster-robust standard errors) and restate the power figures in the manuscript.
 preserved escalations, not regressions:
 1. control-candidate coordinates missing (reproducibility blocker, cycle 3)
 2. power simulation fits an independence model (this cycle)
+
+---
+
+## Cycle 5 — 2026-08-09 23:0x — 3 BVA / 4 semantic / 3 adversarial
+
+**Targets.** The geographic matching constraint, the sensitivity analysis built on it, and
+the churn accounting.
+
+**Tests added** (`tests/testthat/test-geography-and-churn.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | haversine | zero at zero separation, symmetric, plausible magnitude |
+| 2 | BVA | churn loop | accounting starts at year two; denominator is prior-year staff |
+| 3 | BVA | calipers | membership is monotone in the radius |
+| 4 | semantic | fielded pairs | pairs satisfy the 10-mile radius the Methods asserts |
+| 5 | semantic | sensitivity | the 3/5/10-mile calipers are not degenerate |
+| 6 | semantic | churn labels | exits are departures, entries are arrivals, mean is of per-year rates |
+| 7 | semantic | manuscript | vignette and payer arms match the fielded design |
+| 8 | adversarial | coordinates | latitude/longitude are not transposed |
+| 9 | adversarial | sensitivity artifact | reproducible from the cohort coordinates |
+| 10 | adversarial | churn | a one-year office yields no fabricated churn; no-history is NA, not 0 |
+
+**Failures: 6** (4 new, 2 carried).
+
+**(a) TEST BUG — corrected.** My New York to Los Angeles reference was 2,451 mi; with
+r = 3959 and those coordinates it is 2,446. The contract is that the formula returns a
+plausible great-circle distance with arguments in the right order, so the assertion is now
+a band around the true value. Not a loosening: the original figure was simply wrong.
+
+**(b) ROOT-CAUSE DEFECT — the cohort coordinates are wrong. ESCALATED.**
+
+This is the most consequential finding so far and it explains cycle 3 as well.
+
+- **142 of 200 fielded pairs are more than 10 miles apart**, against a Methods claim of
+  matching "within a strict 10-mile radius". Maximum separation: **1,611 miles**.
+- Every pair that *is* within 10 miles sits at **exactly 0 miles**. There are no
+  intermediate distances at all: 58 pairs at 0, 142 above 10, nothing between.
+- The same-state constraint **did** hold: 200 of 200 pairs share a state.
+- Inspecting the extremes shows the coordinates are not merely coarse, they are wrong:
+
+  | Pair state | Coordinate A | Coordinate B | Separation |
+  |---|---|---|---|
+  | PA | (37.867, -104.920) = Colorado | (30.421, -78.102) = Atlantic Ocean | 1,611 mi |
+  | MN | (35.998, -75.117) = North Carolina | (31.949, -102.617) = West Texas | 1,595 mi |
+  | NJ | (34.043, -102.576) = Texas panhandle | (40.594, -74.622) = New Jersey | 1,594 mi |
+
+  A Pennsylvania clinician geocoded into Colorado is a lookup resolving on city name
+  without honouring the state.
+
+**What this invalidates.** Every distance-derived quantity: the 10-mile caliper, the
+geographic sensitivity analysis, `HQ_Distance_Miles`, and plausibly
+`PE_Concentration_15mi`. The matching was in practice same-state plus same-city-name, not
+a distance caliper, which is consistent with the re-run reporting `Caliper Geo Matches: 0`.
+
+**(c) REAL — the sensitivity analysis is vacuous. ESCALATED.**
+The same 58 pairs qualify at 3, 5 and 10 miles, so the analysis reports robustness to a
+radius it never varied. `geographic_sensitivity_results.csv` claims **200** pairs within 10
+miles where the cohort coordinates give **58**, and its 5-mile and 3-mile rows are
+byte-identical to each other. The artifact is not reproducible from the cohort.
+
+**Passed, and worth noting.** Churn accounting is sound: it starts at year two, uses
+prior-year staff as the denominator, computes `(joined + left) / baseline_staff`, averages
+per-year rates rather than summed counts, and distinguishes an observed zero from NA.
+Ownership arms, vignette and payer arms in the manuscript are consistent.
+
+**Weak test identified for cycle 6.** Test 8 (lat/lon not transposed) PASSED while the
+coordinates were badly wrong, because it only checked value ranges. The real contract is
+coordinate-to-state consistency. Cycle 6 should assert that each clinician's coordinate
+falls within its stated state.
+
+**Suite status:** 144 pass, 5 fail, 0 warn, 0 skip. All five are preserved escalations:
+1. control-candidate coordinates missing (cycle 3)
+2. power simulation fits an independence model (cycle 4)
+3. 142/200 fielded pairs exceed the 10-mile radius (this cycle)
+4. 3/5/10-mile calipers are degenerate (this cycle)
+5. sensitivity artifact not reproducible from coordinates (this cycle)
