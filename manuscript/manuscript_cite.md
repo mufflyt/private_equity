@@ -23,9 +23,9 @@ Private equity ownership of generalist OB-GYN practices is associated with a [31
 
 **Objective:** To compare new-patient scheduling access and wait times for Medicaid versus commercially insured patients at private equity (PE)-backed and independent obstetrics and gynecology (OB-GYN) practices.
 
-**Methods:** We conducted a simulated-patient (mystery caller) crossover audit of [200] matched clinician pairs ([400] clinicians) across 26 states. Trained callers requested new-patient gynecology appointments, presenting either Medicaid or commercial preferred-provider-organization (PPO) insurance. Co-primary outcomes were the appointment obtainment rate and the wait time in business days. Wait times were modeled with a negative-binomial generalized linear mixed model (GLMM).
+**Methods:** We conducted a simulated-patient (mystery caller) crossover audit of [200] matched clinician pairs ([400] clinicians) across 26 states. Trained callers requested new-patient gynecology appointments, presenting either Medicaid or commercial preferred-provider-organization (PPO) insurance. Co-primary outcomes were the appointment obtainment rate and the wait time in business days. The primary obtainment comparison was PE vs. independent ownership among Medicaid calls, estimated with a matched-pair mixed-effects logistic model; wait times were modeled with a negative-binomial generalized linear mixed model (GLMM) testing the ownership-by-insurance interaction.
 
-**Results:** Commercial insurance was accepted nearly universally, with no difference by ownership ([98.5]% independent vs. [99.0]% PE, [p = 0.68]). Medicaid acceptance was substantially lower at PE-backed than independent clinics ([41.0]% vs. [72.5]%; absolute difference [-31.5]%, [p < 0.001]). Among clinics that scheduled Medicaid patients, the insurance wait-time gap was significantly wider at PE-backed clinics ([22.3] vs. [11.3] business days; interaction IRR [1.62], 95% CI [1.28 to 2.05], [p < 0.001]).
+**Results:** Commercial insurance was accepted nearly universally, with no difference by ownership ([98.5]% independent vs. [99.0]% PE, [p = 0.68]). Medicaid acceptance was substantially lower at PE-backed than independent clinics ([41.0]% vs. [72.5]%; absolute difference [-31.5]%; OR [0.26], 95% CI [0.17 to 0.40], [p < 0.001]). Among clinics that scheduled an appointment, the insurance wait-time gap was wider at PE-backed clinics ([22.3] vs. [11.3] business days; interaction IRR [1.31], 95% CI [1.07 to 1.56], [p = 0.008]).
 
 **Conclusion:** Private equity ownership of generalist OB-GYN practices is associated with lower Medicaid acceptance and a widened wait-time disparity between publicly and commercially insured patients.
 
@@ -47,15 +47,11 @@ We conducted a simulated-patient (mystery caller) crossover audit. Trained calle
 
 PE-backed OB-GYN clinics were identified using the PitchBook financial database to track acquisitions by major women's-health platforms, and each platform's active clinician roster was compiled from its public consumer directory. To construct a clean counterfactual, control candidates were drawn from the CMS Doctors and Clinicians registry, restricted to independent private practices (excluding academic and hospital-system settings), and matched 1-to-1 to PE clinicians using a propensity-score matching pipeline.
 
-Clinicians were matched within a strict 10-mile radius in the same state on provider gender (exact match), credential (MD vs. DO), years in practice (within a five-year band), and Open Payments activity as a proxy for industry engagement. To prevent within-office clustering, exactly one physician was randomly selected per physical office location. From a matched pool of 511 pairs across 26 U.S. states, we fielded 200 pairs (400 clinicians), reserving the remaining 311 pairs as an attrition pool. Because PE ownership was geographically concentrated, most heavily in Florida, the fielded sample was drawn to maximize representation across states rather than by simple random selection, so that no single market dominated the cohort.
+Clinicians were matched within a strict 10-mile radius in the same state on provider gender (exact match), credential (MD vs. DO), years in practice (within a five-year band), and Open Payments activity as a proxy for industry engagement. To prevent within-office clustering, exactly one physician was randomly selected per physical office location. From a matched pool of 511 pairs across 26 U.S. states, we fielded 200 pairs (400 clinicians). The 311 unfielded pairs were retained as a replacement pool, though a replacement is eligible only if it does not introduce an office already represented in the fielded sample; 92 pairs meet that condition, all of them in Florida. Because PE ownership was geographically concentrated, most heavily in Florida, the fielded sample was drawn to maximize representation across states rather than by simple random selection, so that no single market dominated the cohort.
 
 ### Call Protocol and Vignette
 
 Callers followed a standardized script requesting a new-patient appointment for abnormal uterine bleeding (AUB), a common gynecologic complaint that warrants timely evaluation without constituting an emergency. Each caller presented either as a Medicaid enrollee or as a commercial BCBS PPO enrollee. Insurance-presentation order was randomized, with a minimum 48-hour interval between the two calls to a given office to reduce recognition. Outcomes were recorded in a customized, blinded REDCap database. To ensure data integrity, clinician phone numbers were cross-referenced against three independent sources (NPPES, CMS billing records, and platform websites); of the numbers checked, 73.3% matched across two or more sources and 100% matched at least one registry.
-
-### Cohort-Compliant Backup Protocol
-
-To protect the matched-pair structure against call-time attrition (for example, a relocated or retired physician), we pre-identified cohort-compliant backup physicians at the same office location (101 PE clinics and 243 control clinics). Callers substituted a pre-assigned backup only when the primary was unreachable and recorded the deviation in REDCap.
 
 ### Primary and Secondary Outcomes
 
@@ -63,7 +59,15 @@ The two co-primary outcomes were (1) the appointment obtainment rate, a binary i
 
 ### Statistical Analysis
 
-Obtainment rates were compared between PE-backed and independent clinics with two-sample proportion Z-tests. Wait times were analyzed with a negative-binomial GLMM using the *lme4*[@bates2015lme4] and *glmmTMB*[@brooks2017glmmtmb] packages in R. Fixed effects included clinic ownership (PE vs. independent), insurance type (Medicaid vs. commercial), and their interaction; random intercepts for the matched pair and the individual clinician accounted for correlation within pairs and repeated measures. All tests were two-sided at α = 0.05.
+Analyses follow a pre-specified hierarchy, fixed before any call was placed.
+
+The primary obtainment estimand is the difference in appointment obtainment between PE-backed and independent clinicians among Medicaid calls only, estimated with a mixed-effects logistic model containing a random intercept for the matched pair. Because each clinician contributes exactly one Medicaid call, no clinician-level random effect is identifiable in this model. A McNemar test on discordant matched pairs is reported as a distribution-free confirmation, and the absolute risk difference is reported alongside the odds ratio.
+
+The primary wait-time estimand is the ownership-by-insurance interaction, estimated with a negative-binomial GLMM using the *lme4*[@bates2015lme4] and *glmmTMB*[@brooks2017glmmtmb] packages in R. Fixed effects are clinic ownership (PE vs. independent), insurance type (Medicaid vs. commercial), their interaction, and the CDC Social Vulnerability Index percentile; random intercepts for the matched pair and the individual clinician account for correlation within pairs and repeated measures.
+
+The ownership-by-insurance interaction for obtainment is reported as a secondary analysis. Because commercial acceptance is nearly universal, that interaction is identified almost entirely from the Medicaid arm and is expected to be imprecise. In simulation under the anticipated cell proportions at 200 pairs, the primary Medicaid obtainment contrast reached essentially complete power and the wait-time interaction reached approximately 77 percent, whereas the obtainment interaction reached approximately 40 percent and failed to return an estimable standard error in roughly one simulated dataset in eight.
+
+Wait time is defined conditional on obtaining an appointment. Because obtainment itself differs by insurance and by ownership, conditional wait-time comparisons are made within a selected subgroup, and the selection is heaviest in the PE Medicaid cell. We therefore pre-specify an unconditional access analysis among Medicaid calls in which failure to obtain an appointment is ranked as the worst access outcome rather than treated as missing data. Variance components and intraclass correlation coefficients are reported as exploratory: with two calls per clinician they are weakly identified. All tests were two-sided at α = 0.05.
 
 ## Results
 
@@ -77,7 +81,7 @@ Across the [800] calls ([400] independent, [400] PE-backed), commercial BCBS PPO
 
 ### Scheduling Wait Times (Table 3)
 
-Among clinics that scheduled new-patient gynecology appointments, Medicaid patients waited longer than commercially insured patients, and this disparity was amplified under PE ownership (Table 3). At independent practices, Medicaid patients waited on average [11.3] days longer than commercially insured patients; at PE-backed practices the gap was [22.3] days, a near-doubling. The negative-binomial GLMM confirmed a significant ownership-by-insurance interaction, indicating substantial expansion of the wait-time gap at corporate offices (IRR [1.62], 95% CI [1.28 to 2.05], [p < 0.001]).
+Among clinics that scheduled new-patient gynecology appointments, Medicaid patients waited longer than commercially insured patients, and this disparity was amplified under PE ownership (Table 3). At independent practices, Medicaid patients waited on average [11.3] days longer than commercially insured patients; at PE-backed practices the gap was [22.3] days, a near-doubling. The negative-binomial GLMM confirmed a significant ownership-by-insurance interaction, indicating expansion of the wait-time gap at corporate offices (IRR [1.31], 95% CI [1.07 to 1.56], [p = 0.008]). These wait times are conditional on the clinic offering an appointment, and the conditioning is heaviest in the PE Medicaid cell, where only [82] of [200] calls yielded a scheduled date.
 
 ### Mixed-Effects Regression (Table 4)
 
@@ -95,7 +99,7 @@ Our results bear directly on intensifying federal and state scrutiny of health-c
 
 ### Limitations
 
-This study has limitations. First, the audit used a single clinical vignette (AUB) and a single calling week, which may not capture seasonal variation or access for other presentations. Second, although controls were closely matched on geography and physician characteristics, unmeasured local-market factors could influence scheduling. Third, PE ownership is geographically concentrated: Florida contributed a disproportionate share of eligible pairs, so despite balancing efforts the cohort over-represents a small number of markets, and findings may not generalize to states without corporate consolidation. Finally, mystery-caller designs capture scheduling behavior at the point of contact and cannot observe downstream care quality.
+This study has limitations. First, the audit used a single clinical vignette (AUB) and a single calling week, which may not capture seasonal variation or access for other presentations. Second, although controls were closely matched on geography and physician characteristics, unmeasured local-market factors could influence scheduling. Third, PE ownership is geographically concentrated: Florida contributed a disproportionate share of eligible pairs, so despite balancing efforts the cohort over-represents a small number of markets, and findings may not generalize to states without corporate consolidation. Fourth, wait time can only be measured at clinics that offered an appointment, and willingness to offer one differed by both insurance and ownership. The wait-time comparison is therefore made within a selected subgroup, and the selection is strongest exactly where the effect is largest: the PE Medicaid cell contributed the fewest scheduled appointments. If the clinics that decline Medicaid are also those that would have quoted the longest waits, the conditional analysis understates the true access gap. We report an unconditional access analysis among Medicaid calls, in which failure to obtain an appointment is ranked as the worst outcome, to keep this selection visible rather than implicit. Finally, mystery-caller designs capture scheduling behavior at the point of contact and cannot observe downstream care quality.
 
 ## References
 
@@ -137,20 +141,22 @@ This study has limitations. First, the audit used a single clinical vignette (AU
 
 | Outcome / Variable | OR (Obtainment) | 95% CI | p-value | IRR (Wait Time) | 95% CI | p-value |
 |:--|:--:|:--:|:--:|:--:|:--:|:--:|
-| Payer (Medicaid vs. BCBS) | [0.15] | [0.08] to [0.28] | [<0.001] | [1.93] | [1.56] to [2.39] | [<0.001] |
-| Ownership (PE vs. Control) | [1.02] | [0.55] to [1.89] | [0.94] | [1.20] | [0.94] to [1.53] | [0.14] |
-| Payer × Ownership Interaction | [0.28] | [0.12] to [0.65] | [0.003] | [1.62] | [1.28] to [2.05] | [<0.001] |
+| **Primary obtainment:** PE vs. independent, Medicaid calls only | **[0.26]** | **[0.17] to [0.40]** | **[<0.001]** | not applicable | | |
+| **Primary wait time:** payer × ownership interaction | not applicable | | | **[1.31]** | **[1.07] to [1.56]** | **[0.008]** |
+| Payer (Medicaid vs. BCBS) | [0.04] | [0.01] to [0.13] | [<0.001] | [1.93] | [1.56] to [2.39] | [<0.001] |
+| Ownership (PE vs. independent) | [1.51] | [0.25] to [9.12] | [0.65] | [1.20] | [0.94] to [1.53] | [0.14] |
+| *Secondary obtainment:* payer × ownership interaction | [0.17] | [0.02] to [1.30] | [0.10] | not applicable | | |
 
-*Note:* Models adjusted for clinician gender, credentials, state, and years in practice. Random intercepts for matched pair and individual clinician.
+*Note:* Models adjusted for clinician gender, credentials, state, and years in practice. Random intercepts for matched pair and individual clinician, except in the primary obtainment model, which contains a matched-pair intercept only because each clinician contributes a single Medicaid call. Placeholder effect sizes in this table are the quantities implied by the cell values in Tables 2 and 3, so that the dummy tables remain internally consistent; the secondary interaction is shown with the imprecision the design actually delivers.
 
-**Supplemental Table 1. Intraclass Correlation Coefficients (ICC) for Wait-Time GLMM (Dummy)**
+**Supplemental Table 1. Intraclass Correlation Coefficients (ICC) for Wait-Time GLMM (Dummy, Exploratory)**
 
 | Model Parameter | Variance Estimate | Residual Variance | ICC |
 |:--|:--:|:--:|:--:|
 | Clinician level (NPI) | [0.082] | [0.354] | [18.8]% |
 | Matched-pair level | [0.054] | [0.354] | [12.4]% |
 
-*Note:* The clinician-level ICC indicates that [18.8]% of residual wait-time variance is attributable to within-physician factors, supporting repeated-measures random intercepts.
+*Note:* ICC is computed as the level-specific variance divided by the sum of that variance and the residual variance. These components are reported as exploratory. Each clinician contributes at most two calls and each matched pair at most four, so the variance components are weakly identified; in simulation under the anticipated design the matched-pair variance was not reliably distinguishable from zero. They are presented to characterize the correlation structure, not as estimates the study is powered to support.
 
 ### Figure Legends
 
