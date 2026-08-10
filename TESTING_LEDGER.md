@@ -1546,3 +1546,62 @@ Pinning a defect is right while it stands; leaving the pin in place after the fi
 test asserting brokenness.
 
 **Suite:** 413 pass, 65 fail, 0 warn, 0 skip.
+
+---
+
+## Cycle 20 — 2026-08-10 07:0x — 3 BVA / 4 semantic / 3 adversarial
+
+**Targets.** The definition of the PE universe: the PitchBook keyword filter that decides
+which companies count as private-equity-owned OB-GYN. It sits upstream of the roster, the
+cohort, the exposure variable and every result, and had not been tested.
+
+**Tests added** (`tests/testthat/test-pe-universe.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | keyword patterns | word-anchored where ambiguity would bite |
+| 2 | BVA | universe | non-empty subset of what it filtered |
+| 3 | BVA | company records | every filtered company carries a name |
+| 4 | semantic | traceability | every fielded platform traces to the PitchBook universe |
+| 5 | semantic | coherence | the exposure universe and the eligibility rule do not contradict |
+| 6 | semantic | filter scope | searches relevant fields, not every cell |
+| 7 | semantic | exclusion | excluded platforms absent from the cohort but retained in the roster |
+| 8 | adversarial | precision | no filtered company is a pure keyword coincidence |
+| 9 | adversarial | deal records | carry a date and a type |
+| 10 | adversarial | claim vs code | the manuscript's identification claim matches the implementation |
+
+**4 failures.**
+
+**(a) One fielded platform is not traceable to PitchBook.** **Advantia Health** appears in
+neither the filtered company list nor the deal list, matched against both by normalised name.
+It accounts for **19 clinicians in the eligible cohort and 6 in the fielded 200**. The Methods
+states PE clinics "were identified using the PitchBook financial database to track
+acquisitions by major women's-health platforms". Advantia's PE status therefore rests on a
+source that is not documented and not in the repository. The other seven platforms trace
+cleanly.
+
+**(b) The exposure universe is defined around a segment the study excludes.** The keyword list
+deliberately includes `\bfertility\b` and `\bivf\b`, and **42 of 72 companies (58%)** in the
+resulting universe name fertility or IVF. Those platforms are then removed at the eligibility
+step because they cannot supply a generalist GYN visit. Building the universe around
+fertility and then discarding it is a contradiction that belongs in one place or the other:
+either the keyword list should not target fertility, or the eligibility rule should be stated
+as part of the universe definition.
+
+**(c) The filter matches any cell in any column.** `df.map(matches_keywords).any(axis=1)`
+admits a company if a keyword appears anywhere in the row, including the investor's name or a
+free-text description. A generalist healthcare fund whose blurb mentions women's health
+enters the OB-GYN universe. The precision test partly reassures here: **more than 90% of
+filtered company names carry an OB-GYN term themselves**, so the loose scope has not done
+much damage in practice, but nothing prevents it.
+
+**(d) The Methods does not mention fertility** although fertility dominates the search
+universe. "Acquisitions by major women's-health platforms" understates what was actually
+searched.
+
+**Passed and worth recording.** Keywords are word-anchored where it matters; the filtered
+universe is a proper subset; every company carries a name; deal records carry dates and types;
+excluded platforms are absent from the cohort while retained in the roster, which is both
+halves of the eligibility contract holding simultaneously.
+
+**Suite:** 429 pass, 69 fail, 0 warn, 0 skip.
