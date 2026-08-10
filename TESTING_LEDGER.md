@@ -635,3 +635,64 @@ The nine standing failures are:
 
 Items 3 to 7 describe the **current fielded cohort**, which cycle 7 showed was built with a
 non-functioning geocoder. They are evidence for adopting the redraw, not open code defects.
+
+---
+
+## Cycle 9 — 2026-08-10 01:0x — 3 BVA / 3 semantic / 4 adversarial
+
+**Targets.** The matcher's own guarantees: propensity model, caliper boundary, control reuse,
+determinism. Suite status below was read from the run output, per the cycle-8 process fix.
+
+**Tests added** (`tests/testthat/test-matching-invariants.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | caliper | strict `< 10`; a pair at exactly 10.0 is excluded |
+| 2 | BVA | candidate pool | a match needs at least two nearby candidates, never one |
+| 3 | BVA | propensity | scores are probabilities (binomial family, response scale) |
+| 4 | semantic | matching paths | there is ONE path and it enforces the caliper |
+| 5 | semantic | propensity model | uses the covariates the Methods claims, and no outcome-adjacent terms |
+| 6 | semantic | pair invariant | every matched pair honours the caliper on the matcher's coordinates |
+| 7 | adversarial | control reuse | a control is never reused across pairs |
+| 8 | adversarial | pool separation | the control pool cannot contain PE clinicians |
+| 9 | adversarial | RNG | matching is seeded once, so a rerun is reproducible |
+| 10 | adversarial | environment | no dependence on the caller's working directory |
+
+**CORRECTION TO CYCLE 8.** Cycle 8 recorded a "city-name fallback that bypasses the caliper",
+holding it responsible for 95 pairs beyond 10 miles. **There is no such path.** Line 411
+computes `close_indices <- which(dists < 10)` and everything downstream sits inside that
+branch; `city_match_count` and `caliper_geo_match_count` merely label whether the selected
+control happened to share the PE clinic's city. Both are within the caliper. The escalation
+is withdrawn.
+
+**(a) REAL DEFECT, INTRODUCED BY ME IN CYCLE 8. FIXED.**
+The 95 over-caliper pairs were an artefact of my own coordinate export. It recovered control
+coordinates by looking up NPI in `candidates_df` after `!duplicated()`. **NPI is not unique
+in the candidate pool** (one clinician appears at several addresses), so the lookup returned
+an arbitrary row's coordinates. Measured: PE coordinates agreed with the gazetteer for their
+own city **100%** of the time, controls only **81%** — exactly the 19% that appeared to
+violate the caliper.
+
+Fixed by recording `Matcher_Latitude`/`Matcher_Longitude` from `crow`, the candidate row the
+matcher actually selected, at the point of selection, and attaching the PE side before column
+alignment. Coverage improved from 1,384/2,055 to **1,405/2,055, including all 518 controls**
+(was 497). The pair invariant now **passes: every matched pair is within 10 miles on the
+matcher's own coordinates.**
+
+*Lesson recorded:* recovering a value by key after the fact is not equivalent to recording it
+at the point of use when the key is not unique. Worth checking elsewhere in this pipeline.
+
+**(b) TWO TEST PREMISES OF MINE — corrected.** One asserted that no `matched_control <- `
+assignment precedes the caliper, which caught the loop's `NULL` initialisation; narrowed to
+non-NULL assignments. The other, for the second time in this file, asserted source text
+(`Latitude *=`) and broke when the implementation moved. Both now assert observable output.
+Standing lesson: prefer artifact assertions to source-text assertions wherever an artifact
+exists.
+
+**Passed and worth recording.** The propensity model uses exactly the four covariates the
+Methods claims (MD/DO, gender, years in practice, Open Payments) with no outcome-adjacent or
+geographic terms; it is binomial on the response scale; controls are never reused; the
+control pool contains no PE clinicians; matching is seeded once before the office loop; and
+no path depends on the working directory.
+
+**Suite status:** 250 pass, 9 fail, 0 warn, 0 skip.

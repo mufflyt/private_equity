@@ -482,6 +482,9 @@ current_time <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
 for (i in 1:nrow(controls_matched_df)) {
   crow <- controls_matched_df[i, ]
+  # Coordinates of the exact candidate row the matcher selected, not a later NPI lookup.
+  ctrl_lat <- if ("latitude"  %in% names(crow)) crow$latitude[1]  else NA_real_
+  ctrl_lon <- if ("longitude" %in% names(crow)) crow$longitude[1] else NA_real_
   cnpi <- as.numeric(crow$npi)
   first <- TitleCase(trimws(crow$first_name))
   last <- TitleCase(trimws(crow$last_name))
@@ -576,7 +579,13 @@ for (i in 1:nrow(controls_matched_df)) {
     "DAC Zip" = clean_zip,
     "DAC Phone" = formatted_phone,
     "PE_or_Not" = "Non-PE",
-    "office_id" = control_office_id
+    "office_id" = control_office_id,
+    # Carry the coordinates of the control row the matcher actually selected. NPI is not
+    # unique in the candidate pool (one clinician can appear at several addresses), so
+    # recovering coordinates later by NPI picks an arbitrary row and was wrong for 19% of
+    # controls, making matched pairs appear to violate a caliper the matcher had enforced.
+    "Matcher_Latitude"  = ctrl_lat,
+    "Matcher_Longitude" = ctrl_lon
   )
   control_records[[i]] <- as.data.frame(rec, check.names = FALSE, stringsAsFactors = FALSE)
   start_id <- start_id + 1
@@ -647,6 +656,13 @@ pe_full_df$Matched_Pair_Group[is.na(pe_full_df$Matched_Pair_Group)] <- "N/A"
 # First standardise colnames in control_df to match pe_full_df
 control_df$Matched_Pair_Group <- control_df$Matched_Pair_Group
 # Make sure control_df has the same columns as pe_full_df, fill missing with N/A
+# Attach the PE side's matcher coordinates before column alignment, so that both arms carry
+# Matcher_Latitude/Longitude and the alignment below preserves the control values already
+# recorded from the selected candidate row.
+pe_coord_idx <- match(pe_full_df$NPI, pe_matched_all$NPI)
+pe_full_df$Matcher_Latitude  <- pe_matched_all$latitude[pe_coord_idx]
+pe_full_df$Matcher_Longitude <- pe_matched_all$longitude[pe_coord_idx]
+
 missing_cols <- setdiff(colnames(pe_full_df), colnames(control_df))
 for (c in missing_cols) {
   control_df[[c]] <- "N/A"
@@ -661,19 +677,10 @@ combined_study_df <- rbind(pe_full_df, control_df)
 # downstream came from apply_hq_distance.R / calculate_pair_distances.R instead. Any audit
 # of the 10-mile constraint was therefore measuring a different coordinate source than the
 # one matching used. Writing them here makes the two the same by construction.
-coord_src <- rbind(
-  data.frame(NPI = pe_matched_all$NPI,   Latitude = pe_matched_all$latitude,
-             Longitude = pe_matched_all$longitude, stringsAsFactors = FALSE),
-  data.frame(NPI = if ("NPI" %in% names(candidates_df)) candidates_df$NPI else candidates_df$npi,
-             Latitude = candidates_df$latitude,
-             Longitude = candidates_df$longitude, stringsAsFactors = FALSE)
-)
-coord_src <- coord_src[!duplicated(coord_src$NPI), ]
-idx <- match(combined_study_df$NPI, coord_src$NPI)
-combined_study_df$Matcher_Latitude  <- coord_src$Latitude[idx]
-combined_study_df$Matcher_Longitude <- coord_src$Longitude[idx]
-cat(sprintf("Persisted matcher coordinates for %d of %d records.\n",
-            sum(!is.na(combined_study_df$Matcher_Latitude)), nrow(combined_study_df)))
+cat(sprintf("Persisted matcher coordinates for %d of %d records (PE %d, control %d).\n",
+            sum(!is.na(combined_study_df$Matcher_Latitude)), nrow(combined_study_df),
+            sum(!is.na(combined_study_df$Matcher_Latitude) & combined_study_df$PE_or_Not != "Non-PE"),
+            sum(!is.na(combined_study_df$Matcher_Latitude) & combined_study_df$PE_or_Not == "Non-PE")))
 
 write.csv(combined_study_df, study_output_csv, row.names = FALSE)
 cat(sprintf("Unified study database exported to: %s (%d records)\n", study_output_csv, nrow(combined_study_df)))

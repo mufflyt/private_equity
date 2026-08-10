@@ -52,10 +52,14 @@ test_that("semantic: the matcher persists the coordinates its caliper relied on"
   # The caliper is the study's central geographic claim. If the coordinates behind it are
   # never written out, no downstream consumer, reviewer or test can verify the claim, and
   # any audit silently measures some other source instead. That is exactly what happened.
-  writes_coords <- any(grepl("Latitude *=|latitude *=", psm)) &&
-                   any(grepl("study_output_csv", psm))
-  expect_true(writes_coords,
-              info = "PSM computes latitude/longitude for matching but exports neither")
+  # Second premise correction in this file: matching on source text kept breaking as the
+  # implementation moved. Assert the observable contract instead, on the artifact.
+  skip_if_not(has_cand, "no redraw candidate present")
+  new <- rd(file.path(cand_dir, "pe_obgyn_study_database.csv"))
+  expect_true(all(c("Matcher_Latitude", "Matcher_Longitude") %in% names(new)))
+  lat <- suppressWarnings(as.numeric(new$Matcher_Latitude))
+  expect_true(sum(!is.na(lat)) > nrow(new) / 2,
+              info = "the matcher must export coordinates for the majority of the cohort")
 })
 
 test_that("semantic: the persisted coordinates come from the matcher, not a later step", {
