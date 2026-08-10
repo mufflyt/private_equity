@@ -605,7 +605,13 @@ get_subspecialty_from_tax <- function(tax) {
 
 control_records <- list()
 start_id <- 2001
-current_time <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+# Control records are drawn from the CMS Doctors and Clinicians registry, not scraped from a
+# platform directory, so they have no scrape time. Stamping them with the run clock both
+# mislabels their provenance and makes the study database non-reproducible: two identical
+# runs differed in exactly the 459 control rows. The run timestamp belongs in a sidecar,
+# not in a data column, so the artifact is byte-identical across runs.
+current_time <- NA_character_
+run_stamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
 for (i in 1:nrow(controls_matched_df)) {
   crow <- controls_matched_df[i, ]
@@ -813,6 +819,9 @@ cat(sprintf("Persisted matcher coordinates for %d of %d records (PE %d, control 
             sum(!is.na(combined_study_df$Matcher_Latitude) & combined_study_df$PE_or_Not == "Non-PE")))
 
 write.csv(combined_study_df, study_output_csv, row.names = FALSE)
+writeLines(sprintf("study_database_generated_at: %s\nrows: %d\nmatched_pairs: %d",
+                   run_stamp, nrow(combined_study_df), nrow(controls_matched_df)),
+           file.path(dirname(study_output_csv), "pe_obgyn_study_database.provenance.txt"))
 cat(sprintf("Unified study database exported to: %s (%d records)\n", study_output_csv, nrow(combined_study_df)))
 
 write.csv(control_df, control_output_csv, row.names = FALSE)

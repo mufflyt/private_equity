@@ -1848,3 +1848,61 @@ does.
 **Suite:** see the line below.
 
 **Suite: pass=469  fail=79  warn=0  skip=0**
+
+---
+
+## Cycle 23 — 2026-08-10 09:4x — 3 BVA / 4 semantic / 3 adversarial
+
+**Targets.** Reproducibility, tested empirically rather than by inspection. Cycles 1 and 9
+asserted seed *placement* in source; nothing had ever run the pipeline twice and compared the
+output.
+
+**Tests added** (`tests/testthat/test-pipeline-determinism.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | every stage | fixes a seed |
+| 2 | BVA | seeds | resolve to literals, not the environment |
+| 3 | BVA | pair identifiers | contiguous from one |
+| 4 | semantic | data columns | none records when the script ran |
+| 5 | semantic | control rows | carry no scrape time, having never been scraped |
+| 6 | semantic | PE rows | retain their genuine scrape time |
+| 7 | semantic | provenance | recorded in a sidecar, not in the data |
+| 8 | adversarial | seeding order | no stage reseeds after sampling begins |
+| 9 | adversarial | inputs | the pipeline declares every file it reads |
+| 10 | adversarial | artifacts | agree with each other after a rerun |
+
+**A real defect, found only by running the pipeline twice.**
+
+Two consecutive runs of identical code produced an **identical matched calling list** but a
+**different study database**. The difference was confined to one column:
+
+> **`Scrape Run Time` differed in exactly 459 rows — the number of matched controls.**
+
+`current_time <- format(Sys.time(), ...)` was written into every control record's
+`Scrape Run Time`. Two defects in one line:
+
+1. **Non-determinism.** The study database changed on every run, so byte comparison, caching
+   and any checksum-based provenance were all defeated. Cycle 9's test asserted the matcher is
+   seeded once and passed; seeding was never the problem.
+2. **Mislabelled provenance.** Controls come from the CMS Doctors and Clinicians registry and
+   were never scraped from anything. Stamping them with the run clock asserts a scrape that
+   did not happen, in a column cycle 21 had already used to reason about roster currency.
+
+**Fix.** `current_time <- NA_character_` for controls, and the run timestamp moved to a
+sidecar, `pe_obgyn_study_database.provenance.txt`, carrying the generation time, row count and
+matched-pair count. Verified: two further consecutive runs now produce a **byte-identical**
+study database, and the 300-pair sheet, REDCap import and choices file are byte-identical
+across a rerun of the whole downstream chain.
+
+**A test premise of mine — corrected.** Test 2 required `set.seed(<digits>)` and failed on
+`set.seed(SEED)` where `SEED <- 1978L`. A named constant bound to a literal is better practice
+than an inline number, not worse. Rewritten to resolve the argument to its binding, while
+still rejecting any seed derived from the clock.
+
+**Passed and worth recording.** All three stages seed their RNG, none reseeds after sampling
+begins, pair identifiers are contiguous, every input path is declared, and the fielded
+artifacts agree with each other after a rerun: 800 records, 800 choice lines, and the choices
+file's NPI set exactly equals the fielded sheet's.
+
+**Suite:** 491 pass, 79 fail, 0 warn, 0 skip.
