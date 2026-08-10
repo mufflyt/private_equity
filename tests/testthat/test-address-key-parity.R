@@ -23,7 +23,7 @@ test_that("adversarial: PSM seeds its office sampling once, not per iteration", 
   brace <- cumsum(lengths(regmatches(inside, gregexpr("\\{", inside)))) -
            cumsum(lengths(regmatches(inside, gregexpr("\\}", inside))))
   body_end <- which(brace == 0L)[1]
-  expect_false(any(grepl("set\\.seed", inside[seq_len(body_end)])),
+  expect_false(any(grepl("set.seed", inside[seq_len(body_end)], fixed = TRUE)),
                info = "re-seeding inside the loop makes every office draw the same permutation")
   expect_true(any(grepl("set\\.seed", src[seq_len(loop_start - 1L)])),
               info = "the stream must still be seeded for reproducibility")

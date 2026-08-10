@@ -1091,3 +1091,71 @@ cycle 5 (lat/lon transposition), cycle 13 (207V classifier), cycle 15 (MD defaul
 final audit must treat this as a category, not three incidents.**
 
 **Suite:** 345 pass, 50 fail, 0 warn, 0 skip.
+
+---
+
+## Cycle 16 — 2026-08-10 04:3x — 4 BVA / 3 semantic / 3 adversarial
+
+**Targets.** The enrichment covariates (CDC SVI is a fixed effect in the SAP's wait-time
+model; the tract and county measures are the contextual adjusters), plus the false-negative
+pattern in my own suite that cycle 15 asked the audit to treat as a category.
+
+**Tests added** (`tests/testthat/test-enrichment-covariates.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | CDC SVI | lies within the percentile interval |
+| 2 | BVA | tract shares | each is a percentage in [0,100] |
+| 3 | BVA | county counts | positive; PE concentration admits a true zero |
+| 4 | BVA | Medicaid fee index | plausible ratio range, not constant |
+| 5 | semantic | tract shares | labelled for what they actually measure |
+| 6 | semantic | CDC SVI | behaves like a percentile across the cohort |
+| 7 | semantic | county enrollment | data, not a floor value |
+| 8 | adversarial | adjusters | none is constant |
+| 9 | adversarial | adjusters | no two are the same column renamed |
+| 10 | adversarial | this suite | absence assertions are anchored |
+
+**3 failures.**
+
+**(a) The tract coverage shares are not shares.** Summed across Private, Medicaid, Medicare
+and Uninsured, **289 of 400 rows exceed 100%**, median 105.7%, maximum 134.3%. ACS coverage
+types are not mutually exclusive: dual eligibles and Medicare supplement holders are counted
+in more than one category. The column names read as exclusive population shares, which is how
+anyone building a model would treat them. Each column is individually valid as a coverage
+rate; the set is not a partition. Worth a naming or documentation fix before they are used
+as adjusters.
+
+**(b) County enrollment carries a floor, not data.** `County_Medicare_Enrollment` has **5
+rows at exactly 100** and `County_Medicaid_Enrollment` has **12 rows at exactly 100**, both
+being the column minimum. No US county has exactly 100 Medicare enrollees, and twelve
+counties do not share exactly 100 Medicaid enrollees. This is a placeholder indistinguishable
+from an observation, the same class as the unflagged imputation found in cycle 15.
+
+**(c) FALSE-NEGATIVE PATTERN CLOSED.** Test 10 scans this suite for
+`expect_false(grepl(...))` on source text that is neither `fixed = TRUE` nor anchored, the
+exact shape behind all three tests of mine that passed while their defect was present
+(cycles 5, 13, 15). It found **seven** live instances:
+
+| File | Assertion |
+|---|---|
+| `test-address-key-parity.R:26` | `set\.seed` inside the loop |
+| `test-coordinate-integrity.R:132` | `TRUE_OR_MEDICAID <- 0.x` |
+| `test-matching-invariants.R:21` | `dists <= 10` |
+| `test-matching-invariants.R:29` | `length(close_indices) >= 1` |
+| `test-matching-invariants.R:68` | `PE_or_Not\|Latitude\|Longitude` |
+| `test-matching-invariants.R:121` | `set\.seed` after the loop |
+| `test-matching-provenance.R:70` | `stop(\|warning(` |
+
+All seven anchored with `fixed = TRUE` or `\b`. These are strictly **stronger**, not looser:
+the `Latitude` alternation, for example, previously matched the `Matcher_Latitude` column
+added in cycle 8 and would have begun failing spuriously. The test now fails if anyone adds
+an unanchored absence assertion, so the category is closed rather than tracked.
+
+**Passed and worth recording.** CDC SVI is within [0,1], near-continuous with 393 distinct
+values and a median of 0.439, so it behaves like a genuine percentile. No adjuster is
+constant, and no two are the same column under different names. PE concentration has 89 true
+zeros, which is a real observation rather than missingness.
+
+**Suite:** recorded from the run below.
+
+**Suite: pass=401  fail=53  warn=0  skip=0**

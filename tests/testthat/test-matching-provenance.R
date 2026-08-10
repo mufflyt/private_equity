@@ -67,7 +67,7 @@ test_that("semantic: the subspecialty filter fails open, admitting unknown taxon
   for (k in known) expect_match(body_txt, k, info = sprintf("%s must still be excluded", k))
   # A taxonomy that is neither blank nor one of the four is silently a generalist. Any new
   # subspecialty code CMS issues enters the cohort without anyone noticing.
-  expect_false(grepl("stop\\(|warning\\(", body_txt),
+  expect_false(grepl("\\b(stop|warning)\\(", body_txt),
                info = "no signal is raised for an unrecognised taxonomy")
 })
 

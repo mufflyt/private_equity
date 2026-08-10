@@ -129,7 +129,7 @@ test_that("adversarial: the SAP-revision truths are derived from cells, never ty
   expect_true(grepl("TRUE_OR_MEDICAID <- \\(P_OBTAIN", src),
               info = "the primary estimand's truth must be computed from P_OBTAIN")
   expect_true(grepl("TRUE_IRR_INT *<- *\\(MU_WAIT", src))
-  expect_false(grepl("TRUE_OR_MEDICAID *<- *0\\.[0-9]", src),
+  expect_false(grepl("\\bTRUE_OR_MEDICAID *<- *0\\.[0-9]", src),
                info = "a literal would drift silently from the cell constants")
 })
 

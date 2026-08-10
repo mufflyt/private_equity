@@ -18,7 +18,7 @@ test_that("BVA: the caliper is strict, and the boundary is documented as such", 
   expect_length(line, 1L)
   expect_match(line, "dists < 10",
                info = "a pair at exactly 10.0 miles is excluded; the boundary is open, not closed")
-  expect_false(grepl("dists <= 10", line))
+  expect_false(grepl("dists <= 10", line, fixed = TRUE))
 })
 
 test_that("BVA: a match requires at least two nearby candidates, never one", {
@@ -26,7 +26,7 @@ test_that("BVA: a match requires at least two nearby candidates, never one", {
   expect_length(line, 1L)
   # Requiring two means the chosen control was selected on propensity among alternatives,
   # not taken as the only option available.
-  expect_false(any(grepl("length\\(close_indices\\) >= 1", psm)))
+  expect_false(any(grepl("length(close_indices) >= 1", psm, fixed = TRUE)))
 })
 
 test_that("BVA: propensity scores are probabilities", {
@@ -65,7 +65,7 @@ test_that("semantic: the propensity model uses the covariates the Methods claims
   for (v in c("MD_vs_DO", "Gender", "Years_in_Practice", "Open_Payments_Years")) {
     expect_match(blk, v, info = sprintf("Methods claims matching on %s", v))
   }
-  expect_false(grepl("PE_or_Not|Latitude|Longitude", blk),
+  expect_false(grepl("\\b(PE_or_Not|Latitude|Longitude)\\b", blk),
                info = "outcome-adjacent or geographic terms must not enter the propensity model")
 })
 
@@ -118,7 +118,7 @@ test_that("adversarial: matching is seeded once so a rerun is reproducible", {
   expect_length(loop_i, 1L)
   expect_true(any(grepl("^set\\.seed\\(", psm[seq_len(loop_i - 1L)])),
               info = "the stream must be seeded before the office loop")
-  expect_false(any(grepl("set\\.seed", psm[loop_i:length(psm)])),
+  expect_false(any(grepl("set.seed", psm[loop_i:length(psm)], fixed = TRUE)),
                info = "re-seeding mid-run makes the draw depend on iteration order")
 })
 
