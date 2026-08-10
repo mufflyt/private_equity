@@ -266,10 +266,29 @@ names(full_to_abbrev) <- c('Alabama', 'Alaska', 'Arizona', 'Arkansas', 'Californ
   'Washington', 'West Virginia', 'Wisconsin', 'Wyoming',
   'Puerto Rico', 'Virgin Islands')
 
-lat_long_ref$state_abbrev <- full_to_abbrev[lat_long_ref$state]
+# city_state_to_lat_long$state already holds two-letter abbreviations ("AL", "AZ"), but
+# full_to_abbrev is keyed by full state names ("Alabama"). Mapping one through the other
+# returned NA for all 31,909 rows, and the !is.na() filter below then emptied the entire
+# gazetteer. get_coords() consequently fell through to the 17-entry manual_coords list and
+# returned NA for every other city, which is why matching reported "Caliper Geo Matches: 0"
+# and produced 2 pairs instead of 511. Accept either vocabulary.
+lat_long_ref$state_abbrev <- ifelse(
+  nchar(trimws(lat_long_ref$state)) == 2L,
+  toupper(trimws(lat_long_ref$state)),
+  full_to_abbrev[lat_long_ref$state]
+)
 lat_long_ref$city_upper <- toupper(trimws(lat_long_ref$city))
 lat_long_ref$state_upper <- toupper(trimws(lat_long_ref$state_abbrev))
 lat_long_ref <- lat_long_ref[!is.na(lat_long_ref$state_upper), ]
+
+# Fail loudly if the gazetteer has been emptied. This filter previously removed all
+# 31,909 rows and the script carried on, geocoding everything to NA and reporting a
+# successful matching run that had in fact matched almost nothing.
+if (nrow(lat_long_ref) == 0L) {
+  stop("Geocoding gazetteer is empty after state normalisation: every row was dropped. ",
+       "Check that city_state_to_lat_long$state and full_to_abbrev use the same vocabulary.")
+}
+cat(sprintf("Gazetteer ready: %d city/state coordinates.\n", nrow(lat_long_ref)))
 lat_long_ref <- lat_long_ref[!duplicated(paste(lat_long_ref$city_upper, lat_long_ref$state_upper, sep="_")), ]
 
 manual_coords <- list(
@@ -296,7 +315,11 @@ get_coords <- function(city, state) {
   key <- paste0(city_clean, "_", state_clean)
   if (key %in% names(manual_coords)) return(manual_coords[[key]])
   match_row <- lat_long_ref[lat_long_ref$city_upper == city_clean & lat_long_ref$state_upper == state_clean, ]
-  if (nrow(match_row) > 0) return(c(match_row$latitude[1], match_row$longitude[1]))
+  # city_state_to_lat_long names its coordinate columns lat/long, not latitude/longitude.
+  # Reading the wrong names returned NULL, so c(NULL, NULL) was a zero-length vector. This
+  # was masked while the gazetteer was empty: the branch never executed, and every lookup
+  # fell through to manual_coords or NA. Fixing the state vocabulary exposed it.
+  if (nrow(match_row) > 0) return(c(match_row$lat[1], match_row$long[1]))
   return(c(NA, NA))
 }
 

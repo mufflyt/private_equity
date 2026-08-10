@@ -463,3 +463,75 @@ escalations omitted one test from this cycle. The complete list of seven is:
 7. **2 coordinates shared by clinicians in different states (cycle 6)** — omitted above
 
 Items 3 to 7 are one defect with five symptoms.
+
+---
+
+## Cycle 7 — 2026-08-10 00:0x — 4 BVA / 3 semantic / 3 adversarial
+
+**Targets.** The geocoding lookup itself, as cycle 6 directed. Cycles 3, 5 and 6 measured
+symptoms; this cycle tested the join that causes them, and **found and fixed the root cause**.
+
+**Tests added** (`tests/testthat/test-geocode-lookup.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | gazetteer | rows survive state normalisation; the boundary is zero |
+| 2 | BVA | state tokens | classified at the two-character boundary |
+| 3 | BVA | join key | city+state is essentially unique; city alone is not |
+| 4 | BVA | lookup miss | an unknown city returns nothing, never row 1 |
+| 5 | semantic | vocabulary | gazetteer and mapping table use the same state vocabulary |
+| 6 | semantic | join key | joining on city alone is ambiguous and must not be used |
+| 7 | semantic | resolved coords | a coordinate lies inside the state requested |
+| 8 | adversarial | silent emptying | an emptied reference table must not pass silently |
+| 9 | adversarial | fallback | the 17-entry manual list cannot stand in for a 31,909-row gazetteer |
+| 10 | adversarial | package contract | gazetteer columns and types are stable |
+
+**All 10 pass. Three defects fixed, two of them the root cause of five prior escalations.**
+
+**(a) ROOT CAUSE — state vocabulary mismatch. FIXED.**
+`city_state_to_lat_long$state` holds two-letter abbreviations (`AL`, `AZ`). The script mapped
+it through `full_to_abbrev`, which is keyed by full names (`Alabama`). The lookup returned NA
+for **all 31,909 rows**, and the `!is.na(state_upper)` filter on the next line then deleted
+the entire gazetteer. `get_coords()` fell through to a 17-entry manual list and returned NA
+for every other city. Fixed by accepting either vocabulary.
+
+**(b) MASKED SECOND DEFECT — wrong column names. FIXED.**
+With the gazetteer restored, the run failed at `candidates_df$latitude[i] <- coords[1]`,
+"replacement has length zero". `get_coords()` read `match_row$latitude` / `$longitude`, but
+the gazetteer names its columns `lat` / `long`, so the expression was NULL and `c(NULL, NULL)`
+was zero-length. **This bug was invisible while defect (a) was present**, because the branch
+that reads those columns never executed. Fixing one exposed the other.
+
+**(c) SILENT FAILURE — no guard. FIXED.**
+The filter that emptied the gazetteer was followed by nothing. The script continued,
+geocoded everything to NA, and reported a successful matching run. Added a `stop()` on an
+empty gazetteer plus a row count, so this class of failure announces itself.
+
+**VERIFIED END TO END.** With all three fixed, matching runs clean:
+
+| | Before | After |
+|---|---|---|
+| Gazetteer rows | 0 | **31,909** |
+| Controls matched | 2 | **518** |
+| Caliper Geo Matches | **0** | **345** |
+| City matches | 2 | 173 |
+
+The 10-mile geographic caliper now actually fires, for the first time in this pipeline's
+recorded history. **The reproducibility blocker from cycle 3 is resolved**, and the redraw
+the user authorised is now technically possible.
+
+**Live artifacts deliberately NOT replaced.** The verification run overwrote the calling
+list and study database; both were restored from `backups/pre_redraw_20260809_213418/` and
+verified identical, along with the fielded sheet and REDCap files. The new output is
+preserved at `backups/redraw_candidate_20260810/` for inspection. Replacing the fielded
+sample is not a step to take unattended: it changes which clinics Taylor calls, and it
+additionally requires re-running enrichment, de-duplication and the REDCap load files.
+
+**Suite status:** 201 pass, 7 fail, 0 warn, 0 skip. The seven remaining failures are all
+data-level assertions about the *current* fielded cohort, which was built with the broken
+geocoder. They are expected to clear once the redraw is adopted; they are not code defects
+any more.
+
+**My own recurring test bug, 4th and 5th occurrence.** `expect_gt(..., info=)` again, in the
+same cycle where cycle 6 recorded the pattern. Swept all test files programmatically rather
+than fixing case by case; none remain.
