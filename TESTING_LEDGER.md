@@ -1605,3 +1605,65 @@ excluded platforms are absent from the cohort while retained in the roster, whic
 halves of the eligibility contract holding simultaneously.
 
 **Suite:** 429 pass, 69 fail, 0 warn, 0 skip.
+
+---
+
+## Cycle 21 — 2026-08-10 07:3x — 3 BVA / 3 semantic / 4 adversarial
+
+**Targets.** Whether the cohort is still current. The Methods calls this an "active clinician
+roster". Two independent signals bear on that and neither had been tested: when the platform
+directories were scraped, and the last year each clinician was observed practising. A
+clinician who has left is recorded as a failure to contact, which enters the primary
+obtainment outcome as if it were a refusal.
+
+**Tests added** (`tests/testthat/test-roster-currency.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | scrape timestamp | recorded on every roster row |
+| 2 | BVA | scrape window | timestamps fall in a plausible range |
+| 3 | BVA | activity year | never post-dates its source |
+| 4 | semantic | currency | the activity signal supports an "active roster" claim |
+| 5 | semantic | provenance | every clinician traces to a named source |
+| 6 | semantic | provenance form | recorded in one consistent form |
+| 7 | adversarial | attrition risk | no fielded clinician last observed long ago |
+| 8 | adversarial | coverage | activity known for every fielded clinician |
+| 9 | adversarial | scrape coverage | every fielded platform appears in the scrape stats |
+| 10 | adversarial | attrition mechanism | one exists given the roster's age |
+
+**6 failures.**
+
+**(a) The activity signal stops five years before the calling window.** `Last Active Year`
+ranges 2013 to 2021 with **zero rows at 2022 or later**, so 2021 is the source's last year
+rather than a property of these clinicians. **21 of 400 fielded clinicians were last observed
+practising in 2019 or earlier**, and **40 of 400 have no activity year at all**. The Methods
+describes an "active clinician roster"; the activity evidence cannot support that word on its
+own. What does support it is the platform directory scrape, which is current.
+
+**(b) 33 roster rows carry no scrape timestamp** (all from "Manual scrape (annotated
+practices)"), so their currency is unknown.
+
+**(c) 144 of 1,537 sources carry no resolvable domain**, being a platform name rather than a
+page. Provenance for those rows cannot be re-checked.
+
+**(d) Advantia Health is absent from `scraping_stats.json`**, matched by the documented slug
+mapping. This is the second independent gap for the same platform: cycle 20 found it absent
+from the PitchBook universe. **Advantia's PE status and its roster provenance are both
+undocumented**, covering 19 clinicians in the eligible cohort and 6 in the fielded 200.
+
+**(e) No attrition mechanism is stated.** The roster is roughly 7 weeks old at the calling
+date and the backup-physician protocol was cut from the manuscript, leaving the replacement
+pool as the only absorber, which the Methods does not describe as one.
+
+**Two test premises of mine — corrected.** The provenance-format test required the domain to
+end the string, so "togetherwomenshealth.com (Eastside)" counted as a non-URL; 658 false
+positives reduced to 144 genuine ones. The scrape-coverage test matched platform display
+names against stats keys that are slugs ("1_uwh_michigan" is Unified Women's Healthcare);
+corrected to a documented mapping, which reduced four apparent gaps to one real one.
+
+**Passed and worth recording.** Scrape timestamps are all within June 2026, activity years
+never post-date their source, and every roster row carries a Source of Information field.
+
+**Suite:** see the line below, read from the run.
+
+**Suite: pass=438  fail=75  warn=0  skip=0**
