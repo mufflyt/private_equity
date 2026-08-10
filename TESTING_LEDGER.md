@@ -1026,3 +1026,68 @@ only after the eligibility and redraw decisions land, since both change every nu
 **Suite:** recorded from the run below.
 
 **Suite: pass=333  fail=44  warn=0  skip=0**
+
+---
+
+## Cycle 15 — 2026-08-10 04:0x — 3 BVA / 3 semantic / 4 adversarial
+
+**Targets.** The covariate defaults applied before matching, and the time zone the caller
+uses to decide when to dial. Both are quiet: neither raises an error, and both change either
+who is matched to whom or whether the phone is answered.
+
+**Tests added** (`tests/testthat/test-covariate-imputation.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | time zone | values are recognised US zones |
+| 2 | BVA | gender | exactly two recorded categories, or absent |
+| 3 | BVA | Open Payments | zero is a legitimate observed value |
+| 4 | semantic | time zone | matches the clinic's state |
+| 5 | semantic | imputation | missing covariates filled the same way in both arms |
+| 6 | semantic | gender | a categorical covariate is not defaulted to one of its levels |
+| 7 | adversarial | calling window | no clinic fielded without a time zone |
+| 8 | adversarial | credential | not defaulted to MD when unknown |
+| 9 | adversarial | provenance | imputed values distinguishable from observed |
+| 10 | adversarial | leakage | median imputation computed within arm, not pooled |
+
+**6 failures, all real.**
+
+**(a) ASYMMETRIC IMPUTATION OF A MATCHING COVARIATE. The most serious of this cycle.**
+`build_matched_control_group_psm.R` fills missing Open Payments years with **the PE median
+for the PE arm and 0 for the control candidates** (lines 176 and 179). Open Payments is one
+of the four covariates in the propensity model, so the two arms are not merely imputed
+differently, they are imputed in opposite directions: PE clinicians with unknown industry
+activity are treated as typical, controls with unknown activity are treated as having none.
+This biases the propensity score systematically between arms, which is the one thing a
+matching covariate must not do.
+
+**(b) Gender is defaulted to "Female" when missing**, in both arms. Gender is an exact-match
+covariate, so this does not add noise, it forces those clinicians into the female stratum
+and matches them to women.
+
+**(c) Credential is defaulted to "MD" when unknown.** Recorded in cycle 12 as the mechanism
+that admitted a nurse midwife; here it is also a covariate defect, since MD/DO is matched on.
+
+**(d) Six clinics carry a time zone their state does not use**: UT and PA marked Pacific, TX,
+TN and IL marked Eastern, OH marked Central. PA marked Pacific is three hours out; a caller
+following the sheet could dial at 5pm "Pacific", which is 8pm in Pennsylvania. A closed
+office is recorded as a failure to contact, which enters the obtainment outcome.
+
+**(e) Four clinics have no time zone at all**, so the protocol's 0800 to 1700 local
+instruction cannot be followed for them.
+
+**(f) Nothing marks which values were imputed**, so Table 1, the balance claim, and any
+sensitivity analysis cannot exclude them, and an imputed zero is indistinguishable from an
+observed zero.
+
+**Passed and worth recording.** Year medians are computed within arm rather than pooled, so
+there is no cross-arm leakage in that covariate. Gender values are exactly Female/Male. All
+time zone values are recognised zones, the problem is only which state they are attached to.
+
+**A THIRD FALSE NEGATIVE IN MY OWN SUITE — strengthened.** Test 8 asserted `grepl('"MD"\\)')`
+and so missed `"MD",`, passing while the default it targeted was present. Rewritten to match
+`"MD"` literally. Running tally of tests of mine that passed while their defect existed:
+cycle 5 (lat/lon transposition), cycle 13 (207V classifier), cycle 15 (MD default). **The
+final audit must treat this as a category, not three incidents.**
+
+**Suite:** 345 pass, 50 fail, 0 warn, 0 skip.
