@@ -1906,3 +1906,56 @@ artifacts agree with each other after a rerun: 800 records, 800 choice lines, an
 file's NPI set exactly equals the fielded sheet's.
 
 **Suite:** 491 pass, 79 fail, 0 warn, 0 skip.
+
+---
+
+## Cycle 24 — 2026-08-10 10:1x — 3 BVA / 3 semantic / 4 adversarial
+
+**Targets.** Whether anything downstream still describes the current cohort. The cohort has
+been redrawn four times during this exercise (platform eligibility, the verified-CNM
+exclusion, the NPI repair, activity recency, exact gender matching) and no cycle had tested
+artifact vintage. A figure or table that silently describes a superseded cohort is the most
+publishable kind of error.
+
+**Tests added** (`tests/testthat/test-artifact-vintage.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | cohort sizes | the sizes downstream must agree with |
+| 2 | BVA | provenance sidecar | matches the artifact it describes |
+| 3 | BVA | fielded artifacts | at least as new as the cohort |
+| 4 | semantic | STROBE figure | describes the current cohort |
+| 5 | semantic | Methods pool size | states the size the cohort has |
+| 6 | semantic | Methods state count | states the number actually fielded |
+| 7 | adversarial | analysis artifacts | none predates the cohort it analyses |
+| 8 | adversarial | published figures | none predates the cohort it depicts |
+| 9 | adversarial | Methods | describes the eligibility rules that shaped the cohort |
+| 10 | adversarial | vintage match | the fielded sheet and its pool are the same vintage |
+
+**7 failures, all real. Every downstream description of the cohort is now stale.**
+
+| Artifact | States | Cohort has |
+|---|---:|---:|
+| `strobe_diagram.R`, Figure 1 | **544** matched pairs | **459** |
+| Methods, matched pool | **511** pairs | **459** |
+| Methods, geography | **26** states | **23** |
+
+Analysis artifacts and published figures predate the cohort they describe:
+`geographic_sensitivity_results.csv` (6 Jul), `power_analysis_new_results.csv` (5 Jul),
+`manuscript/figure1.png` and `figure2.png` (5 Jul), against a cohort regenerated on 10 Aug.
+
+**The Methods describes none of the three eligibility rules now in force**: the fertility and
+hospitalist platform exclusion, and the activity recency exclusion. A reader cannot
+reconstruct the cohort from the paper as written.
+
+**Passed and worth recording.** The provenance sidecar matches its artifact exactly (1,397
+rows, 459 pairs); all three REDCap artifacts are newer than the cohort; and the fielded sheet
+and the pool it was drawn from are the same vintage, with every fielded pair and NPI present
+in the current pool.
+
+**Not fixed, deliberately.** The manuscript needs one coherent revision once the outstanding
+matching-description decision from cycle 22 is settled, not piecemeal edits to individual
+numbers. Correcting the pool size while leaving the exact-match and five-year-band claims
+standing would produce a document that is accurate in its arithmetic and wrong in its method.
+
+**Suite:** 498 pass, 86 fail, 0 warn, 0 skip.
