@@ -73,3 +73,41 @@ manuscript were left untouched pending a decision on whether to re-draw the samp
 calling begins.
 
 **Suite status after fix:** 33 pass, 0 fail, 0 warn, 0 skip.
+
+---
+
+## Cycle 2 — 2026-08-09 21:5x — 3 BVA / 4 semantic / 3 adversarial
+
+**Targets.** The shipped REDCap artifacts and the protocol guarantee they encode. Cycle 1
+tested the key builders in isolation; this cycle tests the artifacts those keys produced.
+
+**Tests added** (`tests/testthat/test-redcap-structure.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | choices file | codes span exactly 1..800, no gap or duplicate |
+| 2 | BVA | arm split | boundary falls exactly between code 400 and 401 |
+| 3 | BVA | matched pairs | every pair has exactly two clinicians, never one or three |
+| 4 | semantic | choices file | code i and i+400 are the same physician, not merely the same position |
+| 5 | semantic | sheet + choices | every office receives exactly two calls (the COMIRB promise) |
+| 6 | semantic | import file | 800 records, contiguous ids, `physician_name` carries the code not a label |
+| 7 | semantic | sheet + choices | the ownership-by-payer 2x2 is exactly 200 calls per cell |
+| 8 | adversarial | all artifacts | REDCap files are not stale relative to the calling sheet |
+| 9 | adversarial | call schedule | all 800 records scheduled exactly once, arms differ, >=48h gap |
+| 10 | adversarial | key builders | row order does not determine office identity |
+
+**Failures discovered:** none. **Fixes:** none.
+
+**Honest note.** A clean cycle here is weak evidence: these artifacts were generated and
+independently verified earlier the same day, so the tests largely re-confirm known-good
+output. Their value is as regression guards, not as discovery. Cycles 3+ should move into
+code not written today: `build_matched_control_group_psm.R` (propensity fitting, the
+10-mile radius, the reseeded sampling loop), `calculate_cohort_churn.R`,
+`run_geographic_sensitivity_analysis.R`, `match_all_providers.py`,
+`extract_demographic_covariates.R`, and the power/calibration constants.
+
+**Suite status:** 64 pass, 0 fail, 0 warn, 0 skip.
+
+**Carried forward (unresolved):** the cycle-1 suite-regex defect remains unfixed in
+`build_matched_control_group_psm.R:113` and `add_symmetric_backups.py:34`, pending a
+decision on re-drawing the fielded sample.
