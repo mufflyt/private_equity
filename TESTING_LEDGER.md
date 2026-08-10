@@ -754,3 +754,65 @@ enrichment values the current cohort depends on.
 
 **Suite status:** 272 pass, 9 fail, 0 warn, 0 skip. No change to the nine standing
 escalations; cycle 10 added no new ones.
+
+---
+
+## Cycle 11 — 2026-08-10 02:0x — 3 BVA / 4 semantic / 3 adversarial
+
+**Targets.** The REDCap instrument itself. Cycle 2 tested the load files; nothing had tested
+the form that will actually collect the primary outcomes. A field that cannot hold the value
+the analysis needs is a defect upstream of every model in the SAP.
+
+**Tests added** (`tests/testthat/test-redcap-instrument.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | `calltime`/`holdtime` | admit realistic upper values |
+| 2 | BVA | date fields | bounded at both ends |
+| 3 | BVA | coded answers | start at 1, contiguous, no duplicates |
+| 4 | semantic | `appdate` | the primary outcome cannot be left silently blank |
+| 5 | semantic | date fields | can record the time their labels promise |
+| 6 | semantic | arm identity | the instrument records which insurance arm a call belongs to |
+| 7 | semantic | dropdown | matches the fielded cohort |
+| 8 | adversarial | branching logic | contradictory records are not enterable unchallenged |
+| 9 | adversarial | required set | every field the analysis consumes is required |
+| 10 | adversarial | numeric bounds | no value admitted that would corrupt an outcome |
+
+**11 failures across 9 of the 10 tests. Every one is a genuine instrument defect; none is a
+test bug. None fixed — see the note on drift below.**
+
+1. **The primary wait-time outcome can be saved blank.** `appdate` is not required and has
+   no branching logic. A record can be marked complete with the study's primary endpoint
+   empty and REDCap will not prompt.
+2. **Date fields cannot store a time.** `calldate1` and `calldate2` validate as `date_mdy`
+   while their labels read "Date and Time of FIRST/SECOND Phone Call" and instruct calling
+   between 0800 and 1700 local. Neither the business-hours instruction nor the >=48 hour
+   spacing between insurance arms can be verified from the collected data.
+3. **Date fields have no maximum** (`calldate1`, `calldate2`, `appdate`), so a mistyped year
+   is accepted and would produce an enormous wait time.
+4. **`holdtime` and `calltime` cap at 1000 seconds** (16 min 40 s). The `reminders` field
+   explicitly anticipates holds beyond five minutes, and a long hold is precisely the access
+   barrier the study is trying to detect. A 20-minute hold cannot be recorded.
+5. **`physician_name` is not required**, yet it carries the *only* identifier of which
+   insurance arm a record belongs to (`medicaid_status` option 3 is "NA as this was a Blue
+   Cross/Blue Shield call"). A record without it has an unknown arm and is unusable.
+6. **The dictionary's dropdown is stale**: 600 choices, from the 300-pair era, against the
+   800 the fielded set needs.
+7. **No branching logic exists anywhere in the instrument.** A caller can record
+   `contacted1 = No` and still enter an appointment date, or mark an exclusion and still
+   record a wait time. Nothing prevents internally contradictory records.
+
+**Why nothing was fixed.** The user's own email states the mystery-caller database "is built
+in REDCap", so this CSV is plausibly a snapshot of a live project rather than its source of
+truth. Editing it here would create drift between the file and the live instrument without
+changing what Taylor actually sees. The fix also is not simply "mark appdate required":
+where a clinic declines Medicaid there is no appointment date, so the correct remedy is
+branching logic conditional on obtainment, which is an instrument-design decision.
+
+**Recommended, in priority order:** add branching logic so `appdate` is shown and required
+only when an appointment was obtained; make `physician_name` required; switch the two call
+dates to a datetime validation; add date maxima; raise the duration caps to at least 3600 s;
+and paste the current 800-line choices file into the Online Designer.
+
+**Suite status:** 292 pass, 20 fail, 0 warn, 0 skip. Nine standing escalations plus the
+eleven instrument findings above.
