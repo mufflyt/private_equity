@@ -1725,3 +1725,73 @@ rather than the calling year; a missing activity year is not treated as inactivi
 runaway guard exists; and the exclusion precedes clustering.
 
 **Suite:** 450 pass, 74 fail.
+
+---
+
+## Cycle 22 — 2026-08-10 08:3x — 4 BVA / 3 semantic / 3 adversarial
+
+**Targets.** The thing propensity matching exists to deliver: balance. Table 1 asserts "All
+matching parameters show high balance between groups", and the Methods names four specific
+constraints. Neither had been tested, and the cohort has been redrawn three times since those
+claims were written.
+
+**Tests added** (`tests/testthat/test-matching-balance.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | SMD statistic | zero for identical arms, signed otherwise |
+| 2 | BVA | arms | equal size, one of each per pair |
+| 3 | BVA | five-year band | has a real boundary |
+| 4 | BVA | covariates | plausible ranges within each arm |
+| 5 | semantic | balance | matched cohort balanced on the covariates matching used |
+| 6 | semantic | exact match | gender matched exactly, as the Methods states |
+| 7 | semantic | band | years in practice within the claimed five-year band |
+| 8 | adversarial | constraints | the matcher enforces what the Methods names |
+| 9 | adversarial | concealment | credential imbalance not hidden by aggregate balance |
+| 10 | adversarial | imputation | balance not an artefact of imputed values |
+
+**5 real failures. Three of the four named matching constraints are not implemented.**
+
+The Methods states clinicians were "matched within a strict 10-mile radius in the same state
+on provider gender (exact match), credential (MD vs. DO), years in practice (within a
+five-year band), and Open Payments activity". The candidate pool is filtered on **state and
+prior use only**; all four covariates enter solely through the propensity score, which
+delivers distributional balance rather than the exact match and hard band described.
+
+| Claim | Implemented as | Observed in the fielded 200 |
+|---|---|---|
+| gender, **exact match** | propensity covariate | **79 of 200 pairs differ on gender** |
+| years in practice, **five-year band** | propensity covariate | **99 of 171 measurable pairs exceed 5 years**, median 8, max **47** |
+| credential MD vs. DO | propensity covariate | 18 pairs differ |
+| 10-mile radius, same state | enforced in the pool | holds |
+
+**Balance fails on three of four covariates** by the conventional |SMD| < 0.1 target:
+
+| Covariate | SMD | PE | Control |
+|---|---:|---:|---:|
+| MD vs DO | **-0.235** | 82% | 90% |
+| Open Payments Years | **-0.171** | 6.3 | 6.6 |
+| Years in Practice | **-0.122** | 23.2 | 24.7 |
+| Female | -0.011 | 66% | 67% |
+
+Table 1's note, "All matching parameters show high balance between groups (p > 0.05)", is not
+supported on the current cohort. Post-matching p-values are in any case the wrong instrument;
+SMD is the standard and it exceeds threshold on three covariates.
+
+**An instructive interaction.** Gender is the *best* balanced covariate marginally
+(SMD -0.011) while **40% of pairs are gender-mismatched**. Aggregate balance and pair-level
+matching are different properties, and a marginal statistic alone cannot certify a
+pair-matched design. Test 9 pins that distinction.
+
+**A test premise of mine — corrected.** The SMD sanity check used `ifelse(pe, 10, 0)`, which
+has zero within-arm variance, so the pooled SD is zero and the function returns 0 by its own
+guard. Replaced with arms that have real dispersion.
+
+**Not fixed.** Enforcing exact gender matching and a five-year band would change the matched
+pairs and require a fourth redraw. The alternative is to restate the Methods to describe what
+the code does: propensity-score matching on four covariates within a 10-mile, same-state
+caliper. **Decision needed**, and it is the cheaper of the two.
+
+**Suite:** see the line recorded from the run below.
+
+**Suite: pass=465  fail=80  warn=0  skip=0**
