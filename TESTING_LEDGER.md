@@ -535,3 +535,73 @@ any more.
 **My own recurring test bug, 4th and 5th occurrence.** `expect_gt(..., info=)` again, in the
 same cycle where cycle 6 recorded the pattern. Swept all test files programmatically rather
 than fixing case by case; none remain.
+
+---
+
+## Cycle 8 — 2026-08-10 00:3x — 3 BVA / 4 semantic / 3 adversarial
+
+**Targets.** Coordinate provenance: *which* coordinates were being measured.
+
+**Tests added** (`tests/testthat/test-coordinate-provenance.R`)
+
+| # | Category | Target | Assumption challenged |
+|---|---|---|---|
+| 1 | BVA | years in practice | inside a plausible career span |
+| 2 | BVA | open payments years | cannot exceed the programme's lifetime |
+| 3 | BVA | calling list | two arms per pair at both cohort sizes |
+| 4 | semantic | matcher | persists the coordinates its caliper relied on |
+| 5 | semantic | provenance | persisted coordinates come from the matcher, not a later step |
+| 6 | semantic | redraw | carries the columns downstream expects |
+| 7 | semantic | Python/R parity | both address normalisers strip suites with word boundaries |
+| 8 | adversarial | redraw | does not silently change cohort scale |
+| 9 | adversarial | pairs | no clinician matched to themselves or duplicated |
+| 10 | adversarial | redraw | controls drawn from the control pool, not the PE cohort |
+
+**CORRECTION TO CYCLES 5 AND 6.** Those cycles measured `Latitude`/`Longitude` from the
+study database and concluded the matching ignored its 10-mile radius. That conclusion was
+right, but the evidence was not: **the matcher never wrote those columns.** It computed
+coordinates, used them for the caliper, and discarded them; the persisted columns were added
+later by `apply_hq_distance.R` / `calculate_pair_distances.R`. So cycles 5 and 6 audited a
+*different coordinate source* than matching used. The conclusion survives by a stronger route
+established in cycle 7: the matcher's gazetteer was empty, so its caliper reported
+`Caliper Geo Matches: 0` and could not have been enforced at all. The specific figures
+(142/200 over 10 miles, 380/400 outside their state) describe the downstream enrichment
+coordinates, not the matcher's.
+
+**(a) REAL DEFECT — the geographic claim was unauditable. FIXED.**
+The matcher now writes `Matcher_Latitude` / `Matcher_Longitude` alongside the cohort, so the
+coordinates used for matching and the coordinates available for audit are the same by
+construction. Purely additive; matching behaviour unchanged. Coverage is **1,384 of 2,055
+records (67%)** — the remainder are full-PE-cohort rows absent from the matched subsets.
+*Follow-up for a later cycle: close the remaining 33%.*
+
+**(b) VALIDATED — the redraw now satisfies the geography, mostly.** Measured on the
+matcher's own coordinates for the first time:
+
+| | Old cohort | Redraw candidate |
+|---|---|---|
+| Caliper Geo Matches | 0 | **345** |
+| Pairs within 10 mi | caliper never fired | **402 / 497 (81%)** |
+| Median pair distance | n/a (all 0 or >10) | **4.5 mi** |
+| Calipers discriminate | no (58/58/58) | **yes (230 / 260 / 402)** |
+
+The 3, 5 and 10-mile calipers now select genuinely different sets, so the sensitivity
+analysis would become meaningful rather than vacuous.
+
+**(c) RESIDUAL — the city-match fallback bypasses the caliper. ESCALATED.**
+95 of 497 redrawn pairs (19%) still exceed 10 miles, max 1,281 mi. The matcher has two
+paths: a geographic caliper (345 matches) and a city-name fallback (173 matches). The
+fallback does not enforce the distance constraint. If the Methods is to claim a strict
+10-mile radius, either the fallback must apply the caliper or the claim must acknowledge it.
+
+**(d) OPEN — `add_symmetric_backups.py:34`** still strips suites without word boundaries,
+the cycle-1 defect. One-line fix, held per standing instruction because it was not named in
+the user's authorisation. It cannot affect the fielded sample: the script is not run and the
+manuscript's backup section was cut.
+
+**(e) OPEN — a redraw lacks five enrichment columns**: `CDC_SVI`, `Medicaid_Fee_Index`,
+`Latitude`, `Longitude`, `PE_Concentration_15mi`. Adopting the redraw requires re-running the
+enrichment chain, not just the matcher.
+
+**Suite status:** 224 pass, 7 fail. Cycle 8 added 10 tests; four failed and three of those
+are now fixed or reclassified, leaving the standing escalations.

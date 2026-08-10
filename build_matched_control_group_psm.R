@@ -654,6 +654,27 @@ for (c in missing_cols) {
 control_df <- control_df[, colnames(pe_full_df)]
 
 combined_study_df <- rbind(pe_full_df, control_df)
+
+# Persist the coordinates the caliper actually matched on. Without this the study's central
+# geographic claim is unauditable: the matcher computed latitude/longitude, used them for
+# the 10-mile caliper, then discarded them, and the Latitude/Longitude columns that appeared
+# downstream came from apply_hq_distance.R / calculate_pair_distances.R instead. Any audit
+# of the 10-mile constraint was therefore measuring a different coordinate source than the
+# one matching used. Writing them here makes the two the same by construction.
+coord_src <- rbind(
+  data.frame(NPI = pe_matched_all$NPI,   Latitude = pe_matched_all$latitude,
+             Longitude = pe_matched_all$longitude, stringsAsFactors = FALSE),
+  data.frame(NPI = if ("NPI" %in% names(candidates_df)) candidates_df$NPI else candidates_df$npi,
+             Latitude = candidates_df$latitude,
+             Longitude = candidates_df$longitude, stringsAsFactors = FALSE)
+)
+coord_src <- coord_src[!duplicated(coord_src$NPI), ]
+idx <- match(combined_study_df$NPI, coord_src$NPI)
+combined_study_df$Matcher_Latitude  <- coord_src$Latitude[idx]
+combined_study_df$Matcher_Longitude <- coord_src$Longitude[idx]
+cat(sprintf("Persisted matcher coordinates for %d of %d records.\n",
+            sum(!is.na(combined_study_df$Matcher_Latitude)), nrow(combined_study_df)))
+
 write.csv(combined_study_df, study_output_csv, row.names = FALSE)
 cat(sprintf("Unified study database exported to: %s (%d records)\n", study_output_csv, nrow(combined_study_df)))
 
