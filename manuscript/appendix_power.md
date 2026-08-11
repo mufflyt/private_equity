@@ -149,11 +149,15 @@ first thing that should be re-examined once real wait times accumulate.
 
 **Table S1.3. Minimum detectable interaction at the fielded design** (200 pairs, SD 10 days).
 
-> **PENDING SIMULATION.** Grid of IRR 1.14 / 1.17 / 1.20 / 1.26 at 200 pairs, SD 10, running in
-> `scratch/mde_200_pairs.R`. Interpolating Table S1.1 between IRR 1.10 (0.290) and IRR 1.22
-> (0.870) places the 80%-power threshold near IRR 1.19, but that is an interpolation across a
-> steep region and the simulated values supersede it. Do not circulate this appendix with this
-> box still present.
+| Assumed IRR | 1.10 | 1.14 | 1.17 | **1.20** | 1.22 | 1.26 |
+|---|---:|---:|---:|---:|---:|---:|
+| Power | 0.290 | 0.520 | 0.725 | **0.840** | 0.870 | 0.960 |
+
+The design as fielded detects an interaction of about **IRR 1.19** with 80% power, equivalent to
+a Medicaid wait of 35.7 days at PE practices against 30.0 at independent ones — a differential
+penalty of roughly **5.7 business days**. Anything smaller than that is likely to be missed.
+This is the number to quote when a reviewer asks what the study can rule out, and it assumes
+every call yields a wait time; §S1.8(a) shows what happens when that assumption is dropped.
 
 ## S1.7 What changed from the earlier calculation
 
@@ -192,7 +196,8 @@ rerun.
 
 Table S1.1 describes an idealised design: 800 calls, every call yielding a wait time, 400
 mutually independent clinicians, and no covariate missingness. The fielded study departs from
-that in four ways. The first two are large enough to change the conclusion.
+that in five ways. The first is large enough to change the conclusion; the second was large
+enough and has been repaired.
 
 ### (a) Wait time is observed only when an appointment is offered
 
@@ -211,11 +216,25 @@ manuscript, the expected analytic sample is
 The interaction's precision is governed by the smallest cell, and the smallest cell is the one
 that identifies it. Roughly 82 observed PE-Medicaid waits, not 200, will carry the estimate.
 
-> **PENDING SIMULATION.** `scratch/power_with_obtainment_censoring.R` reruns the primary
-> scenario (IRR 1.22, SD 10) with each call retained at its cell's anticipated obtainment
-> probability, at 200, 250, 300, 400 and 500 pairs. This gives the power the study will actually
-> have for the wait-time interaction, as distinct from the 0.870 of Table S1.1. It is expected to
-> be materially lower. Do not circulate this appendix with this box still present.
+**Table S1.4. Power for the interaction when calls are retained at their cell's obtainment
+probability** (IRR 1.22, SD 10 days, 200 replicates per row).
+
+| Matched pairs | Calls placed | Wait times observed | PE-Medicaid cell | Power | Table S1.1 power |
+|---:|---:|---:|---:|---:|---:|
+| **200 (fielded)** | 800 | 622 | 82 | **0.690** | 0.870 |
+| 250 | 1000 | 777 | 102 | 0.840 | 0.945 |
+| 300 | 1200 | 932 | 123 | 0.910 | 0.950 |
+| 400 | 1600 | 1244 | 163 | 0.960 | 0.990 |
+| 500 | 2000 | 1558 | 206 | 0.980 | — |
+
+**Censoring costs 0.18 of power at the fielded size and takes the design below the conventional
+threshold: 0.690, not 0.870.** Power at 200 pairs with censoring is roughly what Table S1.1
+reports at 150 pairs without it. Recovering 80% requires about 250 pairs.
+
+This materially changes the sample-size conclusion and is the strongest argument in this
+appendix for moving toward the attainable ceiling — see §S1.8(d), which puts that ceiling at 244
+pairs, just short of the 250 needed. At 244 pairs the interpolated censored power is
+approximately 0.83.
 
 This is a selection problem as well as a precision problem: the PE-Medicaid waits that *are*
 observed come from the minority of PE practices willing to schedule a Medicaid patient, which is
@@ -223,54 +242,92 @@ plausibly a favourable subset. The interaction is therefore conditioned on a pos
 variable, and the main manuscript already flags the conditioning. The power consequence had not
 previously been quantified.
 
-### (b) The social-vulnerability covariate is missing only in the control arm
+### (b) The social-vulnerability covariate was simulated, and has been reconstructed
 
-The analysis plan specifies the CDC Social Vulnerability Index percentile as a fixed effect. In
-the fielded sheet:
+**RESOLVED. This section records a defect that has been repaired; the repair is described so
+that the covariate's provenance is on the record.**
 
-| Arm | Has CDC_SVI | Missing |
+The analysis plan specifies the CDC Social Vulnerability Index percentile as a fixed effect in
+the primary wait-time model. The `CDC_SVI` column shipped in the fielded sheet was not a
+measurement. It was a Normal(0.434, 0.193) draw truncated to [0.01, 0.99]:
+
+| Check | Simulated `CDC_SVI` | What a real percentile rank gives |
+|---|---:|---|
+| Kolmogorov-Smirnov vs Normal | p = 0.985 | should reject |
+| Kolmogorov-Smirnov vs Uniform(0,1) | p < 0.001 | should not reject |
+| Rows at exactly 0.010 | 6 | none — a clamp floor |
+| Rows at exactly 0.990 | 1 | none — a clamp ceiling |
+
+An SVI overall summary ranking is a percentile, so it is approximately uniform on [0,1] by
+construction; normality is disqualifying on its own. The generator is `apply_demographic_
+covariates.R`, whose own header states that it "implements standard fallback simulations to
+ensure full dataset completeness". The sibling `Tract_Pct_Female_*`, `County_OBGYN_Count`,
+`County_Medicare_Enrollment` and `County_Medicaid_Enrollment` columns carry the same
+signature — Normal shape with a visible pile at a `pmax`/`pmin` bound — and **should be treated
+as simulated until independently sourced.** `Medicaid_Fee_Index`, `PE_Concentration_15mi` and
+`HQ_Distance_Miles` do not show it and appear to be genuinely derived.
+
+The 94 controls with no SVI at all were therefore the visible edge of the problem, not the
+problem: the 306 rows that *had* a value had a simulated one.
+
+**Reconstruction.** `build_svi_covariate.R` rebuilds the covariate for all 400 fielded
+clinicians from public sources only: NPPES practice address to 2020 census tract via the Census
+Bureau batch geocoder, then tract to `RPL_THEMES` via the CDC/ATSDR SVI 2022 state files.
+Addresses the geocoder cannot place — 31 of 400, whose TIGER address ranges simply do not cover
+them — fall back to a stored coordinate where one exists, then to an area-weighted mean over the
+tracts intersecting the ZCTA. Each row records which method produced it in `SVI_geocode_via`.
+
+| | Simulated `CDC_SVI` | Reconstructed `CDC_SVI_real` |
 |---|---:|---:|
-| PE | 200 | 0 |
-| Independent | 106 | 94 |
+| PE with a value | 200 / 200 | 197 / 200 |
+| Control with a value | 106 / 200 | 197 / 200 |
+| Fisher test, missingness by arm | p = 5.1 × 10⁻³⁵ | **p = 1.00** |
+| Complete pairs | 106 / 200 | **197 / 200** |
+| KS vs Uniform(0,1) | p < 0.001 | p = 0.073 |
 
-Missingness is **perfectly confounded with exposure**: it is zero in the PE arm and 47% in the
-control arm, because the controls added in the most recent redraw were never geocoded to a census
-tract. A complete-case fit of the model as specified would retain 106 complete pairs of 200 —
-approximately the 100-pair row of Table S1.1, or power near 0.60 — and would do so by discarding
-control clinicians on a basis related to how they entered the sample.
+Missingness is now independent of exposure, and a complete-case fit retains 197 pairs rather
+than 106. The old column is deliberately left in place, untouched, so that no downstream script
+changes meaning without a visible edit.
 
-This is fixable and should be fixed rather than modelled around. The 94 values are absent because
-the tract-level geocoding step was not rerun after the most recent redraw — none of the 94 appear
-in `pe_obgyn_study_database_with_churn.csv`, so no join recovers them — but all 94 carry a
-complete street address and ZIP in `pe_obgyn_study_database.csv` (NPPES, CMS DAC and scraped
-address fields are all populated, as is a latitude). They are therefore geocodable to a census
-tract and joinable to the CDC SVI release with the same procedure already used for the PE arm.
-Until that is done, the SAP-specified model and this power calculation describe different
-studies.
+**One residual asymmetry, measured rather than removed.** Missingness is balanced, but
+*precision* is not: 31 control clinicians and 1 PE clinician carry the coarser ZCTA-level value,
+while 19 PE clinicians and no controls carry a value from a stored coordinate. Address-level
+tract values are 166 control and 176 PE. `SVI_geocode_via` makes this analysable — the natural
+sensitivity analysis restricts to address-level rows, and the natural robustness check adds a
+precision indicator to the model.
 
-If the geocoding cannot be completed before fielding, the defensible fallbacks are to drop SVI
-from the primary model and report it only in a sensitivity analysis, or to replace it with a
-county-level or ZIP-level deprivation measure available for all 400 clinicians. What should not
-happen is a complete-case fit of the model as written, which would silently delete 47% of the
-control arm on a basis correlated with exposure.
+### (c) The fielded sample does not contain 400 independent schedulers
 
-### (c) The fielded sample does not contain 400 independent clinics
+**Correction to an earlier statement.** A previous version of this appendix said the 400
+clinicians occupy 385 "dialable" numbers. That was wrong about what will be dialed. The sheet's
+`Phone` column, which is what a caller enters, is the NPPES registered number, and **all 400 are
+distinct** — no clinician is dialed on a number shared with another.
 
-Resolving each fielded clinician to a dialable office key (phone where available, normalised
-address otherwise), the 400 fielded clinicians occupy **385 distinct numbers**. Twelve numbers
-are shared by 27 clinicians, several across different cities — central scheduling lines for
-multi-site groups rather than genuine single offices. One number covers four fielded clinicians
-across Edina, Minneapolis and Saint Paul; it will be dialed eight times.
+Independence is a different question from dialing. Under the practice number carried in the
+study database (scraped practice line, falling back to NPPES then CMS DAC), the same 400
+clinicians collapse onto **385 lines**:
 
-Two fielded pairs place the PE clinician and their matched control on the **same number**
-(pair_321 and pair_437). For those pairs the caller reaches the same scheduler for both arms, and
-the within-pair ownership contrast is not a contrast at all. Sixteen such pairs exist in the
-459-pair pool; two were drawn into the fielded 200.
+| Clinicians on the line | 1 | 2 | 3 | 4 |
+|---|---:|---:|---:|---:|
+| Clinicians | 373 | 20 | 3 | 4 |
 
-The analysis treats the clinician as the clustering unit. Where a shared central line means a
-shared scheduler, the clinician intercept is misspecified and the true number of independent
-units is below 400. This does not have a clean power multiplier attached to it, but it moves in
-the anticonservative direction and both fielded same-number pairs should be replaced.
+Twelve lines serve 27 clinicians, several across different cities — central scheduling numbers
+for multi-site groups rather than single offices. One line covers four fielded clinicians across
+Edina, Minneapolis and Saint Paul and will receive eight calls.
+
+**Two fielded pairs place both arms on the same practice line.** In `pair_321` (Edina and
+Minneapolis) and `pair_437` (Hartford and Danbury) the PE clinician and their matched control
+route through one number, so a caller reaches the same scheduler for both arms and the
+within-pair ownership contrast is not a contrast. Sixteen such pairs exist in the 459-pair pool;
+two were drawn into the fielded 200. No fielded pair shares a normalised street address, so this
+is a shared-switchboard problem rather than a same-office problem.
+
+`build_phone_cluster_vars.R` writes this structure onto the sheet as `phone_id`, `phone_dialed`,
+`phone_practice`, `office_addr_key`, `clinicians_per_phone`, `calls_per_phone`,
+`pairs_per_phone`, `same_phone_within_pair` and `same_address_within_pair`, so that the
+prespecified sensitivity analyses — excluding same-line pairs, and treating the practice line
+rather than the clinician as a clustering unit — can be run as written rather than reconstructed
+after the fact. Treating the line as the cluster gives **385 independent units, not 400**.
 
 ### (d) The pool cannot supply a much larger design
 
@@ -280,10 +337,18 @@ different pairs — the two-calls-per-clinic guarantee — the largest fieldable
 randomised greedy search over 2,000 restarts is **244 pairs**, against a counting upper bound of
 307. So the practical ceiling is roughly 244 pairs, not 459.
 
-At IRR 1.22 and SD 10, 244 pairs would give about 0.94 power — but under (a) and (b) above, the
-extra 44 pairs do not close the gap that censoring and covariate missingness open. **Expanding
-the sample is the wrong lever.** Restoring SVI for the 94 control clinicians is worth more than
-44 additional pairs and costs a geocoding rerun.
+**Revised reading.** An earlier version of this section concluded that expanding the sample was
+the wrong lever. That was written before the censoring-aware simulation existed, and it no
+longer holds. Table S1.4 puts censored power at 0.690 at 200 pairs and 0.840 at 250, so the
+extra pairs now buy about 0.15 of power in the range that matters, not the 0.04 the uncensored
+grid suggested. The ceiling of 244 pairs sits just below the 250 that restores 80%; interpolating
+Table S1.4 gives approximately **0.83 at 244 pairs**.
+
+Expansion is therefore worth considering on its merits, alongside two cheaper levers that act on
+the same shortfall: anything that raises PE-Medicaid obtainment measurement (for example
+recording a wait time for calls that offer a date beyond the audit window rather than treating
+them as non-obtained) directly enlarges the identifying cell, and the SVI repair in (b) has
+already restored 91 complete pairs at no fieldwork cost.
 
 *(A previously circulated figure of 224 office-disjoint pairs was computed with a weaker greedy
 ordering; 244 is the best packing found and supersedes it.)*
@@ -298,22 +363,35 @@ zero in simulation. It is noted for completeness rather than as a live threat.
 
 ## S1.9 Conclusion
 
-Under the literature-anchored effect of IRR 1.22 and a wait-time SD of 10 days, the fielded
-design of 200 matched pairs is adequately powered for the primary wait-time interaction (0.870).
-That statement is conditional on three things that are not currently true of the fielded
-dataset:
+**The headline number for the manuscript is 0.69, not 0.87.**
 
-1. **Obtainment censoring** reduces the analytic sample from 800 calls to roughly 622, with the
-   identifying PE-Medicaid cell falling to about 82. Quantified in §S1.8(a).
-2. **SVI is missing for 94 of 200 control clinicians and none of the PE clinicians.** Fitting the
-   model as specified on complete cases would leave 106 pairs and power near 0.60. All 94 carry
-   complete addresses and are geocodable; this is a data preparation gap, not a design
-   limitation, and should be closed before fielding.
-3. **Dispersion is the binding constraint.** At SD 20 the same design gives 0.41. This should be
-   re-examined against real wait times as soon as they accumulate.
+Under the literature-anchored effect of IRR 1.22 and a wait-time SD of 10 days, the fielded
+design of 200 matched pairs reaches 0.870 for the primary wait-time interaction *if every call
+yields a wait time*. It will not. Once calls are retained at their cell's anticipated obtainment
+probability, power at 200 pairs is **0.690** (§S1.8(a), Table S1.4). The study as fielded is
+underpowered for its primary wait-time estimand.
+
+Where that leaves the design:
+
+1. **Obtainment censoring is the dominant threat.** It costs 0.18 of power by shrinking the
+   identifying PE-Medicaid cell from 200 to about 82. Roughly 250 pairs restores 80%; the
+   attainable ceiling of 244 pairs (§S1.8(d)) gives approximately 0.83.
+2. **The SVI defect is repaired.** The covariate was simulated, not measured, and has been
+   reconstructed from the published CDC release for 394 of 400 clinicians with missingness now
+   independent of exposure (Fisher p = 1.00) and 197 of 200 pairs complete. This removes what
+   would otherwise have been a second, larger reduction to 106 pairs. §S1.8(b).
+3. **Shared schedulers are measured, not assumed away.** Two fielded pairs put both arms on one
+   practice line; 385 lines serve 400 clinicians. Sensitivity analyses excluding same-line pairs
+   and clustering on the line are prespecified and the variables to run them are on the sheet.
+   §S1.8(c).
+4. **Dispersion remains the binding constraint on the uncensored figures.** At SD 20 the same
+   design gives 0.41, and no feasible sample size rescues it. Re-examine against real wait times
+   as soon as they accumulate.
 
 Under the conservative IRR 1.10 no feasible sample size reaches 0.80, and the manuscript should
-say so rather than report only the favourable scenario.
+say so rather than report only the favourable scenario. The minimum detectable interaction at
+the fielded design, before censoring, is about IRR 1.19 — a differential Medicaid penalty of
+roughly 5.7 business days.
 
 ## S1.10 Reproducibility
 
@@ -324,7 +402,11 @@ say so rather than report only the favourable scenario.
 | Seed | `set.seed(42)`, set once before the grid |
 | Replicates | 200 per cell |
 | Software | R 4.4.2; glmmTMB 1.1.14; TMB 1.9.21; MASS 7.3.65 |
-| Supporting scripts | `scratch/mde_200_pairs.R`, `scratch/power_with_obtainment_censoring.R`, `scratch/office_disjoint_ceiling.R` |
-| Tests | `tests/testthat/test-power-and-calibration.R` |
+| Censoring-aware run | `scratch/power_with_obtainment_censoring.R` (Table S1.4) |
+| Minimum detectable effect | `scratch/mde_200_pairs.R` (Table S1.3) |
+| Office packing bounds | `scratch/office_disjoint_ceiling.R` (§S1.8(d)) |
+| SVI reconstruction | `build_svi_covariate.R`; audit in `scratch/audit_enrichment_provenance.R` |
+| Shared-line variables | `build_phone_cluster_vars.R` |
+| Tests | `tests/testthat/test-power-and-calibration.R`, `test-svi-provenance.R`, `test-phone-clustering.R` |
 
 ## References
