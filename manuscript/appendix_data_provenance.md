@@ -407,7 +407,7 @@ Negative-binomial generalized linear mixed model with a clinician random interce
 tested alone at α = 0.05; wait-time standard deviation 10 days; 200 replicates per row; all fits
 usable. The uncensored column is Appendix S1, Table S1.1.
 
-| Matched pairs | Calls placed | Wait times observed | PE-Medicaid cell | Censored power | Uncensored power |
+| Matched pairs | Calls placed | Wait times observed | PE-Medicaid cell | Power, censoring-aware | Power, all calls observed |
 |---:|---:|---:|---:|---:|---:|
 | **200 (fielded)** | 800 | 622 | 82 | **0.690** | 0.870 |
 | **244 (attainable ceiling)** | 976 | 758 | 99 | **0.810** | — |

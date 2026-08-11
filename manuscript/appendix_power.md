@@ -230,7 +230,13 @@ that identifies it. Roughly 82 observed PE-Medicaid waits, not 200, will carry t
 **Table S1.4. Power for the interaction when calls are retained at their cell's obtainment
 probability** (IRR 1.22, SD 10 days, 200 replicates per row).
 
-| Matched pairs | Calls placed | Wait times observed | PE-Medicaid cell | Censored power | Table S1.1 |
+Throughout this appendix, "censoring-aware" describes the *power calculation*, not the data: it
+is the probability of detecting a true interaction of the stated size, computed in simulations
+where a call produces a wait time only if that cell's obtainment probability says an appointment
+was offered. It is not the proportion of calls censored, which is approximately 22% (622 of 800
+calls yield an observed wait time at the fielded size).
+
+| Matched pairs | Calls placed | Wait times observed | PE-Medicaid cell | Power, censoring-aware | Power, all calls observed |
 |---:|---:|---:|---:|---:|---:|
 | **200 (fielded)** | 800 | 622 | 82 | **0.690** | 0.870 |
 | 220 | 880 | 684 | 91 | 0.755 | — |
@@ -246,7 +252,7 @@ Monte Carlo standard error is 0.033 at a power of 0.69 and 0.028 at 0.81.
 threshold: 0.690, not 0.870.** Power at 200 pairs with censoring is roughly what Table S1.1
 reports at 150 pairs without it.
 
-**Table S1.5. Censored power by effect-size scenario, at the fielded size and at the attainable
+**Table S1.5. Power accounting for obtainment censoring, by effect-size scenario, at the fielded size and at the attainable
 ceiling** (SD 10 days; uncensored values from Table S1.1 in parentheses).
 
 | Matched pairs | IRR 1.10 (conservative) | **IRR 1.22 (primary)** | IRR 1.35 (larger) |
@@ -259,7 +265,7 @@ fielded size and 0.295 at the ceiling. The larger scenario is saturated in both 
 places no constraint on the design. **The primary scenario is the only one in which the sample
 size decision has any consequence**, which is why it carries the planning conclusion.
 
-**Expansion to the attainable ceiling of 244 pairs raises censored power from 0.690 to 0.810, a
+**Expansion to the attainable ceiling of 244 pairs raises power from 0.690 to 0.810, a
 gain of 0.12** — measured, not interpolated. That moves the design from clearly underpowered to
 marginally adequate under the primary scenario, and it is the strongest quantitative argument in
 this appendix for expansion. It is contingent on the assumed effect size and does nothing for the
@@ -423,7 +429,7 @@ Where that leaves the design:
    tested. This should be re-examined against real wait times as soon as they accumulate.
 
 Under the conservative IRR 1.10 no feasible sample size reaches 0.80 with or without censoring
-(0.290 uncensored and 0.240 censored at 200 pairs; 0.560 uncensored at 400), and the manuscript
+(0.290 ignoring censoring and 0.240 accounting for it at 200 pairs; 0.560 ignoring censoring at 400), and the manuscript
 should say so rather than report only the favourable scenario. Under the larger IRR 1.35 the
 uncensored design is saturated from 200 pairs, so the primary scenario is the informative
 planning case.
