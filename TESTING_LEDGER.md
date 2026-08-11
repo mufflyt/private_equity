@@ -2220,3 +2220,97 @@ relaxing that protocol commitment or expanding the candidate pool.
 
 The `larger` (1.35) scenario was still computing when this was written; it can only exceed the
 1.22 row.
+
+---
+
+## Post-audit — 2026-08-10 — THE SVI COVARIATE WAS SIMULATED, NOT MEASURED
+
+Acting on the user's priority order (SVI repair first, then censoring-aware power, then
+shared-phone variables), the first item turned out to be larger than the brief described.
+
+**The defect.** `CDC_SVI` in the fielded sheet is not data. It is `pmax(0.01, pmin(0.99,
+rnorm(n, 0.434, 0.193)))`: KS against that Normal p = 0.985, KS against Uniform(0,1) p < 0.001,
+six rows at exactly 0.010 and one at exactly 0.990. An SVI overall summary ranking is a
+percentile and is uniform on [0,1] by construction, so normality is disqualifying on its own.
+The generator is `apply_demographic_covariates.R`, whose own header says it "implements standard
+fallback simulations to ensure full dataset completeness".
+
+**So the framing I gave the user was wrong in an important way.** I had reported the problem as
+"94 controls are missing SVI". The 94 were the visible edge; the 306 rows that *had* a value had
+a simulated one. Same signature on `Tract_Pct_Female_*`, `County_OBGYN_Count`,
+`County_Medicare_Enrollment` and `County_Medicaid_Enrollment` — all should be treated as
+simulated until sourced. `Medicaid_Fee_Index`, `PE_Concentration_15mi` and `HQ_Distance_Miles`
+do not show it.
+
+**Why cycle 16 missed it.** `test-enrichment-covariates.R` asserted that SVI lay in [0,1], was
+near-continuous, and had a median within 0.25 of 0.5. A plausible-looking simulation passes all
+three. This is the fifth instance of the false-negative pattern from cycles 5, 13, 15, 17 and 23,
+and the first where the test asked about *range* when it should have asked about *shape*.
+
+**The repair.** `build_svi_covariate.R`: NPPES address → 2020 census tract (Census batch
+geocoder) → `RPL_THEMES` (CDC/ATSDR SVI 2022). 349 of 400 placed by the batch endpoint; 1 more
+after stripping a suite designator; 19 from a stored coordinate; 32 from an area-weighted ZCTA
+mean for addresses the geocoder genuinely cannot place (their TIGER ranges do not cover them —
+retrying does not help). Method recorded per row in `SVI_geocode_via`.
+
+| | simulated | reconstructed |
+|---|---:|---:|
+| PE with a value | 200/200 | 197/200 |
+| control with a value | 106/200 | 197/200 |
+| Fisher, missingness by arm | p = 5.1e-35 | **p = 1.00** |
+| complete pairs | 106/200 | **197/200** |
+| KS vs Uniform | p < 0.001 | p = 0.073 |
+
+Residual asymmetry, measured not removed: 31 controls and 1 PE clinician carry the coarser
+ZCTA value; 19 PE and 0 controls carry a stored-coordinate value. Address-level is 166 control
+/ 176 PE. `SVI_geocode_via` makes the sensitivity analysis runnable.
+
+Also fixed seven NPPES ZIPs that had lost a leading zero (1604 → 01604 Worcester MA, 8901 →
+08901 New Brunswick NJ). Same coercion-through-numeric class as the NPI float suffix.
+
+**Two false starts worth recording.** `sprintf("%02s", x)` pads with SPACES in R, not zeros,
+which produced a silent zero-row join on the first attempt; `formatC(flag = "0")` is correct.
+And the Census batch response has 12 columns, not 13 — I read state/county/tract from 10/11/12
+instead of 9/10/11.
+
+**Censoring-aware power.** `scratch/power_with_obtainment_censoring.R` retains each call at its
+cell's anticipated obtainment probability. At 200 pairs: 622 wait times observed, PE-Medicaid
+cell 82, **power 0.690** against the 0.870 of the uncensored grid. 250 pairs → 0.840; 300 →
+0.910; 400 → 0.960; 500 → 0.980. This reverses the appendix's earlier "expansion is the wrong
+lever" conclusion.
+
+**Minimum detectable effect** at 200 pairs, SD 10, uncensored: IRR 1.14 → 0.520, 1.17 → 0.725,
+1.20 → 0.840, 1.26 → 0.960. 80% falls at about **IRR 1.19**, a differential Medicaid penalty of
+roughly 5.7 business days.
+
+**Shared-line variables.** `build_phone_cluster_vars.R` writes `phone_id`, `phone_dialed`,
+`phone_practice`, `office_addr_key`, `clinicians_per_phone`, `calls_per_phone`,
+`pairs_per_phone`, `same_phone_within_pair`, `same_address_within_pair`.
+
+**Correction to a claim I made earlier.** I reported "400 fielded clinicians occupy 385 dialable
+numbers". Wrong about *dialable*: the sheet's `Phone` is the NPPES registered number and all 400
+are distinct, so no clinician is dialed twice. Under the practice line (scraped → NPPES → DAC)
+the 400 collapse onto 385; 12 lines serve 27 clinicians; one covers four across Edina,
+Minneapolis and Saint Paul and will take eight calls. `pair_321` and `pair_437` put both arms on
+one line. No fielded pair shares a normalised street address, so this is a switchboard problem
+rather than a same-office problem.
+
+**Also corrected:** the office-disjoint ceiling is 244 pairs (best of 2,000 randomised greedy
+restarts; counting upper bound 307), not the 224 I reported earlier from a weaker ordering.
+
+**New tests:** `test-svi-provenance.R` (16 assertions) and `test-phone-clustering.R` (31). The
+SVI file checks distributional shape, clamp signatures, recorded provenance and independence of
+missingness from exposure — each of which fails on the simulated column. One premise correction
+inside it: the first version forbade any tie at the extremes and failed on real data, because
+two clinicians share an address in Little Silver NJ and therefore one tract; 57 of 400 share a
+tract with someone. The clamp signature is a pile at a ROUND bound, not a tie.
+
+**Suite:** 561 pass, 85 fail, 1 warn, 0 skip. Both new files pass fully. Swapping the sheet back
+to its pre-SVI version leaves every failure count unchanged, so none of the 85 is attributable to
+this work; they are the documented backlog plus timestamp-based staleness signals that my
+rewriting the sheet legitimately trips.
+
+**Open, not actioned without the user:** the REDCap files now predate the sheet. The sheet gained
+columns but no rows changed, so regenerating should be a no-op — but regenerating a fielded
+artifact is the user's call. `run_new_power_analysis.R` was still computing the IRR 1.35 scenario
+when this was written, so `power_analysis_new_results.csv` on disk is still the superseded grid.
