@@ -87,10 +87,13 @@ test_that("adversarial: the reconstruction reaches nearly every fielded clinicia
 })
 
 test_that("adversarial: the simulated column is never silently reused as the real one", {
-  # CDC_SVI is deliberately left in place so nothing downstream changes meaning by surprise.
-  # The contract is that it is never equal to the reconstructed column, which would mean the
-  # reconstruction had quietly copied it.
-  old <- suppressWarnings(as.numeric(sheet$CDC_SVI))
+  # The simulated column is deliberately left in place so nothing downstream changes meaning
+  # by surprise, but it was renamed SIMULATED_CDC_SVI on 2026-08-10 so that no column name in
+  # a fielded artifact asserts a measurement that was not made. The contract is that it is
+  # never equal to the reconstructed column, which would mean the reconstruction copied it.
+  expect_false("CDC_SVI" %in% names(sheet),
+               info = "a measurement-sounding name must not survive for a simulated column")
+  old <- suppressWarnings(as.numeric(sheet$SIMULATED_CDC_SVI))
   both <- !is.na(old) & !is.na(real)
   expect_true(sum(both) > 0L)
   expect_false(isTRUE(all.equal(old[both], real[both])),

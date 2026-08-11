@@ -11,8 +11,10 @@
 #   gate_missingness   CDC_SVI was present for 200/200 PE clinicians and 106/200 controls;
 #                      a complete-case fit would have deleted 47% of the control arm on a
 #                      basis related to exposure.
-#   assert_join        The NPI float suffix, the ZIP leading-zero loss, and a sprintf("%02s")
+#   key_join_index     The NPI float suffix, the ZIP leading-zero loss, and a sprintf("%02s")
 #                      that pads with spaces each produced a silent zero-row or partial join.
+#                      The coverage check itself is mysterycall::mysterycall_safe_left_join();
+#                      only the key normalisation is local.
 #   gate_sap           A power analysis reported a 2-df joint test of "any ownership effect"
 #                      as though it were the 1-df interaction the plan names.
 #   gate_clustering    400 clinicians are reached through 385 practice lines; two matched
@@ -21,6 +23,8 @@
 #                      observe about 622, and the identifying cell falls from 200 to ~82.
 #
 # Sourcing this file has no side effects.
+
+suppressMessages(library(mysterycall))
 
 GATE_ROOT <- tryCatch(normalizePath(file.path(dirname(sys.frame(1)$ofile), "..")),
                       error = function(e) getwd())
@@ -137,59 +141,63 @@ gate_family <- function(x, nm, family) {
 
 #' Gate 2. Missingness must not depend on exposure.
 #'
-#' A covariate missing in one arm and not the other turns a complete-case fit into a
-#' non-random deletion of that arm. The gate tests each analytic covariate against the
-#' exposure with Fisher's exact test.
+#' Delegates to mysterycall::mysterycall_gate_missingness(), which was promoted into the
+#' package from this file so that every mystery-caller study inherits it rather than
+#' re-deriving it. See docs/CANONICAL_SOURCES_AUDIT.md (A3). Only the study's default arm
+#' column and the pass message are local.
 gate_missingness <- function(df, analytic, arm_col = "PE_or_Not", alpha = 0.01) {
   if (!arm_col %in% names(df)) gate_fail("missingness", "No arm column '", arm_col, "'")
-  arm <- df[[arm_col]]
-  bad <- character(0)
-  for (nm in analytic) {
-    miss <- is.na(suppressWarnings(if (is.numeric(df[[nm]])) df[[nm]] else as.character(df[[nm]]))) |
-            (!is.numeric(df[[nm]]) & !nzchar(trimws(ifelse(is.na(df[[nm]]), "", as.character(df[[nm]])))))
-    if (!any(miss) || all(miss)) next
-    tb <- table(arm, miss)
-    if (nrow(tb) < 2 || ncol(tb) < 2) next
-    p <- stats::fisher.test(tb)$p.value
-    if (p < alpha) {
-      bad <- c(bad, sprintf("%s: Fisher P = %.3g\n%s", nm, p,
-                            paste("      ", utils::capture.output(print(tb)), collapse = "\n")))
-    }
-  }
-  if (length(bad)) {
-    gate_fail("missingness",
-              "Missingness depends on exposure for:\n    ", paste(bad, collapse = "\n    "),
-              "\n\n  A complete-case fit would delete one arm preferentially. Repair the ",
-              "covariate at source,\n  or pre-specify a missing-data model. Do not proceed to ",
-              "a complete-case fit.")
-  }
+  out <- tryCatch(
+    mysterycall::mysterycall_gate_missingness(df, vars = analytic, exposure = arm_col,
+                                              alpha = alpha, action = "error"),
+    error = function(e) gate_fail("missingness", conditionMessage(e)))
   gate_pass("missingness", sprintf("independent of arm for %d covariate(s)", length(analytic)))
+  invisible(out)
 }
 
 # ---------------------------------------------------------------------------- joins
+#
+# There is no local join gate any more. mysterycall already exports the canonical ones:
+#
+#     mysterycall::mysterycall_safe_left_join(left, right, by, min_coverage = , ...)
+#     mysterycall::mysterycall_safe_inner_join()
+#     mysterycall::mysterycall_safe_semi_join()
+#     mysterycall::mysterycall_safe_anti_join()
+#     mysterycall::mysterycall_assert_unique_keys(.data, key_cols)
+#
+# They cover more than the local assert_join() did -- key uniqueness on the right-hand side,
+# a duplication ceiling, and an optional written report -- and they are tested in the package.
+# See docs/CANONICAL_SOURCES_AUDIT.md (A4).
+#
+# `key_join_index()` remains only because the study joins by a repaired key rather than by a
+# shared column: the NPI is stored as "1003038688.0" in one artifact and "1003038688" in
+# another, so the key has to be normalised on both sides before any join verb can see it. It
+# delegates the coverage check to mysterycall rather than reimplementing it.
 
-#' Gate 3. A join must match what it is expected to match.
+#' Match `x` into `table` on a normalised key, verifying coverage with mysterycall.
 #'
-#' Returns the matched index vector so the call site reads as a normal lookup. The three join
-#' defects in this project were all silent: nothing errored, a column simply arrived empty.
-assert_join <- function(x, table, min_match = 1.0, label = "join", key_fun = identity) {
-  xi <- key_fun(x)
-  ti <- key_fun(table)
-  idx <- match(xi, ti)
-  rate <- mean(!is.na(idx))
-  if (rate < min_match) {
-    ex <- utils::head(unique(xi[is.na(idx)]), 5)
-    gate_fail("join",
-              sprintf("%s matched %.1f%% of %d keys; the contract requires %.1f%%.",
-                      label, 100 * rate, length(xi), 100 * min_match),
-              "\n  Unmatched example key(s): ", paste(ex, collapse = ", "),
-              "\n  Example key(s) on the other side: ", paste(utils::head(unique(ti), 3), collapse = ", "),
-              "\n\n  A partial join is how the NPI float suffix and the ZIP zero-truncation ",
-              "reached the data.\n  Check for type coercion and for padding before widening ",
-              "the tolerance.")
-  }
-  gate_pass("join", sprintf("%s matched %.1f%% of %d keys", label, 100 * rate, length(xi)))
-  idx
+#' @param key_fun applied to both sides before matching, e.g. `npi_key`
+#' @param min_match required match rate; passed to mysterycall as `min_coverage`
+key_join_index <- function(x, table, min_match = 1.0, label = "join", key_fun = identity) {
+  lhs <- data.frame(.key = key_fun(x), stringsAsFactors = FALSE)
+  rhs <- data.frame(.key = key_fun(table), stringsAsFactors = FALSE)
+  rhs <- rhs[!duplicated(rhs$.key), , drop = FALSE]
+  rhs$.present <- TRUE
+
+  joined <- tryCatch(
+    mysterycall::mysterycall_safe_left_join(
+      lhs, rhs, by = ".key",
+      min_coverage = min_match,
+      label_left  = label,
+      label_right = paste0(label, " (reference)")),
+    error = function(e) gate_fail("join", label, ": ", conditionMessage(e),
+                                  "\n\n  A partial join is how the NPI float suffix and the ZIP ",
+                                  "zero-truncation reached the data.\n  Check for type coercion ",
+                                  "and padding before widening the tolerance."))
+
+  rate <- mean(!is.na(joined$.present))
+  gate_pass("join", sprintf("%s matched %.1f%% of %d keys", label, 100 * rate, nrow(lhs)))
+  match(lhs$.key, rhs$.key)
 }
 
 # ---------------------------------------------------------------------------- SAP lock

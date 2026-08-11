@@ -9,7 +9,7 @@ p <- function(...) file.path(root, ...)
 
 sheet <- utils::read.csv(p("pe_obgyn_final_calling_sheet_200.csv"), check.names = FALSE)
 sheet$CDC_SVI_real <- suppressWarnings(as.numeric(sheet$CDC_SVI_real))
-sheet$CDC_SVI      <- suppressWarnings(as.numeric(sheet$CDC_SVI))
+sheet$SIMULATED_CDC_SVI <- suppressWarnings(as.numeric(sheet$SIMULATED_CDC_SVI))
 man <- read_manifest(p("analysis_manifest.csv"))
 sap <- read_sap(p("SAP.lock"))
 
@@ -30,10 +30,14 @@ test_that("BVA: the manifest uses only recognised statuses and families", {
 
 test_that("semantic: the manifest agrees with the audit about what is simulated", {
   sim <- man$column[man$status == "simulated"]
-  expect_true(all(c("CDC_SVI", "Tract_Pct_Female_Private", "Tract_Pct_Female_Medicaid",
-                    "Tract_Pct_Female_Medicare", "Tract_Pct_Female_Uninsured",
-                    "County_OBGYN_Count", "County_Medicare_Enrollment",
-                    "County_Medicaid_Enrollment") %in% sim))
+  expect_true(all(paste0("SIMULATED_", c("CDC_SVI", "Tract_Pct_Female_Private",
+                    "Tract_Pct_Female_Medicaid", "Tract_Pct_Female_Medicare",
+                    "Tract_Pct_Female_Uninsured", "County_OBGYN_Count",
+                    "County_Medicare_Enrollment", "County_Medicaid_Enrollment")) %in% sim))
+  # No column may carry a measurement-sounding name while being simulated.
+  expect_true(all(grepl("^SIMULATED_", sim)),
+              info = sprintf("simulated column without the prefix: %s",
+                             paste(sim[!grepl("^SIMULATED_", sim)], collapse = ", ")))
   expect_false("CDC_SVI_real" %in% sim)
   expect_equal(man$status[man$column == "CDC_SVI_real"], "measured")
 })
@@ -41,7 +45,7 @@ test_that("semantic: the manifest agrees with the audit about what is simulated"
 # ---------------------------------------------------------------- provenance gate
 
 test_that("adversarial: the provenance gate rejects a simulated covariate", {
-  expect_error(gate_provenance(sheet, "CDC_SVI", man), "Simulated variable")
+  expect_error(gate_provenance(sheet, "SIMULATED_CDC_SVI", man), "Simulated variable")
 })
 
 test_that("adversarial: the provenance gate rejects an undeclared column", {
@@ -73,35 +77,77 @@ test_that("BVA: the family check catches out-of-range and non-integer values", {
 
 test_that("adversarial: the missingness gate reproduces and rejects the original SVI pattern", {
   # 200/200 PE and 106/200 control, which is what shipped.
-  expect_error(gate_missingness(sheet, "CDC_SVI"), "depends on exposure")
+  expect_error(gate_missingness(sheet, "SIMULATED_CDC_SVI"), "depends on PE_or_Not")
+  # The message must carry the per-arm counts, not only a p-value, so the reader can see the
+  # pattern rather than take the test's word for it.
+  msg <- tryCatch(gate_missingness(sheet, "SIMULATED_CDC_SVI"), error = conditionMessage)
+  expect_match(msg, "94 / 0")
+  expect_match(msg, "complete-case")
 })
 
 test_that("the missingness gate accepts the reconstructed covariate", {
-  expect_true(gate_missingness(sheet, "CDC_SVI_real"))
+  out <- gate_missingness(sheet, "CDC_SVI_real")
+  expect_s3_class(out, "tbl_df")
+  expect_false(any(out$dependent))
 })
 
 test_that("semantic: the missingness gate ignores a covariate that is wholly present or absent", {
   d <- sheet; d$all_there <- 1; d$none_there <- NA_real_
-  expect_true(gate_missingness(d, c("all_there", "none_there")))
+  out <- gate_missingness(d, c("all_there", "none_there"))
+  expect_false(any(out$dependent))
 })
 
 # ---------------------------------------------------------------- join gate
 
 test_that("adversarial: the join gate catches the float-suffix and zero-truncation defects", {
-  expect_error(assert_join(c("1003038688", "1144280553"),
-                           c("1003038688.0", "1144280553.0"), label = "npi"), "matched 0.0%")
-  expect_error(assert_join(c("01604", "06880"), c("1604", "6880"), label = "zip"), "matched 0.0%")
+  expect_error(key_join_index(c("1003038688", "1144280553"),
+                              c("1003038688.0", "1144280553.0"), label = "npi"))
+  expect_error(key_join_index(c("01604", "06880"), c("1604", "6880"), label = "zip"))
 })
 
 test_that("the join gate passes when the key function repairs the type", {
-  idx <- assert_join(c("1003038688", "1144280553"),
-                     c("1003038688.0", "1144280553.0"), label = "npi", key_fun = npi_key)
+  idx <- key_join_index(c("1003038688", "1144280553"),
+                        c("1003038688.0", "1144280553.0"), label = "npi", key_fun = npi_key)
   expect_equal(idx, c(1L, 2L))
 })
 
 test_that("BVA: the join gate honours a partial-match tolerance exactly at the boundary", {
-  expect_true(is.integer(assert_join(c("a", "b"), "a", min_match = 0.5, label = "half")))
-  expect_error(assert_join(c("a", "b"), "a", min_match = 0.51, label = "half"))
+  expect_true(is.integer(key_join_index(c("a", "b"), "a", min_match = 0.5, label = "half")))
+  expect_error(key_join_index(c("a", "b"), "a", min_match = 0.51, label = "half"))
+})
+
+test_that("semantic: the join coverage check is the canonical one, not a local reimplementation", {
+  src <- readLines(p("R", "analysis_gates.R"), warn = FALSE)
+  expect_true(any(grepl("mysterycall_safe_left_join", src, fixed = TRUE)),
+              info = "coverage must be checked by mysterycall, not by local arithmetic")
+  expect_false(any(grepl("^assert_join <- function", src)),
+               info = "the local join gate was replaced by the canonical one and must not return")
+})
+
+test_that("semantic: the missingness gate delegates to the canonical mysterycall function", {
+  src <- readLines(p("R", "analysis_gates.R"), warn = FALSE)
+  expect_true(any(grepl("mysterycall_gate_missingness", src, fixed = TRUE)),
+              info = "gate_missingness was promoted into mysterycall; the local copy must delegate")
+  expect_true(is.function(mysterycall::mysterycall_gate_missingness))
+})
+
+test_that("adversarial: no script defines a name an attached canonical package exports", {
+  # The defect that produced the simulated covariates: extract_demographic_covariates.R defined
+  # four functions under names mysterycall exports, so which definition won depended on source
+  # order. See docs/CANONICAL_SOURCES_AUDIT.md (A1, A9).
+  canon <- getNamespaceExports("mysterycall")
+  files <- list.files(root, pattern = "\\.R$", full.names = TRUE)
+  files <- c(files, list.files(file.path(root, "R"), pattern = "\\.R$", full.names = TRUE))
+  offenders <- character(0)
+  for (f in files) {
+    src <- readLines(f, warn = FALSE)
+    defs <- trimws(sub("\\s*<-\\s*function.*$", "",
+                       grep("^\\s*[A-Za-z._][A-Za-z0-9._]*\\s*<-\\s*function", src, value = TRUE)))
+    hit <- intersect(defs, canon)
+    if (length(hit)) offenders <- c(offenders, sprintf("%s: %s", basename(f),
+                                                       paste(hit, collapse = ", ")))
+  }
+  expect_length(offenders, 0L)
 })
 
 # ---------------------------------------------------------------- SAP lock

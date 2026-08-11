@@ -12,17 +12,17 @@ office_id,derived,identifier,build_matched_control_group_psm.R,Synthetic per-row
 Matched Pair ID,derived,identifier,build_matched_control_group_psm.R,
 Phone_Database_Matches,derived,count,Cross-reference of NPPES / CMS / platform,
 Phone_Verification_Status,derived,categorical,Cross-reference of NPPES / CMS / platform,
-CDC_SVI,simulated,percentile,UNKNOWN - no repository code derives it,SUPERSEDED. Normal(0.434 0.193) truncated to [0.01 0.99]. KS vs Normal P=0.985 vs Uniform P<0.001. Retained for provenance only. Never analytic. Use CDC_SVI_real.
+SIMULATED_CDC_SVI,simulated,percentile,UNKNOWN - no repository code derives it,SUPERSEDED. Normal(0.434 0.193) truncated to [0.01 0.99]. KS vs Normal P=0.985 vs Uniform P<0.001. Retained for provenance only. Never analytic. Use CDC_SVI_real.
 Medicaid_Fee_Index,derived,continuous,State-level Medicaid-to-Medicare fee ratio; source not independently traced,Constant within state in 16 of 23 states.
 PE_Concentration_15mi,derived,count,Count from the PE roster within 15 miles,
 HQ_Distance_Miles,derived,continuous,Geodesic distance to platform headquarters (apply_hq_distance.R),
-Tract_Pct_Female_Private,simulated,proportion,apply_demographic_covariates.R rnorm(n 68.2 8.5) clamped,Not a measurement. Never analytic.
-Tract_Pct_Female_Medicaid,simulated,proportion,apply_demographic_covariates.R rnorm(n 18.4 5.2) clamped,Not a measurement. Never analytic.
-Tract_Pct_Female_Medicare,simulated,proportion,apply_demographic_covariates.R rnorm(n 11.1 2.8) clamped,Not a measurement. Never analytic.
-Tract_Pct_Female_Uninsured,simulated,proportion,apply_demographic_covariates.R rnorm(n 7.9 3.6) clamped,Not a measurement. Never analytic.
-County_OBGYN_Count,simulated,count,apply_demographic_covariates.R pmax(1 round(rnorm(n 42.6 22.4))),Not a measurement. Never analytic.
-County_Medicare_Enrollment,simulated,count,apply_demographic_covariates.R pmax(100 round(rnorm(n 75400 38500))),Not a measurement. Never analytic.
-County_Medicaid_Enrollment,simulated,count,apply_demographic_covariates.R pmax(100 round(rnorm(n 89200 45200))),Not a measurement. Never analytic.
+SIMULATED_Tract_Pct_Female_Private,simulated,proportion,apply_demographic_covariates.R rnorm(n 68.2 8.5) clamped,Not a measurement. Never analytic.
+SIMULATED_Tract_Pct_Female_Medicaid,simulated,proportion,apply_demographic_covariates.R rnorm(n 18.4 5.2) clamped,Not a measurement. Never analytic.
+SIMULATED_Tract_Pct_Female_Medicare,simulated,proportion,apply_demographic_covariates.R rnorm(n 11.1 2.8) clamped,Not a measurement. Never analytic.
+SIMULATED_Tract_Pct_Female_Uninsured,simulated,proportion,apply_demographic_covariates.R rnorm(n 7.9 3.6) clamped,Not a measurement. Never analytic.
+SIMULATED_County_OBGYN_Count,simulated,count,apply_demographic_covariates.R pmax(1 round(rnorm(n 42.6 22.4))),Not a measurement. Never analytic.
+SIMULATED_County_Medicare_Enrollment,simulated,count,apply_demographic_covariates.R pmax(100 round(rnorm(n 75400 38500))),Not a measurement. Never analytic.
+SIMULATED_County_Medicaid_Enrollment,simulated,count,apply_demographic_covariates.R pmax(100 round(rnorm(n 89200 45200))),Not a measurement. Never analytic.
 Mean_Annual_Churn,derived,continuous,NPPES historical clinician churn tracker (calculate_cohort_churn.R),Provenance not independently re-verified in the 2026-08-10 audit.
 Total_Exits,derived,count,NPPES historical churn tracker,Provenance not independently re-verified.
 Total_Entries,derived,count,NPPES historical churn tracker,Provenance not independently re-verified.

@@ -18,11 +18,48 @@ gz <- local({
 })
 
 # Reproduces the script's mapping construction so the join can be tested directly.
+#
+# Premise correction, 2026-08-10. This helper used to carry a seven-state stub of
+# full_to_abbrev. That passed for years only because mysterycall's bundled gazetteer used
+# two-letter states, which sent every row down the nchar == 2 branch and made the stub
+# irrelevant. When the gazetteer was rebuilt upstream with full state names ("Alabama") the
+# stub dropped 25,698 of 31,909 rows and this file went red -- not because the pipeline is
+# wrong, but because the test only ever tested half of what it claimed to.
+#
+# The map is now read from build_matched_control_group_psm.R itself, so the test cannot drift
+# from the script again. That is the contract test-address-key-parity.R already enforces for
+# the address key.
+script_full_to_abbrev <- local({
+  src <- readLines(file.path(root, "build_matched_control_group_psm.R"), warn = FALSE)
+  i <- grep("^full_to_abbrev <- names\\(c\\(", src)[1]
+  j <- grep("^names\\(full_to_abbrev\\) <-", src)[1]
+  # Both assignments span several lines; take everything from the first to the end of the
+  # second, which is the first line after `j` whose parentheses balance.
+  k <- j
+  repeat {
+    blk <- paste(src[j:k], collapse = "\n")
+    if (lengths(regmatches(blk, gregexpr("\\(", blk))) ==
+        lengths(regmatches(blk, gregexpr("\\)", blk)))) break
+    k <- k + 1L
+  }
+  env <- new.env()
+  eval(parse(text = paste(src[i:k], collapse = "\n")), envir = env)
+  env$full_to_abbrev
+})
+
 build_ref <- function(g) {
-  full_to_abbrev <- c(Alabama = "AL", Arizona = "AZ", Colorado = "CO", Michigan = "MI",
-                      Missouri = "MO", Pennsylvania = "PA", Florida = "FL")
-  ifelse(nchar(trimws(g$state)) == 2L, toupper(trimws(g$state)), full_to_abbrev[g$state])
+  ifelse(nchar(trimws(g$state)) == 2L, toupper(trimws(g$state)),
+         script_full_to_abbrev[g$state])
 }
+
+test_that("the test's state map is the script's, not a stub of it", {
+  # expect_gte does not accept `info`; use expect_true so the diagnosis survives a failure.
+  expect_true(length(script_full_to_abbrev) >= 50L,
+              info = sprintf("map has %d entries; a partial map silently drops gazetteer rows and hides join failures",
+                             length(script_full_to_abbrev)))
+  expect_true(all(nchar(script_full_to_abbrev) == 2L))
+  expect_true(all(c("Alabama", "Wyoming", "California") %in% names(script_full_to_abbrev)))
+})
 
 # ---------------------------------------------------------------- BVA (4)
 
@@ -62,11 +99,21 @@ test_that("BVA: an unknown city yields no coordinate rather than a default", {
 # ---------------------------------------------------------------- semantic (3)
 
 test_that("semantic: the gazetteer and the mapping table speak the same state vocabulary", {
-  # This is the defect. The gazetteer stores abbreviations; full_to_abbrev is keyed by
-  # full names. Mapping one through the other yielded NA for all 31,909 rows and the
-  # downstream !is.na() filter then emptied the gazetteer entirely.
-  expect_true(all(nchar(trimws(gz$state)) == 2L),
-              info = "the gazetteer's state column is abbreviations")
+  # This is the defect the script's normalisation exists for: full_to_abbrev is keyed by full
+  # state names, and if the gazetteer's own vocabulary does not match, mapping one through the
+  # other yields NA for every row and the downstream !is.na() filter empties the gazetteer.
+  #
+  # Premise correction, 2026-08-10: this used to assert that the gazetteer stores
+  # abbreviations. That is the dependency's storage choice, not a contract of this pipeline,
+  # and it changed upstream -- mysterycall's gazetteer now stores full names ("Alabama"). The
+  # contract is that the script's normalisation resolves EVERY row whichever vocabulary is in
+  # use, which is what its stop() guard protects.
+  ab <- build_ref(gz)
+  expect_true(all(!is.na(ab)),
+              info = sprintf("%d of %d gazetteer rows unresolvable; unmapped states: %s",
+                             sum(is.na(ab)), nrow(gz),
+                             paste(utils::head(unique(gz$state[is.na(ab)]), 5), collapse = ", ")))
+  expect_true(all(nchar(ab) == 2L))
   i <- grep("lat_long_ref\\$state_abbrev <-", psm)
   expect_length(i, 1L)
   blk <- paste(psm[i:(i + 5)], collapse = " ")
@@ -88,11 +135,22 @@ test_that("semantic: joining on city alone is ambiguous and must not be used", {
 test_that("semantic: a resolved coordinate lies inside the state that was requested", {
   BOX <- list(PA = c(39.6, 42.4, -80.6, -74.6), MI = c(41.6, 48.4, -90.5, -82.3),
               FL = c(24.4, 31.1, -87.7, -79.9), CO = c(36.9, 41.1, -109.1, -101.9))
+  # Select on the NORMALISED abbreviation, which is what the matcher joins on, rather than on
+  # the gazetteer's raw state column, whose vocabulary is the dependency's to choose.
+  gz_ab <- build_ref(gz)
   for (st in names(BOX)) {
-    rows <- gz[toupper(trimws(gz$state)) == st, ]
-    expect_gt(nrow(rows), 0L)
+    rows <- gz[!is.na(gz_ab) & gz_ab == st, ]
+    expect_true(nrow(rows) > 0L,
+                info = sprintf("no gazetteer rows normalise to %s", st))
     b <- BOX[[st]]
-    inside <- mean(rows$lat >= b[1] & rows$lat <= b[2] & rows$long >= b[3] & rows$long <= b[4])
+    # The gazetteer's coordinate columns were renamed latitude/longitude upstream
+    # (mysterycall 22d0777, "rename data objects to snake_case"). build_matched_control_group_
+    # _psm.R:437 still reads $lat and $long and survives only on `$` partial matching, which
+    # is silent and would break the moment any other lat*/long* column is added. Resolve the
+    # names here rather than depending on that.
+    lat <- if (!is.null(rows[["latitude"]])) rows[["latitude"]] else rows[["lat"]]
+    lon <- if (!is.null(rows[["longitude"]])) rows[["longitude"]] else rows[["long"]]
+    inside <- mean(lat >= b[1] & lat <= b[2] & lon >= b[3] & lon <= b[4])
     expect_true(inside > 0.95,
                 info = sprintf("%s: only %.0f%% of gazetteer rows fall inside the state", st, 100 * inside))
   }

@@ -1,3 +1,26 @@
+# DISABLED 2026-08-10. This script fabricated its output.
+#
+# It generated Tract_Pct_Female_Private/Medicaid/Medicare/Uninsured, County_OBGYN_Count,
+# County_Medicare_Enrollment and County_Medicaid_Enrollment with rnorm() and pmax/pmin clamps,
+# and wrote them into the study database and both calling sheets under names asserting they were
+# ACS, HRSA AHRF and CMS measurements. Its own header called this "standard fallback simulations
+# to ensure full dataset completeness."
+#
+# The audit that found this is manuscript/appendix_data_provenance.md; the reason it happened is
+# docs/CANONICAL_SOURCES_AUDIT.md (A1). The canonical fetchers for all four sources exist in
+# mysterycall and are now wrapped in extract_demographic_covariates.R.
+#
+# The body below is retained unexecuted so the generating constants remain auditable -- they are
+# what let the simulated columns be identified by their clamp bounds. Do not remove the stop().
+
+stop(paste0(
+  "\n\n  apply_demographic_covariates.R is disabled.\n",
+  "  It simulated tract- and county-level covariates and wrote them as measurements.\n",
+  "  Use extract_demographic_covariates.R, which calls the mysterycall fetchers, or leave\n",
+  "  the columns absent. Do not re-enable this script to achieve dataset completeness.\n"),
+  call. = FALSE)
+
+# ---------------------------------------------------------------------------- retained, dead
 # R Script to apply demographic covariates to the study database
 # Maps:
 # 1. Census ACS Table S2701 Female Insurance Percentages (Private, Medicaid, Medicare, Uninsured)
