@@ -245,7 +245,8 @@ previously been quantified.
 ### (b) The social-vulnerability covariate was simulated, and has been reconstructed
 
 **RESOLVED. This section records a defect that has been repaired; the repair is described so
-that the covariate's provenance is on the record.**
+that the covariate's provenance is on the record. Appendix S2 documents the audit, the
+reconstruction procedure and the validation in full.**
 
 The analysis plan specifies the CDC Social Vulnerability Index percentile as a fixed effect in
 the primary wait-time model. The `CDC_SVI` column shipped in the fielded sheet was not a
@@ -327,7 +328,8 @@ is a shared-switchboard problem rather than a same-office problem.
 `pairs_per_phone`, `same_phone_within_pair` and `same_address_within_pair`, so that the
 prespecified sensitivity analyses — excluding same-line pairs, and treating the practice line
 rather than the clinician as a clustering unit — can be run as written rather than reconstructed
-after the fact. Treating the line as the cluster gives **385 independent units, not 400**.
+after the fact. Treating the line as the cluster gives **385 independent units, not 400**. The
+full structure and the prespecified analyses are in Appendix S2 §S2.8 and §S2.9.
 
 ### (d) The pool cannot supply a much larger design
 
