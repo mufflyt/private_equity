@@ -117,37 +117,48 @@ penalty.
 standard error at an estimated power of 0.87 is 0.024 (95% CI 0.82 to 0.92); at 0.29 it is 0.032.
 Differences smaller than about 0.05 between adjacent cells should not be interpreted.
 
+The full grid is complete: three effect-size scenarios by two dispersion assumptions by six
+sample sizes, 36 cells, 200 replicates each, all fits usable. It is reported in
+`power_analysis_new_results.csv`.
+
 **Table S1.1. Power for the ownership-by-insurance interaction, wait-time SD 10 days.**
 
 | Matched pairs | Calls | IRR 1.10 (conservative) | **IRR 1.22 (primary)** | IRR 1.35 (larger) |
 |---:|---:|---:|---:|---:|
-| 100 | 400 | 0.205 | 0.575 | — |
-| 150 | 600 | 0.250 | **0.840** | — |
-| **200 (fielded)** | **800** | 0.290 | **0.870** | — |
-| 250 | 1000 | 0.420 | 0.945 | — |
-| 300 | 1200 | 0.515 | 0.950 | — |
-| 400 | 1600 | 0.560 | 0.990 | — |
+| 100 | 400 | 0.205 | 0.575 | 0.880 |
+| 150 | 600 | 0.250 | **0.840** | 0.990 |
+| **200 (fielded)** | **800** | 0.290 | **0.870** | 1.000 |
+| 250 | 1000 | 0.420 | 0.945 | 1.000 |
+| 300 | 1200 | 0.515 | 0.950 | 1.000 |
+| 400 | 1600 | 0.560 | 0.990 | 1.000 |
 
-The IRR 1.35 column is monotonically above the 1.22 column by construction; it was still
-computing when this appendix was prepared and the cells are left blank rather than asserted.
+**Table S1.2. Power under high dispersion, wait-time SD 20 days.**
 
-**Table S1.2. Power under high dispersion, wait-time SD 20 days, IRR 1.22.**
-
-| Matched pairs | 100 | 150 | **200** | 250 | 300 |
-|---|---:|---:|---:|---:|---:|
-| Power | 0.180 | 0.260 | **0.410** | 0.455 | 0.530 |
+| Matched pairs | Calls | IRR 1.10 | **IRR 1.22** | IRR 1.35 |
+|---:|---:|---:|---:|---:|
+| 100 | 400 | 0.065 | 0.180 | 0.390 |
+| 150 | 600 | 0.100 | 0.260 | 0.525 |
+| **200 (fielded)** | **800** | 0.125 | **0.410** | 0.695 |
+| 250 | 1000 | 0.135 | 0.455 | 0.740 |
+| 300 | 1200 | 0.135 | 0.530 | 0.810 |
+| 400 | 1600 | 0.175 | 0.580 | 0.935 |
 
 **Reading.** Under the primary anchored effect and a wait-time SD of 10 days, the fielded design
-of 200 pairs gives 0.870 power for the interaction, and 150 pairs would already clear 0.80.
-Under the conservative 1.10 the design is underpowered at every feasible size — 0.29 at 200 pairs
-and only 0.56 at 400 — so no achievable sample rescues that scenario. Under high dispersion the
-primary scenario reaches only 0.41 at the fielded size.
+of 200 pairs gives 0.870 power for the interaction, and 150 pairs would already clear 0.80. Under
+the conservative 1.10 the design is underpowered at every feasible size — 0.29 at 200 pairs and
+only 0.56 at 400 — so no achievable sample rescues that scenario. Under the larger 1.35 the
+design is saturated at SD 10, reaching 1.000 from 200 pairs onward, which means the primary
+scenario rather than the optimistic one is the informative planning case.
 
 **Dispersion, not sample size, is the binding constraint.** Doubling the wait-time SD costs more
-power than halving the sample. This is the input the study has least information about, and the
-first thing that should be re-examined once real wait times accumulate.
+power than doubling the sample. At SD 20 the primary scenario reaches 0.410 at 200 pairs and
+still only 0.580 at 400; even the larger 1.35 scenario needs 300 pairs to clear 0.80. The
+conservative scenario never exceeds 0.175 at any size tested. Dispersion is the input the study
+has least information about and the first thing that should be re-examined once real wait times
+accumulate.
 
-**Table S1.3. Minimum detectable interaction at the fielded design** (200 pairs, SD 10 days).
+**Table S1.3. Minimum detectable interaction at the fielded design** (200 pairs, SD 10 days,
+all calls yielding a wait time).
 
 | Assumed IRR | 1.10 | 1.14 | 1.17 | **1.20** | 1.22 | 1.26 |
 |---|---:|---:|---:|---:|---:|---:|
@@ -219,22 +230,40 @@ that identifies it. Roughly 82 observed PE-Medicaid waits, not 200, will carry t
 **Table S1.4. Power for the interaction when calls are retained at their cell's obtainment
 probability** (IRR 1.22, SD 10 days, 200 replicates per row).
 
-| Matched pairs | Calls placed | Wait times observed | PE-Medicaid cell | Power | Table S1.1 power |
+| Matched pairs | Calls placed | Wait times observed | PE-Medicaid cell | Censored power | Table S1.1 |
 |---:|---:|---:|---:|---:|---:|
 | **200 (fielded)** | 800 | 622 | 82 | **0.690** | 0.870 |
+| 220 | 880 | 684 | 91 | 0.755 | — |
+| **244 (attainable ceiling)** | 976 | 758 | 99 | **0.810** | — |
 | 250 | 1000 | 777 | 102 | 0.840 | 0.945 |
 | 300 | 1200 | 932 | 123 | 0.910 | 0.950 |
 | 400 | 1600 | 1244 | 163 | 0.960 | 0.990 |
 | 500 | 2000 | 1558 | 206 | 0.980 | — |
 
+Monte Carlo standard error is 0.033 at a power of 0.69 and 0.028 at 0.81.
+
 **Censoring costs 0.18 of power at the fielded size and takes the design below the conventional
 threshold: 0.690, not 0.870.** Power at 200 pairs with censoring is roughly what Table S1.1
-reports at 150 pairs without it. Recovering 80% requires about 250 pairs.
+reports at 150 pairs without it.
 
-This materially changes the sample-size conclusion and is the strongest argument in this
-appendix for moving toward the attainable ceiling — see §S1.8(d), which puts that ceiling at 244
-pairs, just short of the 250 needed. At 244 pairs the interpolated censored power is
-approximately 0.83.
+**Table S1.5. Censored power by effect-size scenario, at the fielded size and at the attainable
+ceiling** (SD 10 days; uncensored values from Table S1.1 in parentheses).
+
+| Matched pairs | IRR 1.10 (conservative) | **IRR 1.22 (primary)** | IRR 1.35 (larger) |
+|---:|---:|---:|---:|
+| **200 (fielded)** | 0.240 (0.290) | **0.690** (0.870) | 0.980 (1.000) |
+| **244 (ceiling)** | 0.295 (—) | **0.810** (—) | 0.995 (—) |
+
+The conservative scenario is not rescuable by sample size with or without censoring: 0.240 at the
+fielded size and 0.295 at the ceiling. The larger scenario is saturated in both conditions and so
+places no constraint on the design. **The primary scenario is the only one in which the sample
+size decision has any consequence**, which is why it carries the planning conclusion.
+
+**Expansion to the attainable ceiling of 244 pairs raises censored power from 0.690 to 0.810, a
+gain of 0.12** — measured, not interpolated. That moves the design from clearly underpowered to
+marginally adequate under the primary scenario, and it is the strongest quantitative argument in
+this appendix for expansion. It is contingent on the assumed effect size and does nothing for the
+measurement and dependence problems documented in Appendix S2.
 
 This is a selection problem as well as a precision problem: the PE-Medicaid waits that *are*
 observed come from the minority of PE practices willing to schedule a Medicaid patient, which is
@@ -340,16 +369,17 @@ randomised greedy search over 2,000 restarts is **244 pairs**, against a countin
 307. So the practical ceiling is roughly 244 pairs, not 459.
 
 **Revised reading.** An earlier version of this section concluded that expanding the sample was
-the wrong lever. That was written before the censoring-aware simulation existed, and it no
-longer holds. Table S1.4 puts censored power at 0.690 at 200 pairs and 0.840 at 250, so the
-extra pairs now buy about 0.15 of power in the range that matters, not the 0.04 the uncensored
-grid suggested. The ceiling of 244 pairs sits just below the 250 that restores 80%; interpolating
-Table S1.4 gives approximately **0.83 at 244 pairs**.
+the wrong lever. That was written before the censoring-aware simulation existed and no longer
+holds. The ceiling has now been simulated directly rather than interpolated: **244 pairs gives
+0.810 under censoring, against 0.690 at 200** (Table S1.4). The extra 44 pairs buy 0.12 of power
+in the range that matters, not the 0.04 the uncensored grid suggested, and they take the design
+across the conventional threshold.
 
-Expansion is therefore worth considering on its merits, alongside two cheaper levers that act on
-the same shortfall: anything that raises PE-Medicaid obtainment measurement (for example
-recording a wait time for calls that offer a date beyond the audit window rather than treating
-them as non-obtained) directly enlarges the identifying cell, and the SVI repair in (b) has
+Expansion is therefore defensible on its merits. Two cheaper levers act on the same shortfall and
+should be considered first, because both enlarge the identifying cell rather than the sample.
+Anything that converts a call currently scored as non-obtained into an observed wait — for
+example recording a date offered beyond the audit window instead of treating it as a refusal —
+directly increases the PE-Medicaid cell from its expected 82. And the covariate repair in (b) has
 already restored 91 complete pairs at no fieldwork cost.
 
 *(A previously circulated figure of 224 office-disjoint pairs was computed with a weaker greedy
@@ -371,40 +401,47 @@ Under the literature-anchored effect of IRR 1.22 and a wait-time SD of 10 days, 
 design of 200 matched pairs reaches 0.870 for the primary wait-time interaction *if every call
 yields a wait time*. It will not. Once calls are retained at their cell's anticipated obtainment
 probability, power at 200 pairs is **0.690** (§S1.8(a), Table S1.4). The study as fielded is
-underpowered for its primary wait-time estimand.
+underpowered for its primary wait-time estimand, and the manuscript should report 0.69 as the
+design's power rather than the idealised figure.
 
 Where that leaves the design:
 
 1. **Obtainment censoring is the dominant threat.** It costs 0.18 of power by shrinking the
-   identifying PE-Medicaid cell from 200 to about 82. Roughly 250 pairs restores 80%; the
-   attainable ceiling of 244 pairs (§S1.8(d)) gives approximately 0.83.
-2. **The SVI defect is repaired.** The covariate was simulated, not measured, and has been
-   reconstructed from the published CDC release for 394 of 400 clinicians with missingness now
-   independent of exposure (Fisher p = 1.00) and 197 of 200 pairs complete. This removes what
-   would otherwise have been a second, larger reduction to 106 pairs. §S1.8(b).
+   identifying PE-Medicaid cell from 200 to about 82. Expansion to the attainable ceiling of 244
+   pairs restores 0.810 — measured directly, not interpolated (§S1.8(d)).
+2. **The SVI defect is repaired.** The covariate was simulated rather than measured and has been
+   reconstructed from the published CDC release for 394 of 400 clinicians, with missingness now
+   independent of exposure (Fisher *P* = 1.00) and 197 of 200 pairs complete. This removes what
+   would otherwise have been a second and larger reduction, to 106 pairs. §S1.8(b); full audit in
+   Appendix S2.
 3. **Shared schedulers are measured, not assumed away.** Two fielded pairs put both arms on one
-   practice line; 385 lines serve 400 clinicians. Sensitivity analyses excluding same-line pairs
-   and clustering on the line are prespecified and the variables to run them are on the sheet.
-   §S1.8(c).
-4. **Dispersion remains the binding constraint on the uncensored figures.** At SD 20 the same
-   design gives 0.41, and no feasible sample size rescues it. Re-examine against real wait times
-   as soon as they accumulate.
+   practice line, and 385 practice lines serve 400 clinicians. Sensitivity analyses excluding
+   same-line pairs and clustering on the line are prespecified, and the variables needed to run
+   them are on the calling sheet. §S1.8(c).
+4. **Dispersion is the binding constraint everywhere.** At SD 20 the primary scenario gives 0.410
+   at 200 pairs and 0.580 at 400; the conservative scenario never exceeds 0.175 at any size
+   tested. This should be re-examined against real wait times as soon as they accumulate.
 
-Under the conservative IRR 1.10 no feasible sample size reaches 0.80, and the manuscript should
-say so rather than report only the favourable scenario. The minimum detectable interaction at
-the fielded design, before censoring, is about IRR 1.19 — a differential Medicaid penalty of
-roughly 5.7 business days.
+Under the conservative IRR 1.10 no feasible sample size reaches 0.80 with or without censoring
+(0.290 uncensored and 0.240 censored at 200 pairs; 0.560 uncensored at 400), and the manuscript
+should say so rather than report only the favourable scenario. Under the larger IRR 1.35 the
+uncensored design is saturated from 200 pairs, so the primary scenario is the informative
+planning case.
+
+The minimum detectable interaction at the fielded design, before censoring, is about **IRR
+1.19** — a differential Medicaid penalty of roughly **5.7 business days**. This is the quantity
+to report when asked what the study can rule out.
 
 ## S1.10 Reproducibility
 
 | Item | Value |
 |---|---|
 | Primary script | `run_new_power_analysis.R` |
-| Results | `power_analysis_new_results.csv` |
+| Results | `power_analysis_new_results.csv` (36 cells: 3 scenarios × 2 dispersions × 6 sample sizes) |
 | Seed | `set.seed(42)`, set once before the grid |
-| Replicates | 200 per cell |
+| Replicates | 200 per cell; 200/200 fits usable in every cell |
 | Software | R 4.4.2; glmmTMB 1.1.14; TMB 1.9.21; MASS 7.3.65 |
-| Censoring-aware run | `scratch/power_with_obtainment_censoring.R` (Table S1.4) |
+| Censoring-aware runs | `scratch/power_with_obtainment_censoring.R`, `scratch/power_censored_244_and_scenarios.R` (Tables S1.4, S1.5) |
 | Minimum detectable effect | `scratch/mde_200_pairs.R` (Table S1.3) |
 | Office packing bounds | `scratch/office_disjoint_ceiling.R` (§S1.8(d)) |
 | SVI reconstruction | `build_svi_covariate.R`; audit in `scratch/audit_enrichment_provenance.R` |
