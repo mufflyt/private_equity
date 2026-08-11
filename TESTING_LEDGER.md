@@ -2166,3 +2166,57 @@ term, which IS a between-physician contrast, so for that one the original cycle-
 does apply and its power is likely overstated.
 
 **Suite:** 520 pass, 79 fail, 0 warn, 0 skip.
+
+---
+
+## Post-audit — 2026-08-10 — LITERATURE-ANCHORED EFFECT SIZE FOR THE POWER ANALYSIS
+
+The 0.66 power figure came from the script assuming an interaction IRR of 1.167, invented
+rather than derived. The user supplied a published anchor and the framing it requires.
+
+**Anchor.** Nie et al., *Urology* 2022 (PMID 35276202): 815 calls to 445 urology offices,
+mystery-caller design, PE versus non-PE, commercial versus Medicaid. Mean wait 17.5 days at
+PE-affiliated practices versus 21.4 at non-PE (P = .017), a ratio of 17.5/21.4 = 0.818, or
+**1.22** in the opposite direction. Added to `references.bib` as `nie2022urology`; it was not
+previously in the bibliography.
+
+**The caveat is load-bearing and is recorded in the script itself.** Nie et al. did NOT report
+a PE-by-insurance interaction for wait time. They reported the two main effects separately,
+and their Medicaid-versus-commercial wait ratio was only 1.047 (P = .59). So 1.22 must be
+described as *the magnitude of the published PE-associated wait-time difference in the closest
+mystery-caller study*, never as an observed interaction. Their ACCESS outcome does show the
+effect modification this study hypothesises (Medicaid availability 52.1% at PE versus 66.8%
+non-PE; adjusted OR 0.55, 95% CI 0.37-0.83), which is why an interaction of this order is
+plausible for wait time.
+
+**Scenarios:** conservative 1.10, primary 1.22, larger plausible 1.35.
+
+**Results** (glmmTMB with a physician random intercept, interaction tested alone, 200
+simulations per cell, all fits usable):
+
+| Pairs | Calls | IRR 1.10 | **IRR 1.22 (primary)** | SD 20, IRR 1.22 |
+|---:|---:|---:|---:|---:|
+| 100 | 400 | 0.205 | 0.575 | 0.180 |
+| 150 | 600 | 0.250 | **0.840** | 0.260 |
+| **200 (fielded)** | **800** | 0.290 | **0.870** | 0.410 |
+| 250 | 1000 | 0.420 | 0.945 | 0.455 |
+| 300 | 1200 | 0.515 | 0.950 | 0.530 |
+| 400 | 1600 | 0.560 | 0.990 | — |
+
+**Conclusion: at the literature-anchored effect the fielded design is adequately powered.**
+200 pairs gives **0.870** for the primary wait-time interaction, and 150 pairs would already
+clear 80%. The earlier 0.66 was an artefact of the invented 1.167.
+
+**Two caveats that belong in the manuscript.** Under the conservative 1.10 the design is
+underpowered at any feasible size (0.29 at 200 pairs, 0.56 at 400). And every figure above
+assumes a wait-time SD of 10 days; at SD 20 the primary scenario reaches only 0.41 at 200
+pairs. Dispersion, not sample size, is the binding constraint if waits turn out highly
+variable.
+
+**Also settled: the pool cannot supply a larger design anyway.** Of 459 matched pairs, only
+**224 are office-disjoint**; the rest would put a second pair of calls into an office already
+in the study, breaking the two-calls-per-clinic guarantee. So 224 pairs is the ceiling without
+relaxing that protocol commitment or expanding the candidate pool.
+
+The `larger` (1.35) scenario was still computing when this was written; it can only exceed the
+1.22 row.
