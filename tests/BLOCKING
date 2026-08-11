@@ -1,0 +1,32 @@
+# The blocking subset.
+#
+# These test files must pass before a commit lands. The rest of the suite is advisory until it
+# is clean; a gate you routinely bypass is not a gate, so this list starts with the files that
+# are green and grows as others are fixed. Promotion is a one-line edit here.
+#
+# Format: <needs-data> <file>
+#   data  - reads a cohort CSV, so it can only run where the (gitignored) data is present
+#   nodata- runs anywhere, including CI
+#
+# Files deliberately NOT yet blocking, with their failure counts as of 2026-08-10:
+#   test-table1-balance.R 12, test-redcap-instrument.R 11, test-taxonomy-eligibility.R 7,
+#   test-artifact-vintage.R 6, test-control-independence.R 6, test-covariate-imputation.R 6,
+#   test-roster-currency.R 5, test-cohort-definition.R 4, test-enrichment-covariates.R 4,
+#   test-matching-balance.R 4, test-pe-exposure.R 4, test-matching-provenance.R 3,
+#   test-name-credential-parsing.R 3, test-pe-universe.R 3, test-coordinate-provenance.R 2,
+#   test-key-joins.R 2, test-coordinate-integrity.R (1 error),
+#   test-geography-and-churn.R (1 error)
+
+nodata  test-pe_helpers.R
+nodata  test-geocode-lookup.R
+nodata  test-address-key-parity.R
+
+data    test-analysis-gates.R
+data    test-svi-provenance.R
+data    test-phone-clustering.R
+data    test-power-and-calibration.R
+data    test-platform-exclusion.R
+data    test-redcap-structure.R
+data    test-pipeline-determinism.R
+data    test-matching-invariants.R
+data    test-activity-recency.R

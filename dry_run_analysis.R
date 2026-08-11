@@ -18,6 +18,9 @@
 
 suppressMessages({library(readr); library(dplyr); library(tidyr); library(glmmTMB)})
 
+source("R/pe_helpers.R")
+source("R/analysis_gates.R")
+
 SHEET  <- "pe_obgyn_final_calling_sheet_200.csv"
 OUT    <- "dry_run_analysis_results.csv"
 SEED   <- 1978L
@@ -59,10 +62,21 @@ sheet <- read_csv(SHEET, show_col_types = FALSE)
 stopifnot("expected 400 fielded clinicians" = nrow(sheet) == 400L)
 
 # One row per call: 400 clinicians x 2 payer arms = 800.
+# The deprivation covariate is read by name from the frozen plan, not hard-coded here, so
+# that switching it is an amendment to SAP.lock rather than an edit buried in a script.
+SAP <- read_sap()
+SVI_COL <- SAP[["svi_column"]]
+
+analysis_preflight(sheet,
+                   analytic        = SVI_COL,
+                   arm_col         = "PE_or_Not",
+                   clustering_unit = "phone_id",
+                   sap             = SAP)
+
 design <- sheet %>%
   transmute(npi = as.character(NPI), pair = `Matched Pair ID`, State,
             pe = as.integer(PE_or_Not == "PE"),
-            svi = suppressWarnings(as.numeric(CDC_SVI))) %>%
+            svi = suppressWarnings(as.numeric(.data[[SVI_COL]]))) %>%
   mutate(svi_z = as.numeric(scale(ifelse(is.na(svi), median(svi, na.rm = TRUE), svi)))) %>%
   tidyr::crossing(payer = c("BCBS", "Medicaid")) %>%
   mutate(medicaid = as.integer(payer == "Medicaid"),
@@ -91,11 +105,18 @@ simulate_calls <- function(d) {
 # Exactly the manuscript specification: ownership x payer interaction, CDC SVI, and
 # random intercepts for matched pair and individual clinician.
 
+F_OB <- obtained     ~ pe * medicaid + svi_z + (1 | pair) + (1 | npi)
+F_WT <- business_days ~ pe * medicaid + svi_z + (1 | pair) + (1 | npi)
+
+# Both formulas are checked against SAP.lock once, before any fitting. An earlier power
+# analysis silently substituted a 2-df joint test for the 1-df interaction; nothing in the
+# code said which hypothesis was being tested, so nothing could contradict it.
+TERM_WT <- gate_sap(F_WT, "waittime_primary",     family = "nbinom2", sap = SAP)
+TERM_OB <- gate_sap(F_OB, "obtainment_secondary", family = "binomial", sap = SAP)
+
 fit_both <- function(d) {
-  ob <- try(glmmTMB(obtained ~ pe * medicaid + svi_z + (1 | pair) + (1 | npi),
-                    family = binomial, data = d), silent = TRUE)
-  wt <- try(glmmTMB(business_days ~ pe * medicaid + svi_z + (1 | pair) + (1 | npi),
-                    family = nbinom2, data = filter(d, obtained == 1)), silent = TRUE)
+  ob <- try(glmmTMB(F_OB, family = binomial, data = d), silent = TRUE)
+  wt <- try(glmmTMB(F_WT, family = nbinom2, data = filter(d, obtained == 1)), silent = TRUE)
   list(ob = ob, wt = wt)
 }
 
@@ -134,7 +155,10 @@ gap <- t3 %>% select(Ownership, payer, mean_days) %>%
 print(as.data.frame(gap), row.names = FALSE, digits = 3)
 
 cat("\n--- Table 4: model estimates (simulated) ---\n")
-terms <- c(Payer = "medicaid", Ownership = "pe", `Payer x Ownership` = "pe:medicaid", SVI = "svi_z")
+# The estimand names come from the frozen plan, so the reported number cannot drift onto a
+# different coefficient than the one the plan nominates.
+stopifnot(identical(TERM_WT, "pe:medicaid"), identical(TERM_OB, "pe:medicaid"))
+terms <- c(Payer = "medicaid", Ownership = "pe", `Payer x Ownership` = TERM_WT, SVI = "svi_z")
 t4 <- bind_rows(lapply(names(terms), function(nm) {
   o <- grab(f1$ob, terms[[nm]]); w <- grab(f1$wt, terms[[nm]])
   tibble(Term = nm,

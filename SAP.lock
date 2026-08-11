@@ -1,0 +1,68 @@
+# Frozen statistical analysis plan.
+#
+# The analysis reads this file and refuses to run if the model it is about to fit does not
+# match the formula recorded here. The failure this prevents is real: an earlier power
+# analysis reported a two-degree-of-freedom joint test of "any ownership effect" as though it
+# were the interaction the plan names. Nothing in the code said otherwise, because nothing in
+# the code said anything.
+#
+# Format: key = value. Blank lines and lines beginning with # are ignored. Every formula is
+# compared after normalising whitespace, so reformatting is safe but reordering terms is not.
+#
+# CHANGING THIS FILE CHANGES THE PRE-SPECIFIED ANALYSIS. Do not edit it to make a run pass.
+# Record the amendment, the date, and the reason in the amendments block at the foot, and
+# regenerate the hash with:  Rscript -e 'source("R/analysis_gates.R"); sap_write_hash()'
+
+version = 2026-08-10
+
+# ---------------------------------------------------------------- primary obtainment
+# PE vs independent among Medicaid calls only. Each clinician contributes one Medicaid call,
+# so no clinician-level random effect is identifiable and none is specified.
+obtainment_primary_formula   = obtained ~ pe + svi_z + (1 | pair)
+obtainment_primary_family    = binomial
+obtainment_primary_subset    = medicaid == 1
+obtainment_primary_estimand  = pe
+obtainment_primary_scale     = odds ratio
+
+# ---------------------------------------------------------------- primary wait time
+# The ownership-by-insurance interaction, tested alone. One degree of freedom.
+waittime_primary_formula     = business_days ~ pe * medicaid + svi_z + (1 | pair) + (1 | npi)
+waittime_primary_family      = nbinom2
+waittime_primary_subset      = obtained == 1
+waittime_primary_estimand    = pe:medicaid
+waittime_primary_scale       = incidence rate ratio
+
+# ---------------------------------------------------------------- secondary obtainment
+obtainment_secondary_formula = obtained ~ pe * medicaid + svi_z + (1 | pair) + (1 | npi)
+obtainment_secondary_family  = binomial
+obtainment_secondary_estimand = pe:medicaid
+obtainment_secondary_scale   = odds ratio
+
+# ---------------------------------------------------------------- shared settings
+alpha                        = 0.05
+sided                        = two
+svi_column                   = CDC_SVI_real
+clustering_unit              = npi
+clustering_unit_sensitivity  = phone_id
+
+# ---------------------------------------------------------------- assumed constants
+# Every assumed magnitude must carry a source. An unsourced constant is a gate failure.
+effect_primary_irr           = 1.22
+effect_primary_irr_source    = Nie J et al. Urology 2022;164:112-117. doi:10.1016/j.urology.2022.01.055. Magnitude of the published PE-associated wait-time difference in the closest mystery-caller study; NOT a previously observed PE-by-insurance interaction.
+effect_conservative_irr      = 1.10
+effect_conservative_irr_source = Pre-specified conservative sensitivity; no external anchor claimed.
+effect_larger_irr            = 1.35
+effect_larger_irr_source     = Pre-specified optimistic sensitivity; no external anchor claimed.
+
+# ---------------------------------------------------------------- prespecified sensitivity
+sensitivity_1 = exclude pairs where same_phone_within_pair is TRUE
+sensitivity_2 = cluster on phone_id rather than npi
+sensitivity_3 = restrict to pairs where both members have an address-level SVI linkage
+sensitivity_4 = refit without svi_z
+sensitivity_5 = complete-case on all analytic covariates
+
+# ---------------------------------------------------------------- amendments
+# date | section | change | reason
+# 2026-08-10 | initial | frozen | first lock; svi_column set to the reconstructed measure
+# because the original CDC_SVI column was established to be simulated (Appendix S2).
+# sha256 = 01f65282d490f79303ba431a5f23b2b66beaff4d0a76394d93c176a6cb5d8789
