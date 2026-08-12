@@ -5,6 +5,8 @@
 # Step 4: Perform nearest-neighbor PSM matching (1-to-1 match, exact state constraint)
 # Step 5: Save control group, study database, and a clean matched calling list CSV
 
+suppressMessages(library(dplyr))
+
 # Helper to classify subspecialties from taxonomy
 get_subspecialty_from_tax <- function(tax) {
   if (is.na(tax) || tax == "") return("Generalist")
@@ -119,19 +121,14 @@ cat(sprintf("  PE roster (all, control-ineligible): %d | study-eligible after ex
             nrow(pe_roster_all), nrow(pe_matched_all)))
 
 # Filter out PE providers with no valid phone numbers (Scraped, NPPES, or DAC)
-has_valid_phone <- function(row) {
-  ph <- row[["Scraped Phone"]]
-  if (is.na(ph) || ph == "" || ph == "N/A" || ph == "NAN") {
-    ph <- row[["NPPES Phone"]]
-    if (is.na(ph) || ph == "" || ph == "N/A" || ph == "NAN") {
-      ph <- row[["DAC Phone"]]
-    }
-  }
-  return(!is.na(ph) && ph != "" && ph != "N/A" && ph != "NAN")
+na_if_invalid <- function(x) {
+  ifelse(is.na(x) | x == "" | x == "N/A" | x == "NAN", NA_character_, as.character(x))
 }
-pe_matched_all$has_phone <- sapply(1:nrow(pe_matched_all), function(i) has_valid_phone(pe_matched_all[i, ]))
-pe_matched_all <- pe_matched_all[pe_matched_all$has_phone, ]
-pe_matched_all$has_phone <- NULL
+
+pe_matched_all <- pe_matched_all %>%
+  filter(!is.na(na_if_invalid(`Scraped Phone`)) | 
+         !is.na(na_if_invalid(`NPPES Phone`)) | 
+         !is.na(na_if_invalid(`DAC Phone`)))
 
 # Filter PE cohort strictly to Generalists only using both NPPES Taxonomy and raw Subspecialty
 pe_matched_all$Subspecialty_clean <- sapply(pe_matched_all[["NPPES Taxonomy"]], get_subspecialty_from_tax)
@@ -260,38 +257,34 @@ pe_matched_all$office_id <- sapply(1:nrow(pe_matched_all), function(i) {
 pe_matched_all$address_key <- NULL
 
 # # 3. Clean and Standardize Covariates for PSM Model
-pe_matched_all$Gender_clean <- ifelse(is.na(pe_matched_all$Gender), "Female", pe_matched_all$Gender)
-candidates_df$Gender_clean <- ifelse(is.na(candidates_df$gender), "Female", 
-                                     ifelse(candidates_df$gender == "F", "Female", 
-                                            ifelse(candidates_df$gender == "M", "Male", "Female")))
-
-pe_matched_all$MD_vs_DO <- ifelse(is.na(pe_matched_all[["MD vs. DO"]]), "MD", pe_matched_all[["MD vs. DO"]])
-candidates_df$MD_vs_DO <- ifelse(is.na(candidates_df$cred), "MD", 
-                                 ifelse(grepl("DO", toupper(candidates_df$cred)), "DO", "MD"))
-
-# Pinned, not read from the clock. Deriving the study year from Sys.Date() means the
-# cohort silently changes on 1 January: years-in-practice imputation and any downstream
-# matching shift with wall-clock time, so a re-run in a later year cannot reproduce the
-# fielded sample. 2026 is the year the cohort was constructed, so pinning it preserves
-# current behaviour exactly while making the run reproducible from here on.
 STUDY_YEAR <- 2026
 study_year <- STUDY_YEAR
-pe_matched_all$Years_in_Practice <- as.numeric(pe_matched_all[["Years in Practice"]])
-pe_years_med <- median(pe_matched_all$Years_in_Practice, na.rm = TRUE)
-pe_matched_all$Years_in_Practice[is.na(pe_matched_all$Years_in_Practice)] <- pe_years_med
 
-candidates_df$Years_in_Practice <- study_year - as.numeric(candidates_df$grad_yr)
-candidates_df$enum_yr <- as.numeric(sapply(strsplit(as.character(candidates_df$enum_date), "-"), `[`, 1))
-candidates_df$Years_in_Practice <- ifelse(is.na(candidates_df$Years_in_Practice), study_year - candidates_df$enum_yr, candidates_df$Years_in_Practice)
-cand_years_med <- median(candidates_df$Years_in_Practice, na.rm = TRUE)
-candidates_df$Years_in_Practice[is.na(candidates_df$Years_in_Practice)] <- cand_years_med
+pe_matched_all <- pe_matched_all %>%
+  mutate(
+    Gender_clean = coalesce(Gender, "Female"),
+    MD_vs_DO = coalesce(`MD vs. DO`, "MD"),
+    Years_in_Practice = as.numeric(`Years in Practice`),
+    Years_in_Practice = coalesce(Years_in_Practice, median(Years_in_Practice, na.rm = TRUE)),
+    Open_Payments_Years = as.numeric(`Open Payments Years`),
+    Open_Payments_Years = coalesce(Open_Payments_Years, median(Open_Payments_Years, na.rm = TRUE))
+  )
 
-pe_matched_all$Open_Payments_Years <- as.numeric(pe_matched_all[["Open Payments Years"]])
-pe_op_med <- median(pe_matched_all$Open_Payments_Years, na.rm = TRUE)
-pe_matched_all$Open_Payments_Years[is.na(pe_matched_all$Open_Payments_Years)] <- pe_op_med
-
-candidates_df$Open_Payments_Years <- as.numeric(candidates_df$op_years)
-candidates_df$Open_Payments_Years[is.na(candidates_df$Open_Payments_Years)] <- 0
+candidates_df <- candidates_df %>%
+  mutate(
+    Gender_clean = case_when(
+      is.na(gender) ~ "Female",
+      gender == "F" ~ "Female",
+      gender == "M" ~ "Male",
+      TRUE ~ "Female"
+    ),
+    MD_vs_DO = if_else(is.na(cred), "MD", if_else(grepl("DO", toupper(cred)), "DO", "MD")),
+    Years_in_Practice = study_year - as.numeric(grad_yr),
+    enum_yr = as.numeric(sapply(strsplit(as.character(enum_date), "-"), `[`, 1)),
+    Years_in_Practice = coalesce(Years_in_Practice, study_year - enum_yr),
+    Years_in_Practice = coalesce(Years_in_Practice, median(Years_in_Practice, na.rm = TRUE)),
+    Open_Payments_Years = coalesce(as.numeric(op_years), 0)
+  )
 
 # ACOG States Mapping (PR duplicate removed)
 STATE_TO_ACOG <- c(
@@ -481,30 +474,30 @@ get_coords <- function(city, state) {
 }
 
 # Pre-map coordinates to candidates
-candidates_df$latitude <- NA
-candidates_df$longitude <- NA
-for (i in 1:nrow(candidates_df)) {
-  coords <- get_coords(candidates_df$city[i], candidates_df$state[i])
-  candidates_df$latitude[i] <- coords[1]
-  candidates_df$longitude[i] <- coords[2]
-}
+candidates_df <- candidates_df %>%
+  rowwise() %>%
+  mutate(
+    coords = list(get_coords(city, state)),
+    latitude = coords[1],
+    longitude = coords[2]
+  ) %>%
+  ungroup() %>%
+  select(-coords)
 
 # Pre-map coordinates to PE clinicians
-pe_matched_all$latitude <- NA
-pe_matched_all$longitude <- NA
-for (i in 1:nrow(pe_matched_all)) {
-  p_city <- pe_matched_all[["DAC City"]][i]
-  if (is.na(p_city) || p_city == "" || p_city == "N/A" || p_city == "NAN") {
-    p_city <- pe_matched_all[["NPPES City"]][i]
-  }
-  p_state <- pe_matched_all[["DAC State"]][i]
-  if (is.na(p_state) || p_state == "" || p_state == "N/A" || p_state == "NAN") {
-    p_state <- pe_matched_all[["NPPES State"]][i]
-  }
-  coords <- get_coords(p_city, p_state)
-  pe_matched_all$latitude[i] <- coords[1]
-  pe_matched_all$longitude[i] <- coords[2]
-}
+pe_matched_all <- pe_matched_all %>%
+  mutate(
+    p_city = coalesce(na_if_invalid(`DAC City`), na_if_invalid(`NPPES City`)),
+    p_state = coalesce(na_if_invalid(`DAC State`), na_if_invalid(`NPPES State`))
+  ) %>%
+  rowwise() %>%
+  mutate(
+    coords = list(get_coords(p_city, p_state)),
+    latitude = coords[1],
+    longitude = coords[2]
+  ) %>%
+  ungroup() %>%
+  select(-coords, -p_city, -p_state)
 
 matched_pairs <- list()
 used_npis <- numeric()
