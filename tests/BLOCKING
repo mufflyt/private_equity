@@ -8,27 +8,22 @@
 #   data  - reads a cohort CSV, so it can only run where the (gitignored) data is present
 #   nodata- runs anywhere, including CI
 #
-# DEMOTED 2026-08-10: test-geocode-lookup.R.
-#   Not because the test is wrong. Because it is right, and what it detects is a decision the
-#   user has to make rather than a defect I can fix.
+# RESOLVED 2026-08-11: the gazetteer question, split in two.
+#   test-geocode-lookup.R is gone. It conflated two questions and pinned the pipeline to a
+#   dependency's storage schema, which is precisely what broke when mysterycall renamed its
+#   columns. It is replaced by:
 #
-#   mysterycall commit 22d0777 ("rename data objects to snake_case") rebuilt the bundled
-#   gazetteer city_state_to_lat_long: 6,211 rows with two-letter states and lat/long columns
-#   became 31,909 rows with full state names and latitude/longitude columns. The installed
-#   package was stale relative to its own source until it was rebuilt on 2026-08-10, so the
-#   fielded cohort was matched against a gazetteer that the installed package no longer
-#   contains.
+#     test-frozen-geo-reference.R      BLOCKING. The coordinate set the fielded cohort's
+#                                      10-mile caliper actually used is immutable, hashed, and
+#                                      covers every fielded clinician.
+#     test-gazetteer-compatibility.R   NON-BLOCKING. Can the CURRENT mysterycall gazetteer be
+#                                      normalised to the four-column pipeline contract? A pass
+#                                      does NOT license substituting it into the primary
+#                                      analysis.
 #
-#   `adversarial: the gazetteer package contract is stable` asserts
-#   c("city","state","lat","long") %in% names(gz). That is now false. The test is left failing
-#   deliberately: editing it to accept the new columns would silence the only signal that the
-#   matching reference changed underneath a fielded sample.
-#
-#   Two ways out, both the user's call:
-#     (a) pin mysterycall to the build the cohort was matched against, or
-#     (b) accept the new gazetteer, regenerate the cohort, and re-verify the 10-mile caliper.
-#   Note that build_matched_control_group_psm.R:437 reads $lat and $long and currently survives
-#   only on `$` partial matching against latitude/longitude. That is silent and fragile.
+#   The mysterycall build used to construct the cohort could not be reconstructed and no longer
+#   exists. Re-resolving through the current build reproduces 82.2% of the persisted
+#   coordinates, max discrepancy 54 degrees. See inst/frozen/PROVENANCE.md.
 #
 # Files deliberately NOT yet blocking, with their failure counts as of 2026-08-10:
 #   test-table1-balance.R 12, test-redcap-instrument.R 11, test-taxonomy-eligibility.R 7,
@@ -42,6 +37,7 @@
 nodata  test-pe_helpers.R
 nodata  test-address-key-parity.R
 
+data    test-frozen-geo-reference.R
 data    test-analysis-gates.R
 data    test-svi-provenance.R
 data    test-phone-clustering.R

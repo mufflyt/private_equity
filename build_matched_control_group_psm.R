@@ -353,9 +353,56 @@ haversine_distance <- function(lat1, lon1, lat2, lon2) {
   return(r * c)
 }
 
+# ---------------------------------------------------------------- gazetteer boundary
+#
+# The gazetteer is a FROZEN ANALYSIS DEPENDENCY, not a package implementation detail. The
+# coordinate each clinician was assigned decides which controls fell inside the 10-mile
+# caliper, so replacing the reference is a new matching specification, not an upgrade.
+#
+# mysterycall has since changed the dataset's schema (object renamed to snake_case, columns
+# renamed to latitude/longitude). Re-resolving the fielded cohort through the current build
+# reproduces only 82.2% of the persisted coordinates, with a maximum discrepancy of 54 degrees.
+# The build the cohort was matched against no longer exists anywhere. See
+# inst/frozen/PROVENANCE.md.
+#
+# Everything downstream of this boundary sees exactly four columns -- city, state, lat, long --
+# whatever the package happens to ship. `normalize_gazetteer()` accepts either the historical
+# abbreviated-state schema or the current full-name schema and errors rather than guessing.
+
+#' Reduce any gazetteer schema to the pipeline contract: city, state, lat, long.
+#'
+#' Column resolution is EXACT. `$` partial matching silently rescued `$lat` against a
+#' `latitude` column for months and would have stopped doing so the moment any other `lat*`
+#' column appeared; nothing downstream may rely on it.
+normalize_gazetteer <- function(g, full_to_abbrev) {
+  pick <- function(cands, what) {
+    hit <- cands[cands %in% names(g)]
+    if (!length(hit)) {
+      stop(sprintf(paste0("Gazetteer has no %s column. Looked for: %s. Found: %s.\n",
+                          "  The dependency's schema changed; extend normalize_gazetteer() ",
+                          "rather than\n  relying on partial matching."),
+                   what, paste(cands, collapse = ", "), paste(names(g), collapse = ", ")),
+           call. = FALSE)
+    }
+    g[[hit[1]]]
+  }
+
+  raw_state <- pick(c("state", "state_abbrev", "STATE"), "state")
+  out <- data.frame(
+    city  = toupper(trimws(pick(c("city", "CITY"), "city"))),
+    state = ifelse(nchar(trimws(raw_state)) == 2L, toupper(trimws(raw_state)),
+                   unname(full_to_abbrev[raw_state])),
+    lat   = as.numeric(pick(c("lat", "latitude", "LAT"), "latitude")),
+    long  = as.numeric(pick(c("long", "longitude", "lon", "lng", "LONG"), "longitude")),
+    stringsAsFactors = FALSE
+  )
+  stopifnot(identical(names(out), c("city", "state", "lat", "long")))
+  out
+}
+
 # Set up lat/long lookup reference from package
 data(city_state_to_lat_long, package = "mysterycall")
-lat_long_ref <- city_state_to_lat_long
+lat_long_raw <- city_state_to_lat_long
 full_to_abbrev <- names(c('AL'='Alabama', 'AK'='Alaska', 'AZ'='Arizona', 'AR'='Arkansas', 'CA'='California',
   'CO'='Colorado', 'CT'='Connecticut', 'DE'='Delaware', 'DC'='District of Columbia',
   'FL'='Florida', 'GA'='Georgia', 'HI'='Hawaii', 'ID'='Idaho', 'IL'='Illinois',
@@ -387,13 +434,9 @@ names(full_to_abbrev) <- c('Alabama', 'Alaska', 'Arizona', 'Arkansas', 'Californ
 # gazetteer. get_coords() consequently fell through to the 17-entry manual_coords list and
 # returned NA for every other city, which is why matching reported "Caliper Geo Matches: 0"
 # and produced 2 pairs instead of 511. Accept either vocabulary.
-lat_long_ref$state_abbrev <- ifelse(
-  nchar(trimws(lat_long_ref$state)) == 2L,
-  toupper(trimws(lat_long_ref$state)),
-  full_to_abbrev[lat_long_ref$state]
-)
-lat_long_ref$city_upper <- toupper(trimws(lat_long_ref$city))
-lat_long_ref$state_upper <- toupper(trimws(lat_long_ref$state_abbrev))
+lat_long_ref <- normalize_gazetteer(lat_long_raw, full_to_abbrev)
+lat_long_ref$city_upper  <- lat_long_ref$city
+lat_long_ref$state_upper <- lat_long_ref$state
 lat_long_ref <- lat_long_ref[!is.na(lat_long_ref$state_upper), ]
 
 # Fail loudly if the gazetteer has been emptied. This filter previously removed all
@@ -430,11 +473,10 @@ get_coords <- function(city, state) {
   key <- paste0(city_clean, "_", state_clean)
   if (key %in% names(manual_coords)) return(manual_coords[[key]])
   match_row <- lat_long_ref[lat_long_ref$city_upper == city_clean & lat_long_ref$state_upper == state_clean, ]
-  # city_state_to_lat_long names its coordinate columns lat/long, not latitude/longitude.
-  # Reading the wrong names returned NULL, so c(NULL, NULL) was a zero-length vector. This
-  # was masked while the gazetteer was empty: the branch never executed, and every lookup
-  # fell through to manual_coords or NA. Fixing the state vocabulary exposed it.
-  if (nrow(match_row) > 0) return(c(match_row$lat[1], match_row$long[1]))
+  # `[[` not `$`: the columns are guaranteed by normalize_gazetteer(), and `$` would partial
+  # match `lat` against a `latitude` column, which is how this survived a schema change
+  # without anyone noticing. `[[` errors on a missing name instead of silently succeeding.
+  if (nrow(match_row) > 0) return(c(match_row[["lat"]][1], match_row[["long"]][1]))
   return(c(NA, NA))
 }
 
