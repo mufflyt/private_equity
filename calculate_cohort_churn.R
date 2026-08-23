@@ -8,7 +8,7 @@ library(readr)
 library(DBI)
 library(duckdb)
 
-db_path <- "/Volumes/MufflySamsung 1/DuckDB/nber_my_duckdb.duckdb"
+source("R/pe_warehouse.R")   # pe_nber_warehouse(): resolves the drive, refuses to guess
 study_db_path <- "/Users/tylermuffly/private_equity/pe_obgyn_study_database.csv"
 output_db_path <- "/Users/tylermuffly/private_equity/pe_obgyn_study_database_with_churn.csv"
 
@@ -27,7 +27,7 @@ unique_offices <- df_db %>%
 cat(sprintf("Found %d unique clinic locations to query for churn...\n", nrow(unique_offices)))
 
 # Connect to DuckDB once for speed (using direct queries rather than multiple function calls)
-con <- dbConnect(duckdb::duckdb(), db_path, read_only = TRUE)
+con <- pe_nber_warehouse(required_tables = "temporal_obgyn_only_all_years")
 
 # Create a temporary table or map values in memory
 # To optimize performance, we can extract all records matching our ZIP codes first

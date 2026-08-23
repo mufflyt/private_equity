@@ -3,7 +3,7 @@ import duckdb
 import os
 import datetime
 
-DB_PATH = "/Volumes/MufflySamsung 1/DuckDB/nber_my_duckdb.duckdb"
+from pe_paths import open_nber_warehouse
 OUTPUT_CSV = "/Users/tylermuffly/private_equity/control_candidates_raw.csv"
 PE_CSV = "/Users/tylermuffly/private_equity/pe_obgyn_providers_active.csv"
 
@@ -34,15 +34,13 @@ GOVERNMENT_PATTERNS = [
 COMMUNITY_PATTERNS = ["HOSPITAL", "MEDICAL CENTER", "HEALTH SYSTEM", "HEALTH CARE", "HEALTHCARE", "COMMUNITY HEALTH"]
 
 def main():
-    if not os.path.exists(DB_PATH):
-        raise FileNotFoundError(f"Database not found at {DB_PATH}")
         
     pe_df = pd.read_csv(PE_CSV)
     pe_npis = set(pe_df['NPI'].dropna().astype(int))
     print(f"Loaded {len(pe_df)} PE providers (NPIs: {len(pe_npis)})")
     
     print("Connecting to DuckDB...")
-    con = duckdb.connect(DB_PATH, read_only=True)
+    con = open_nber_warehouse(required_tables=['temporal_obgyn_only_all_years'])
     
     try:
         # 1. Fetch raw candidates

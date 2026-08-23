@@ -767,7 +767,15 @@ if __name__ == "__main__":
     import subprocess
     import tempfile
     
-    db_path = "/Volumes/MufflySamsung 1/DuckDB/nber_my_duckdb.duckdb"
+    from pe_paths import nber_warehouse_path
+    try:
+        db_path = nber_warehouse_path()
+    except (FileNotFoundError, RuntimeError) as exc:
+        # Skipping enrichment is the pre-existing behaviour when the drive is
+        # absent. Say so loudly: a silently unenriched cohort looks identical to
+        # an enriched one downstream.
+        print(f"WARNING: skipping DuckDB enrichment -- {exc}")
+        db_path = ""
     r_script_path = "/Users/tylermuffly/.gemini/antigravity/brain/3559c6d4-837e-47d8-9183-059d4fa833d5/scratch/infer_gender.R"
     
     if os.path.exists(db_path):

@@ -52,6 +52,33 @@ redistributed.
 10. `run_geographic_sensitivity_analysis.R`: run secondary analyses restricted to a tighter three-mile or five-mile matching radius to verify that wait-time results hold in identical local micro-markets.
 11. `calculate_cohort_churn.R`: track historical clinician entries, exits, and annual churn rates at the clinic level from 2013-2024 using address normalized matches in the 83.7 GB DuckDB database.
 
+### The DuckDB warehouse on the removable drive
+
+`calculate_cohort_churn.R`, `export_control_candidates.py` and `match_all_providers.py`
+read an 84 GB NPPES/NBER warehouse from an external disk. They no longer hardcode its
+mount path. macOS leaves a stale mount point in `/Volumes` after an unclean unmount and
+remounts the same disk one suffix along, and `dbConnect()`/`duckdb.connect()` **create**
+a database at a path that does not exist -- so a stale literal does not raise, it yields
+an empty database and a pipeline that reports success having measured nothing.
+
+Resolution goes through [`researchpaths`](https://github.com/mufflyt/researchpaths)
+(`R/pe_warehouse.R`) and its Python counterpart (`pe_paths.py`): glob the volume name,
+validate a size floor, refuse to guess between two plausible mounts, and assert the
+required tables exist *and are non-empty* before returning a read-only connection.
+
+```r
+source("R/pe_warehouse.R")
+con <- pe_nber_warehouse(required_tables = "temporal_obgyn_only_all_years")
+```
+
+```python
+from pe_paths import open_nber_warehouse
+con = open_nber_warehouse(required_tables=["temporal_obgyn_only_all_years"])
+```
+
+Install with `remotes::install_github("mufflyt/researchpaths")`. Set `PE_NBER_DUCKDB` to
+override the search; the override is validated, not trusted.
+
 ### REDCap
 
 - `generate_redcap_data_dictionary.py` / `update_redcap_dictionary.py`: build the REDCap
