@@ -27,5 +27,6 @@ jobs:
             any::dplyr
             any::readr
             github::mufflyt/mysterycall
+            github::mufflyt/researchpaths
       - name: blocking gates (data-independent subset)
         run: Rscript tests/run_blocking.R --no-data
