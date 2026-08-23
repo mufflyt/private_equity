@@ -46,7 +46,7 @@ for (d in dupes) {
 cat(sprintf("  (%d name(s))\n", length(dupes)))
 
 # ---------------------------------------------------------------- what private_equity defines
-PE <- "/Users/tylermuffly/private_equity"
+PE <- "."
 pe_files <- c(list.files(file.path(PE, "R"), pattern = "\\.R$", full.names = TRUE),
               list.files(PE, pattern = "\\.R$", full.names = TRUE))
 pe_defs <- unlist(lapply(pe_files, function(f) {

@@ -28,7 +28,8 @@ geo <- read.csv("data/covariates/npi_geography.csv", colClasses = "character")
 geo <- geo[!duplicated(geo$NPI), c("NPI","zip5","county_fips","tract_geoid")]
 
 # Recover county from ZIP (grace-ent crosswalk) where the geocode failed.
-xw_path <- "/Users/tylermuffly/grace-ent/data/raw/zip_to_county_cbsa.csv"
+xw_path <- Sys.getenv("PE_ZIP_COUNTY_CROSSWALK",
+                       file.path(path.expand("~"), "grace-ent/data/raw/zip_to_county_cbsa.csv"))
 if (file.exists(xw_path)) {
   xw <- read.csv(xw_path, colClasses = "character")
   z2c <- setNames(xw$county_fips, xw$zip)

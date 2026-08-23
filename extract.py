@@ -209,8 +209,8 @@ if csv_check and csv_check.startswith("EXISTS:"):
             csv_data += chunk
             print(f"  Chunk {start//chunk_size + 1}: {len(chunk)} chars (total: {len(csv_data)})")
     
-    os.makedirs("/Users/tylermuffly/private_equity", exist_ok=True)
-    with open("/Users/tylermuffly/private_equity/companies_export.csv", "w", encoding="utf-8") as f:
+    os.makedirs(".", exist_ok=True)
+    with open("companies_export.csv", "w", encoding="utf-8") as f:
         f.write(csv_data)
     print(f"Saved companies_export.csv ({len(csv_data)} chars)")
 
@@ -225,7 +225,7 @@ if deals_check and deals_check.startswith("EXISTS:"):
             csv_data += chunk
             print(f"  Chunk {start//chunk_size + 1}: {len(chunk)} chars (total: {len(csv_data)})")
     
-    with open("/Users/tylermuffly/private_equity/deals_export.csv", "w", encoding="utf-8") as f:
+    with open("deals_export.csv", "w", encoding="utf-8") as f:
         f.write(csv_data)
     print(f"Saved deals_export.csv ({len(csv_data)} chars)")
 
@@ -302,13 +302,13 @@ if (not csv_check or csv_check == "NOT_FOUND") and (not deals_check or deals_che
     
     scrape_tab(
         "https://my.pitchbook.com/search-results/s655975417/companies",
-        "/Users/tylermuffly/private_equity/companies_export.csv",
+        "companies_export.csv",
         ["Rank", "Company", "Details"]
     )
     
     scrape_tab(
         "https://my.pitchbook.com/search-results/s655975417/deals",
-        "/Users/tylermuffly/private_equity/deals_export.csv",
+        "deals_export.csv",
         ["Rank", "Company", "Details"]
     )
 

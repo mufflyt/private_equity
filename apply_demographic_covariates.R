@@ -32,9 +32,9 @@ stop(paste0(
 library(dplyr)
 library(readr)
 
-study_db_path <- "/Users/tylermuffly/private_equity/pe_obgyn_study_database_with_churn.csv"
-sheet_path <- "/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_300.csv"
-sheet200_path = "/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_200.csv"
+study_db_path <- "pe_obgyn_study_database_with_churn.csv"
+sheet_path <- "pe_obgyn_final_calling_sheet_300.csv"
+sheet200_path = "pe_obgyn_final_calling_sheet_200.csv"
 
 if (!file.exists(study_db_path)) {
   stop("Enriched study database file not found.")

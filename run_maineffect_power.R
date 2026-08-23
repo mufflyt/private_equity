@@ -73,5 +73,5 @@ for (delta in deltas_to_test) {
   }
 }
 
-write.csv(results, "/Users/tylermuffly/private_equity/power_maineffect_results.csv", row.names = FALSE)
+write.csv(results, "power_maineffect_results.csv", row.names = FALSE)
 print("PE main-effect power analysis complete!")

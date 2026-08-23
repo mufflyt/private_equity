@@ -1,6 +1,6 @@
 import csv
 
-input_path = "/Users/tylermuffly/private_equity/ICVsPOPVsSUI_DataDictionary_2026-07-05.csv"
+input_path = "ICVsPOPVsSUI_DataDictionary_2026-07-05.csv"
 
 # Read rows
 with open(input_path, 'r', newline='') as f:

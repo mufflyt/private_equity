@@ -23,7 +23,7 @@ headers = {
     "Accept-Language": "en-US,en;q=0.9"
 }
 
-output_dir = "/Users/tylermuffly/private_equity/scraped_texts"
+output_dir = "scraped_texts"
 os.makedirs(output_dir, exist_ok=True)
 
 for name, url in urls.items():

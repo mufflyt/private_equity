@@ -28,7 +28,7 @@ suppressMessages({
   library(readr)
 })
 
-ROOT       <- "/Users/tylermuffly/private_equity"
+ROOT       <- "."
 SHEET      <- file.path(ROOT, "pe_obgyn_final_calling_sheet_200.csv")
 STUDY_DB   <- file.path(ROOT, "pe_obgyn_study_database.csv")
 WORK       <- file.path(ROOT, "scratch", "svi")

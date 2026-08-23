@@ -2,7 +2,7 @@
 import base64, pathlib
 
 FIGDIR = pathlib.Path("figures")
-OUT = pathlib.Path("/Users/tylermuffly/Library/Caches/claude-code-tmp/claude-501/-Users-tylermuffly-private-equity/54f51cf9-b48a-4bff-ae07-09c6eb815859/scratchpad/figures_preview.html")
+OUT = FIGDIR / "figures_preview.html"
 
 def uri(name):
     b = (FIGDIR / name).read_bytes()

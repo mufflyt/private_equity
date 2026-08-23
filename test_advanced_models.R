@@ -7,7 +7,7 @@ library(glmmTMB)
 library(splines)
 library(ggplot2)
 
-db_path <- "/Users/tylermuffly/private_equity/pe_obgyn_study_database_with_churn.csv"
+db_path <- "pe_obgyn_study_database_with_churn.csv"
 if (!file.exists(db_path)) {
   stop("Study database not found.")
 }
@@ -70,7 +70,7 @@ print(comparison_results)
 # 3. Test mysterycall_model_nonlinear (Splines & Polynomials)
 # ═══════════════════════════════════════════════════════════════════
 cat("\n=== Testing mysterycall_model_nonlinear (Natural Cubic Splines) ===\n")
-dir.create("/Users/tylermuffly/private_equity/figures", showWarnings = FALSE)
+dir.create("figures", showWarnings = FALSE)
 nonlinear_res <- mysterycall_model_nonlinear(
   data = positive_df,
   outcome_col = "business_days",
@@ -82,5 +82,5 @@ nonlinear_res <- mysterycall_model_nonlinear(
 )
 
 print(summary(nonlinear_res$model))
-ggsave("/Users/tylermuffly/private_equity/figures/nonlinear_spline_fit.png", plot = nonlinear_res$plot, width = 7.5, height = 4.5, dpi = 300)
-cat("Saved non-linear spline visualization to: /Users/tylermuffly/private_equity/figures/nonlinear_spline_fit.png\n")
+ggsave("figures/nonlinear_spline_fit.png", plot = nonlinear_res$plot, width = 7.5, height = 4.5, dpi = 300)
+cat("Saved non-linear spline visualization to: figures/nonlinear_spline_fit.png\n")

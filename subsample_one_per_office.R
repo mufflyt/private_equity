@@ -1,7 +1,7 @@
 # Subsample One Physician per Office and Run Regression
 
-study_csv <- "/Users/tylermuffly/private_equity/pe_obgyn_study_database.csv"
-output_csv <- "/Users/tylermuffly/private_equity/pe_obgyn_study_database_one_per_office.csv"
+study_csv <- "pe_obgyn_study_database.csv"
+output_csv <- "pe_obgyn_study_database_one_per_office.csv"
 
 if (!file.exists(study_csv)) {
   stop(paste("ERROR: Study database not found at:", study_csv))

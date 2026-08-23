@@ -1,6 +1,6 @@
 import pandas as pd
 
-df = pd.read_csv("/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_300.csv")
+df = pd.read_csv("pe_obgyn_final_calling_sheet_300.csv")
 
 print("Total rows:", len(df))
 print("Missing Phone count:", df['Phone'].isna().sum())

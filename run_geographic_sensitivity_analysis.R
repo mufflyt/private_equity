@@ -13,8 +13,8 @@ suppressMessages({
 })
 
 # Load the data
-calling_sheet_path <- "/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_200.csv"
-study_db_path <- "/Users/tylermuffly/private_equity/pe_obgyn_study_database.csv"
+calling_sheet_path <- "pe_obgyn_final_calling_sheet_200.csv"
+study_db_path <- "pe_obgyn_study_database.csv"
 
 if (!file.exists(calling_sheet_path) || !file.exists(study_db_path)) {
   stop("Required database files are missing. Run the matching pipeline first.")
@@ -166,10 +166,10 @@ run_analysis <- function(data_subset, label) {
   # Run DHARMa diagnostics and package zero-inflation checks on primary model
   if (label == "10-mile (Primary)") {
     cat("\n=== Running DHARMa Residual Diagnostics for Primary GLMM ===\n")
-    dir.create("/Users/tylermuffly/private_equity/figures", showWarnings = FALSE)
+    dir.create("figures", showWarnings = FALSE)
     dharma_res <- mysterycall_validate_residuals_dharma(
       model = model, 
-      plot_path = "/Users/tylermuffly/private_equity/figures/dharma_diagnostics.png"
+      plot_path = "figures/dharma_diagnostics.png"
     )
     
     # Print residuals test summary
@@ -224,7 +224,7 @@ run_analysis <- function(data_subset, label) {
     )
     cat(sprintf("Calibration Slope: %.3f (Ideal = 1.0) | Intercept: %.3f (Ideal = 0.0)\n", 
                 recal_res$calibration_slope, recal_res$calibration_intercept))
-    ggplot2::ggsave("/Users/tylermuffly/private_equity/figures/recalibration_diagnostics.png", 
+    ggplot2::ggsave("figures/recalibration_diagnostics.png", 
            plot = recal_res$plot, width = 7.5, height = 4.5, dpi = 300)
     
     cat("\n=== [INTERNAL VALIDATION] Site/Provider Split CV Simulation ===\n")
@@ -279,5 +279,5 @@ res_3 <- run_analysis(sim_calls %>% filter(Distance <= 3.0), "3-mile Caliper")
 results_summary <- rbind(res_10, res_5, res_3)
 print(results_summary)
 
-write.csv(results_summary, "/Users/tylermuffly/private_equity/geographic_sensitivity_results.csv", row.names = FALSE)
+write.csv(results_summary, "geographic_sensitivity_results.csv", row.names = FALSE)
 cat("\nGeographic sensitivity results exported successfully to geographic_sensitivity_results.csv!\n")

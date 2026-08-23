@@ -16,7 +16,7 @@
 #
 # Nothing here changes the sample. It adds columns.
 
-ROOT <- "/Users/tylermuffly/private_equity"
+ROOT <- "."
 source(file.path(ROOT, "R", "pe_helpers.R"))
 
 SHEET <- file.path(ROOT, "pe_obgyn_final_calling_sheet_200.csv")

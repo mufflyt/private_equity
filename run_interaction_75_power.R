@@ -63,5 +63,5 @@ for (sd_val in sds_to_test) {
   }
 }
 
-write.csv(results, "/Users/tylermuffly/private_equity/power_interaction_75_results.csv", row.names = FALSE)
+write.csv(results, "power_interaction_75_results.csv", row.names = FALSE)
 print("7.5-day interaction power analysis complete!")

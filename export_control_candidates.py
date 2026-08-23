@@ -4,8 +4,8 @@ import os
 import datetime
 
 from pe_paths import open_nber_warehouse
-OUTPUT_CSV = "/Users/tylermuffly/private_equity/control_candidates_raw.csv"
-PE_CSV = "/Users/tylermuffly/private_equity/pe_obgyn_providers_active.csv"
+OUTPUT_CSV = "control_candidates_raw.csv"
+PE_CSV = "pe_obgyn_providers_active.csv"
 
 # ACOG District Map
 STATE_TO_ACOG = {

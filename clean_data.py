@@ -68,7 +68,7 @@ def clean_file(input_path, output_path, label):
     return cleaned_df
 
 if __name__ == "__main__":
-    base_dir = "/Users/tylermuffly/private_equity"
+    base_dir = "."
     
     # Clean Companies
     clean_file(

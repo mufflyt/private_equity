@@ -3,7 +3,7 @@ import json
 import re
 from bs4 import BeautifulSoup
 
-output_dir = "/Users/tylermuffly/private_equity/scraped_texts"
+output_dir = "scraped_texts"
 parsed_providers = []
 
 # Helper to normalize names and credentials
@@ -560,6 +560,6 @@ for p in parsed_providers:
 print(f"\nTotal unique providers parsed: {len(unique_providers)}")
 
 # Save to discovered_providers.json
-with open("/Users/tylermuffly/private_equity/discovered_providers.json", "w") as f:
+with open("discovered_providers.json", "w") as f:
     json.dump(unique_providers, f, indent=2)
-print("Saved parsed providers to /Users/tylermuffly/private_equity/discovered_providers.json")
+print("Saved parsed providers to discovered_providers.json")

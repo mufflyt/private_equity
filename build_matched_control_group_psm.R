@@ -19,11 +19,11 @@ get_subspecialty_from_tax <- function(tax) {
 }
 
 cat("=== Loading Cohorts for Propensity Score Matching ===\n")
-pe_csv <- "/Users/tylermuffly/private_equity/pe_obgyn_providers_active.csv"
-candidates_csv <- "/Users/tylermuffly/private_equity/control_candidates_raw.csv"
-control_output_csv <- "/Users/tylermuffly/private_equity/pe_obgyn_control_providers.csv"
-study_output_csv <- "/Users/tylermuffly/private_equity/pe_obgyn_study_database.csv"
-calling_list_csv <- "/Users/tylermuffly/private_equity/pe_obgyn_matched_calling_list.csv"
+pe_csv <- "pe_obgyn_providers_active.csv"
+candidates_csv <- "control_candidates_raw.csv"
+control_output_csv <- "pe_obgyn_control_providers.csv"
+study_output_csv <- "pe_obgyn_study_database.csv"
+calling_list_csv <- "pe_obgyn_matched_calling_list.csv"
 
 # Load PE active cohort (check.names = FALSE to preserve spaces in headers)
 pe_df <- read.csv(pe_csv, stringsAsFactors = FALSE, na.strings = c("NA", "N/A", ""), check.names = FALSE)

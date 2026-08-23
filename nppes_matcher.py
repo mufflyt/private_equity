@@ -275,5 +275,5 @@ if __name__ == "__main__":
     print(df.to_string(index=False))
     
     # Save test results
-    df.to_csv("/Users/tylermuffly/private_equity/nppes_matching_demo.csv", index=False)
-    print("\nSaved demo DataFrame to /Users/tylermuffly/private_equity/nppes_matching_demo.csv")
+    df.to_csv("nppes_matching_demo.csv", index=False)
+    print("\nSaved demo DataFrame to nppes_matching_demo.csv")

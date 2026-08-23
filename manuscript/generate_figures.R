@@ -4,7 +4,7 @@ library(mysterycall)
 library(DiagrammeRsvg)
 library(rsvg)
 
-output_dir <- "/Users/tylermuffly/private_equity/manuscript"
+output_dir <- "manuscript"
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
 # Configure Green Journal theme color palette

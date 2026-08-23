@@ -391,7 +391,7 @@ def process_provider(prov, cache):
 
 if __name__ == "__main__":
     print("=== Loading Parsed Providers ===")
-    discovered_path = "/Users/tylermuffly/private_equity/discovered_providers.json"
+    discovered_path = "discovered_providers.json"
     if not os.path.exists(discovered_path):
         print(f"ERROR: {discovered_path} does not exist. Run parse_scraped_directories.py first.")
         exit(1)
@@ -403,7 +403,7 @@ if __name__ == "__main__":
     
     # Load cache if existing CSV is present
     cache = {}
-    csv_path = "/Users/tylermuffly/private_equity/pe_obgyn_providers_npi.csv"
+    csv_path = "pe_obgyn_providers_npi.csv"
     if os.path.exists(csv_path):
         print(f"Loading existing NPI cache from {csv_path}...")
         try:
@@ -558,7 +558,7 @@ if __name__ == "__main__":
         return str(phone_str).strip()
 
     # Load TopLine clinics JSON for dynamic parsing
-    clinics_path = "/Users/tylermuffly/private_equity/scraped_texts/4_topline_md_clinics.json"
+    clinics_path = "scraped_texts/4_topline_md_clinics.json"
     clinics_list = []
     if os.path.exists(clinics_path):
         try:
@@ -675,7 +675,9 @@ if __name__ == "__main__":
 
     
     # Load canonical ABOG file to map subspecialty
-    abog_path = "/Users/tylermuffly/Desktop/canonical_abog_npi_LATEST.csv"
+    abog_path = os.environ.get(
+        "PE_ABOG_CROSSWALK", os.path.expanduser("~/Desktop/canonical_abog_npi_LATEST.csv")
+    )
     abog_npi_mapping = {}
     abog_name_mapping = {}
     if os.path.exists(abog_path):
@@ -776,7 +778,10 @@ if __name__ == "__main__":
         # an enriched one downstream.
         print(f"WARNING: skipping DuckDB enrichment -- {exc}")
         db_path = ""
-    r_script_path = "/Users/tylermuffly/.gemini/antigravity/brain/3559c6d4-837e-47d8-9183-059d4fa833d5/scratch/infer_gender.R"
+    # Optional gender-inference-from-name script; not part of this repo and
+    # machine-specific, so it must be pointed at explicitly. Enrichment below
+    # already checks os.path.exists() and skips silently when unset/absent.
+    r_script_path = os.environ.get("PE_GENDER_INFER_R_SCRIPT", "")
     
     if os.path.exists(db_path):
         print(f"Connecting to DuckDB at {db_path}...")
@@ -1057,7 +1062,7 @@ if __name__ == "__main__":
             
             # Load existing genders from CSV to avoid live queries on subsequent runs
             existing_gender_map = {}
-            output_path = "/Users/tylermuffly/private_equity/pe_obgyn_providers_npi.csv"
+            output_path = "pe_obgyn_providers_npi.csv"
             if os.path.exists(output_path):
                 try:
                     exist_df = pd.read_csv(output_path, keep_default_na=False)
@@ -1434,7 +1439,7 @@ if __name__ == "__main__":
     final_df = final_df[cols]
     
     # Save to CSV
-    output_path = "/Users/tylermuffly/private_equity/pe_obgyn_providers_npi.csv"
+    output_path = "pe_obgyn_providers_npi.csv"
     final_df.to_csv(output_path, index=False)
     
     print("\n=== Matching Pipeline Complete ===")

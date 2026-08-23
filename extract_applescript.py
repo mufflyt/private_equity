@@ -8,7 +8,7 @@ import json
 import sys
 
 TAB_NUM = 2  # PitchBook tab number in Chrome
-OUTPUT_DIR = "/Users/tylermuffly/private_equity"
+OUTPUT_DIR = "."
 
 def run_js(tab, js_code):
     """Execute JavaScript in Chrome tab via AppleScript and return result."""

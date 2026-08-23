@@ -106,5 +106,5 @@ for (scen in names(IRR_SCENARIOS)) {
   }
 }
 
-write.csv(results, "/Users/tylermuffly/private_equity/power_analysis_new_results.csv", row.names = FALSE)
+write.csv(results, "power_analysis_new_results.csv", row.names = FALSE)
 cat("\nPower analysis complete.\n")

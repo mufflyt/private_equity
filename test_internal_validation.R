@@ -7,7 +7,7 @@ library(ggplot2)
 library(glmmTMB)
 library(splines)
 
-db_path <- "/Users/tylermuffly/private_equity/pe_obgyn_study_database_with_churn.csv"
+db_path <- "pe_obgyn_study_database_with_churn.csv"
 if (!file.exists(db_path)) {
   stop("Study database not found.")
 }
@@ -75,9 +75,9 @@ cat(sprintf("Calibration Slope: %.3f (Ideal = 1.0)\n", recal_res$calibration_slo
 cat(sprintf("Calibration Intercept: %.3f (Ideal = 0.0)\n", recal_res$calibration_intercept))
 
 # Save the calibration plot
-dir.create("/Users/tylermuffly/private_equity/figures", showWarnings = FALSE)
-ggsave("/Users/tylermuffly/private_equity/figures/recalibration_plot.png", plot = recal_res$plot, width = 7.5, height = 4.5, dpi = 300)
-cat("Recalibration plot saved to: /Users/tylermuffly/private_equity/figures/recalibration_plot.png\n")
+dir.create("figures", showWarnings = FALSE)
+ggsave("figures/recalibration_plot.png", plot = recal_res$plot, width = 7.5, height = 4.5, dpi = 300)
+cat("Recalibration plot saved to: figures/recalibration_plot.png\n")
 
 # ═══════════════════════════════════════════════════════════════════
 # 3. Test mysterycall_provider_split_simulation (Cluster CV)

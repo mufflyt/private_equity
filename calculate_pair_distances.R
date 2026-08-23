@@ -79,7 +79,7 @@ haversine_distance <- function(lat1, lon1, lat2, lon2) {
 }
 
 # Load the calling sheet
-df <- read.csv("/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_300.csv", stringsAsFactors = FALSE, check.names = FALSE)
+df <- read.csv("pe_obgyn_final_calling_sheet_300.csv", stringsAsFactors = FALSE, check.names = FALSE)
 
 # Split into PE and Non-PE
 pe_df <- df[df$PE_or_Not == "PE", ]
@@ -128,8 +128,8 @@ different_cities$Distance_Miles <- round(distances, 2)
 different_cities <- different_cities[order(different_cities$Distance_Miles, na.last = TRUE), ]
 
 # Save to CSV
-write.csv(different_cities, "/Users/tylermuffly/private_equity/pe_obgyn_fallback_distances_300.csv", row.names = FALSE)
-cat("Fallback distances exported to: /Users/tylermuffly/private_equity/pe_obgyn_fallback_distances_300.csv\n\n")
+write.csv(different_cities, "pe_obgyn_fallback_distances_300.csv", row.names = FALSE)
+cat("Fallback distances exported to: pe_obgyn_fallback_distances_300.csv\n\n")
 
 # Print complete table
 print_cols <- c("Matched Pair ID", "City_PE", "State_PE", "City_Control", "State_Control", "Distance_Miles")

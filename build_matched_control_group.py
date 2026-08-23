@@ -14,7 +14,7 @@ def main():
     print("=== STARTING COMPLETE PROPENSITY SCORE MATCHING (PSM) PIPELINE ===")
     
     # Base directory
-    base_dir = "/Users/tylermuffly/private_equity"
+    base_dir = "."
     
     # 1. Export control candidates with covariates from DuckDB
     export_script = os.path.join(base_dir, "export_control_candidates.py")

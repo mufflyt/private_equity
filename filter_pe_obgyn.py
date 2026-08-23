@@ -38,7 +38,7 @@ def filter_csv(input_path, output_path, label):
 if __name__ == "__main__":
     import sys
     
-    base_dir = "/Users/tylermuffly/private_equity"
+    base_dir = "."
     
     companies_in = os.path.join(base_dir, "companies_export.csv")
     companies_out = os.path.join(base_dir, "pe_obgyn_companies_filtered.csv")

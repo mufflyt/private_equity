@@ -9,8 +9,8 @@ library(DBI)
 library(duckdb)
 
 source("R/pe_warehouse.R")   # pe_nber_warehouse(): resolves the drive, refuses to guess
-study_db_path <- "/Users/tylermuffly/private_equity/pe_obgyn_study_database.csv"
-output_db_path <- "/Users/tylermuffly/private_equity/pe_obgyn_study_database_with_churn.csv"
+study_db_path <- "pe_obgyn_study_database.csv"
+output_db_path <- "pe_obgyn_study_database_with_churn.csv"
 
 if (!file.exists(study_db_path)) {
   stop("Study database not found.")
@@ -129,9 +129,9 @@ write_csv(df_db_enriched, output_db_path)
 cat(sprintf("Enriched study database saved to: %s\n", output_db_path))
 
 # Map to final calling sheets (dropping any pre-existing churn columns to prevent duplicates)
-sheet300 <- read_csv("/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_300.csv", show_col_types = FALSE) %>%
+sheet300 <- read_csv("pe_obgyn_final_calling_sheet_300.csv", show_col_types = FALSE) %>%
   select(-any_of(c("Mean_Annual_Churn", "Total_Exits", "Total_Entries", "Max_Staff_Count")))
-sheet200 <- read_csv("/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_200.csv", show_col_types = FALSE) %>%
+sheet200 <- read_csv("pe_obgyn_final_calling_sheet_200.csv", show_col_types = FALSE) %>%
   select(-any_of(c("Mean_Annual_Churn", "Total_Exits", "Total_Entries", "Max_Staff_Count")))
 
 # sheet300 has NPI, which is unique. We can map from df_db_enriched using NPI!
@@ -141,11 +141,11 @@ churn_map_mean <- df_db_enriched %>%
 
 sheet300_enriched <- sheet300 %>%
   left_join(churn_map_mean, by = "NPI")
-write_csv(sheet300_enriched, "/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_300.csv")
+write_csv(sheet300_enriched, "pe_obgyn_final_calling_sheet_300.csv")
 
 sheet200_enriched <- sheet200 %>%
   left_join(churn_map_mean, by = "NPI")
-write_csv(sheet200_enriched, "/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_200.csv")
+write_csv(sheet200_enriched, "pe_obgyn_final_calling_sheet_200.csv")
 
 cat("Updated calling sheets with churn metrics.\n")
 

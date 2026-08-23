@@ -97,5 +97,5 @@ for (pe_rate in pe_med_rates) {
 }
 
 # Write results
-write.csv(results, "/Users/tylermuffly/private_equity/obtainment_power_results.csv", row.names = FALSE)
+write.csv(results, "obtainment_power_results.csv", row.names = FALSE)
 print("Obtainment power simulation complete!")

@@ -2,8 +2,8 @@
 # Enforces reproducible random selection of matched pairs (without Caller Doctor Aliases)
 
 cat("=== Subsampling 300 Matched Pairs (600 Clinicians) ===\n")
-input_csv <- "/Users/tylermuffly/private_equity/pe_obgyn_matched_calling_list.csv"
-output_csv <- "/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_300.csv"
+input_csv <- "pe_obgyn_matched_calling_list.csv"
+output_csv <- "pe_obgyn_final_calling_sheet_300.csv"
 
 if (!file.exists(input_csv)) {
   stop(paste("ERROR: Input file not found at:", input_csv))

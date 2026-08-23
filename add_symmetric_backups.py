@@ -3,9 +3,9 @@ import numpy as np
 import re
 
 # Load files
-calling_sheet_path = "/Users/tylermuffly/private_equity/pe_obgyn_final_calling_sheet_300.csv"
-study_db_path = "/Users/tylermuffly/private_equity/pe_obgyn_study_database.csv"
-control_cands_path = "/Users/tylermuffly/private_equity/control_candidates_raw.csv"
+calling_sheet_path = "pe_obgyn_final_calling_sheet_300.csv"
+study_db_path = "pe_obgyn_study_database.csv"
+control_cands_path = "control_candidates_raw.csv"
 
 df_sheet = pd.read_csv(calling_sheet_path)
 df_study = pd.read_csv(study_db_path)
