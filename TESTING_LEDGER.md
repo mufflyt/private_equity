@@ -2314,3 +2314,84 @@ rewriting the sheet legitimately trips.
 columns but no rows changed, so regenerating should be a no-op — but regenerating a fielded
 artifact is the user's call. `run_new_power_analysis.R` was still computing the IRR 1.35 scenario
 when this was written, so `power_analysis_new_results.csv` on disk is still the superseded grid.
+
+## Post-audit — 2026-08-23 — THREE NEW CI-SAFE GATES, AND A RUNNER BUG THAT WAS HIDING 27 PASSES
+
+**Scope.** Asked to write CI for three categories: numeric internal consistency, statistical/code
+correctness (denominators, Inf/NaN guards), and provenance/trust-a-number (including the ACS
+2010/2020 tract-boundary vintage footgun). All three land as new gates in `R/analysis_gates.R`
+plus `nodata`-tier tests, so — unlike most of the blocking suite — they run in GitHub Actions,
+not only locally where the gitignored cohort CSVs exist.
+
+**`gate_tract_geoid_vintage()` (Gate 7).** `tract_geoid` is a bare string on both sides of every
+geographic join in this pipeline (`R/replace_fake_covariates.R`), with no column anywhere
+recording which Census vintage it was fetched on. A future re-fetch on a different vintage would
+join without error — same 11-digit shape, wrong tract — and nothing would reveal it except the
+match rate collapsing. The gate checks exactly that: GEOID length, and overlap between two
+covariate files above a floor. Verified against real data first: `data/covariates/
+npi_geography.csv` and `tract_female_insurance.csv` overlap at 97.4% today (373/383 distinct
+GEOIDs), confirming the gate passes cleanly on the true vintage-consistent case before writing a
+test that asserts it. The adversarial test scrambles the tract suffix of every GEOID on one side
+or checks the collapse actually happens with real R arithmetic first — the first draft dropped 10
+already-blank `tract_geoid` rows into the scramble and produced 6-character garbage that tripped
+the *length* check instead of the intended *overlap* check; fixed by filtering blanks before
+scrambling, not by loosening the assertion.
+
+**`gate_power_curve_integrity()` (Gate 8).** Checks `Power` is finite and in [0,1], and that
+`Physicians = 2 x Pairs` and `Total_Calls = arms x Physicians` for every row — the exact
+denominator-consistency shape of the defect `gate_analytic_n`'s own docstring already documents
+(all 800 calls given a wait time when the study observes about 622). Deliberately does NOT assert
+which denominator is scientifically correct for a given scenario; that is an estimand choice made
+at the call site, and a generic integrity gate silently choosing one would be exactly the mistake
+the anti-cheating rules above forbid. Run against the one power-curve file actually tracked in
+git, `power_analysis_new_results.csv` (the `.gitignore` exception for it already existed).
+
+**`gate_manifest_sources_populated()` (Gate 9).** `read_manifest()` has always required the
+`source` column to exist; it never required it to be non-empty or non-placeholder. A column
+declared `measured` with a blank or `TBD` source passes `gate_provenance()` today — which checks
+presence of the column, not its content — while remaining exactly as untraceable as the simulated
+CDC_SVI column was before it was caught. Verified the current manifest has zero violations before
+writing the gate (41 rows, 0 blank/placeholder sources), so this adds forward protection without
+retroactively failing anything true today.
+
+**A bug in my own tests, twice.** First drafts of the tract-vintage and manifest-sources test
+files split `info =` strings across multiple lines as bare string literals instead of wrapping
+them in `paste()`. R does not concatenate adjacent string literals the way some languages do; the
+continuation lines became extra positional arguments to `expect_error()`/`expect_true()`, landing
+in `class` and producing `Error ... NA in coercion to boolean` and a wrong expected-class message
+— not gate defects, test-authoring defects. Caught by actually running every new file with
+`test_file()` before trusting it, per this ledger's own rule; fixed by wrapping every multi-line
+`info=` in `paste()` and re-running until each file passed for real.
+
+**A real runner defect, not mine, found while integrating.** `tests/run_tests.R` sourced only
+`R/pe_helpers.R`, never `R/analysis_gates.R` — `run_blocking.R` sourced both, so the two runners
+silently disagreed about what was in scope. Every gate-dependent test file, including the
+pre-existing `test-analysis-gates.R`, therefore errored under `run_tests.R` with "could not find
+function", indistinguishable in the summary from a real failure. Fixed by sourcing
+`R/analysis_gates.R` in `run_tests.R` to match `run_blocking.R`. Effect: 27 previously-hidden
+passing assertions became visible (188 → 215 pass) and `error` count dropped from including every
+gate-dependent file to only the ones that are genuinely missing gitignored cohort data. This was
+a monitoring-blind-spot bug, not a scientific one, but it was making the advisory suite's failure
+count meaningless for exactly the files most likely to catch a real defect.
+
+**Registered as `nodata` in `tests/BLOCKING`** (`test-tract-geoid-vintage.R`,
+`test-power-curve-integrity.R`, `test-manifest-sources-populated.R`), so `Rscript
+tests/run_blocking.R --no-data` — the command `.github/workflows/gates.yml` actually runs —
+now exercises all three in CI, not only locally.
+
+**Suite, `--no-data` (CI-equivalent):** 5 files, 67 passed, 0 failed, 0 configuration gates
+failed — up from 2 files / 39 passed before this entry.
+
+**Suite, full (`tests/run_tests.R`, this machine):** 215 passed, 1 failed, 32 errored, 6 warned,
+2 skipped. The 1 failure and all 32 errors are pre-existing and unrelated: every one needs a
+gitignored cohort CSV (`pe_obgyn_final_calling_sheet_200.csv` and its descendants) that this
+session independently established is not recoverable from this machine, the external drive,
+Dropbox, or Gmail (see the REDCap-reconstruction work earlier this session). Confirmed
+pre-existing by file identity, not just count: every failing/erroring file was already failing
+before this entry, and none of the three new files nor `test-pe_helpers.R` /
+`test-address-key-parity.R` (the only other `nodata` files) appear in that list.
+
+**Files changed:** `R/analysis_gates.R` (+3 gates), `tests/run_tests.R` (source fix),
+`tests/BLOCKING` (+3 registrations), `tests/testthat/test-tract-geoid-vintage.R` (new, 5
+assertions), `tests/testthat/test-power-curve-integrity.R` (new, 12 assertions),
+`tests/testthat/test-manifest-sources-populated.R` (new, 11 assertions).

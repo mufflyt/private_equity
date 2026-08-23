@@ -328,6 +328,135 @@ gate_analytic_n <- function(observed, expected, tol = 0.05, label = "analytic N"
 
 # ---------------------------------------------------------------------------- preflight
 
+#' Gate 7. Geographic joins on `tract_geoid` must share one Census vintage.
+#'
+#' ACS tract boundaries change at each redistricting; a 2010-vintage GEOID and a 2020-vintage
+#' GEOID can be the same 11 digits in shape while identifying different geography. There is no
+#' vintage column anywhere in this pipeline -- `tract_geoid` is a bare string on both sides of
+#' every join -- so a future re-fetch on the wrong vintage would produce a join that succeeds
+#' (same format, no error) while silently attaching each clinician's covariates to the wrong
+#' tract. The only thing that would reveal that today is the match rate collapsing, which is
+#' exactly what this gate checks instead of waiting for someone to notice.
+#'
+#' @param min_overlap required fraction of `left`'s distinct GEOIDs found in `right`
+gate_tract_geoid_vintage <- function(left, right, left_col = "tract_geoid",
+                                     right_col = "tract_geoid", min_overlap = 0.90,
+                                     label = "tract_geoid vintage") {
+  l <- as.character(left[[left_col]]); l <- l[nzchar(l) & !is.na(l)]
+  r <- as.character(right[[right_col]]); r <- r[nzchar(r) & !is.na(r)]
+  if (!length(l)) gate_fail(label, "left side has no non-empty ", left_col, " values")
+
+  bad_len <- unique(nchar(l))[!unique(nchar(l)) %in% 11L]
+  if (length(bad_len)) {
+    gate_fail(label, "GEOID(s) not 11 characters (state+county+tract): lengths ",
+              paste(bad_len, collapse = ", "),
+              "\n\n  A short GEOID is usually a dropped leading zero, not a genuine mismatch, ",
+              "but either way\n  it cannot be a valid 2020-vintage census tract identifier.")
+  }
+
+  overlap <- length(intersect(unique(l), r)) / length(unique(l))
+  if (overlap < min_overlap) {
+    gate_fail(label,
+              sprintf("only %.1f%% of %d distinct GEOIDs on the left are found on the right ",
+                      100 * overlap, length(unique(l))),
+              "(need >= ", sprintf("%.0f%%", 100 * min_overlap), ").",
+              "\n\n  Real 2010-vs-2020 tract boundaries overlap at a small fraction of this rate ",
+              "because\n  redistricting splits and merges most tracts. This collapse is the ",
+              "signature of joining\n  across a vintage boundary, not of ordinary missing data. ",
+              "Check which vintage each side\n  was fetched on (search for 'vintage=' / ",
+              "'Census2020_Current' / the ACS survey year) before\n  treating this as a coverage ",
+              "problem to patch over.")
+  }
+  gate_pass(label, sprintf("%.1f%% GEOID overlap (%d distinct)", 100 * overlap, length(unique(l))))
+}
+
+# ---------------------------------------------------------------------------- power-curve output
+
+#' Gate 8. A power-curve results table must be internally arithmetic-consistent and finite.
+#'
+#' Every power scenario in this pipeline is defined by a physician count, an arm count and a
+#' calls-per-physician count that are supposed to multiply together; a scenario where they do
+#' not is a scenario where someone edited one column (typically `Pairs`, to explore a new grid)
+#' without regenerating the derived ones. Power itself is a probability: an NA/NaN/Inf value or
+#' one outside [0,1] means a fit failed silently rather than a real result of 0 or 1.
+#'
+#' This does NOT check which denominator (e.g. all 800 calls vs. an obtainment-adjusted count)
+#' is scientifically correct for a given scenario -- that is an estimand choice made at the call
+#' site, not something a generic integrity check can decide. It only checks that whatever
+#' denominator a row claims is the one its own other columns imply.
+gate_power_curve_integrity <- function(df, pairs_col = "Pairs", physicians_col = "Physicians",
+                                       calls_col = "Total_Calls", power_col = "Power",
+                                       arms = 2L, label = "power curve") {
+  need <- c(pairs_col, physicians_col, calls_col, power_col)
+  miss <- setdiff(need, names(df))
+  if (length(miss)) gate_fail(label, "missing column(s): ", paste(miss, collapse = ", "))
+
+  p <- suppressWarnings(as.numeric(df[[power_col]]))
+  bad_finite <- which(!is.finite(p))
+  if (length(bad_finite)) {
+    gate_fail(label, sprintf("%d row(s) have non-finite %s (NA/NaN/Inf); row(s): %s",
+                             length(bad_finite), power_col, paste(bad_finite, collapse = ", ")),
+              "\n\n  A silently failed model fit looks like a missing value here, not an error. ",
+              "Trace which\n  simulation produced it before trusting any power number in the ",
+              "same table.")
+  }
+  bad_range <- which(p < 0 | p > 1)
+  if (length(bad_range)) {
+    gate_fail(label, sprintf("%d row(s) have %s outside [0,1]: %s",
+                             length(bad_range), power_col,
+                             paste(sprintf("%.4f", p[bad_range]), collapse = ", ")))
+  }
+
+  physicians <- suppressWarnings(as.numeric(df[[physicians_col]]))
+  pairs      <- suppressWarnings(as.numeric(df[[pairs_col]]))
+  calls      <- suppressWarnings(as.numeric(df[[calls_col]]))
+  want_phys  <- 2 * pairs
+  bad_phys   <- which(abs(physicians - want_phys) > 1e-8)
+  if (length(bad_phys)) {
+    gate_fail(label, sprintf("%d row(s): %s != 2 x %s (1 PE + 1 control per pair); row(s): %s",
+                             length(bad_phys), physicians_col, pairs_col,
+                             paste(bad_phys, collapse = ", ")))
+  }
+  want_calls <- arms * physicians
+  bad_calls  <- which(abs(calls - want_calls) > 1e-8)
+  if (length(bad_calls)) {
+    gate_fail(label, sprintf("%d row(s): %s != %d x %s (%d insurance arm(s) per physician); row(s): %s",
+                             length(bad_calls), calls_col, arms, physicians_col, arms,
+                             paste(bad_calls, collapse = ", ")))
+  }
+  gate_pass(label, sprintf("%d row(s) finite, in-range, and arithmetic-consistent", nrow(df)))
+}
+
+# ---------------------------------------------------------------------------- manifest sources
+
+#' Gate 9. Every non-simulated, non-identifier manifest entry must cite a real source.
+#'
+#' `read_manifest()` already requires the `source` column to exist; it does not require it to
+#' be non-empty or non-placeholder. A column marked "measured" with a blank or "TBD" source is
+#' indistinguishable, to gate_provenance(), from one with a real citation -- it would pass
+#' gate_provenance() while still being untraceable to anyone reading the manifest. This is the
+#' check that closes that gap, run over the whole manifest rather than only the columns a given
+#' model happens to use.
+gate_manifest_sources_populated <- function(manifest = read_manifest(),
+                                            placeholder = c("TBD", "TODO", "UNKNOWN", "?", "N/A", "NA")) {
+  cited_statuses <- c("measured", "derived", "outcome")
+  rows <- manifest[manifest$status %in% cited_statuses, , drop = FALSE]
+  blank <- rows$column[!nzchar(trimws(rows$source))]
+  vague <- rows$column[toupper(trimws(rows$source)) %in% toupper(placeholder)]
+  bad <- union(blank, vague)
+  if (length(bad)) {
+    gate_fail("manifest sources",
+              "Column(s) with status in {", paste(cited_statuses, collapse = ", "),
+              "} but no real source:\n    ", paste(bad, collapse = "\n    "),
+              "\n\n  A manifest entry that says 'measured' with an empty or placeholder source ",
+              "is exactly the\n  gap that let CDC_SVI enter the model as a measurement while ",
+              "actually being rnorm().\n  Cite the real source or change the status to ",
+              "'simulated'.")
+  }
+  gate_pass("manifest sources", sprintf("%d/%d cited-status column(s) have a real source",
+                                        nrow(rows) - length(bad), nrow(rows)))
+}
+
 #' Run every gate that can be run before a model is fitted.
 #'
 #' Call this at the top of an analysis script. It throws on the first failure.

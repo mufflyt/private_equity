@@ -36,6 +36,9 @@
 
 nodata  test-pe_helpers.R
 nodata  test-address-key-parity.R
+nodata  test-tract-geoid-vintage.R
+nodata  test-power-curve-integrity.R
+nodata  test-manifest-sources-populated.R
 
 data    test-frozen-geo-reference.R
 data    test-analysis-gates.R
