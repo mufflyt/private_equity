@@ -26,6 +26,8 @@ jobs:
             any::digest
             any::dplyr
             any::readr
+            any::DBI
+            any::duckdb
             github::mufflyt/mysterycall
             github::mufflyt/researchpaths
       - name: blocking gates (data-independent subset)
