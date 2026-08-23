@@ -525,7 +525,13 @@ if __name__ == "__main__":
     df = df.drop(columns=['name', 'state', 'platform'])
     
     # Enforce formatting
+    # int(float(x)) produces the right value, but a column of ints containing None is
+    # promoted by pandas to float64, so to_csv writes "1144280553.0". Every downstream
+    # consumer then joins on a key that no longer matches the integer NPIs in the calling
+    # sheets: a raw join of the fielded sheet against the study database matched 0 of 400
+    # rows. Int64 is pandas' nullable integer type and writes the value with no decimal.
     df['NPI'] = df['NPI'].apply(lambda x: int(float(x)) if pd.notna(x) and str(x).strip() != "" and str(x).replace('.0','').isdigit() else None)
+    df['NPI'] = df['NPI'].astype('Int64')
     
     # Separate matched and unmatched/excluded rows
     matched_df = df[df['NPI'].notna()].copy()

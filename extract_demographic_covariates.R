@@ -1,211 +1,103 @@
-# R Script to extract methodological covariates for the OB/GYN study
-# Implements:
-# 1. NPPES Historical Clinician Churn Tracker (via DuckDB)
-# 2. Census ACS Table S2701 Female Insurance Percentages (via Census API)
-# 3. HRSA Area Health Resources File (AHRF) County-Level Metrics
-# 4. CMS Monthly County-Level Enrollment Retrieval
+#!/usr/bin/env Rscript
+# Contextual covariates: ACS female insurance, HRSA AHRF supply, CMS enrollment, NPPES churn.
+#
+# WHAT THIS FILE USED TO BE, AND WHY THAT MATTERED.
+#
+# Until 2026-08-10 this script contained verbatim local copies of four functions that the
+# mysterycall package already exports, under the same names:
+#
+#     mysterycall_track_clinician_churn        mysterycall/R/demographic_covariates.R:12
+#     mysterycall_get_acs_female_insurance     mysterycall/R/demographic_covariates.R:97
+#     mysterycall_get_hrsa_ahrf                mysterycall/R/demographic_covariates.R:142
+#     mysterycall_get_cms_enrollment           mysterycall/R/demographic_covariates.R:170
+#
+# Shadowing an exported name is worse than an ordinary duplicate: whichever definition is
+# sourced last wins, silently, and which one that is depends on script order.
+#
+# The consequence is on the record. apply_demographic_covariates.R called none of these. It
+# generated Tract_Pct_Female_*, County_OBGYN_Count and both County_*_Enrollment with rnorm()
+# and clamps, describing that in its own header as "standard fallback simulations to ensure
+# full dataset completeness." The real-data path existed in the author's own package the entire
+# time and was bypassed by a local copy. See docs/CANONICAL_SOURCES_AUDIT.md (A1) and
+# manuscript/appendix_data_provenance.md.
+#
+# The local definitions are gone. This script now calls the canonical functions and fails
+# loudly when the inputs they need are absent, rather than substituting numbers.
 
-library(DBI)
-library(duckdb)
-library(httr)
-library(jsonlite)
-library(dplyr)
+suppressMessages({
+  library(mysterycall)
+  library(dplyr)
+})
 
-#' 1. Track Clinician Churn at a Specific Practice Location (NPPES History)
-#' Since Tax Identifiers (TINs) are private, we track offices longitudinally using
-#' physical practice address matches and organization NPI (Type 2) associations.
-#'
-#' @param db_path Path to the 80 GB DuckDB database (e.g. "/Volumes/MufflySamsung 1/nppes_historical.duckdb")
-#' @param street_address Character. Practice Location Address Line 1 (e.g. "123 Main St").
-#' @param zip_code Character. Five-digit ZIP code.
-#' @return A data frame containing annual staffing levels, entries, exits, and churn rates.
-#' @export
-mysterycall_track_clinician_churn <- function(db_path, street_address, zip_code, table_name = "temporal_obgyn_only_all_years") {
-  if (!file.exists(db_path)) {
-    stop("DuckDB database not found at the specified path.")
+# Every one of these functions needs an input this repository does not and should not carry:
+# a Census API key, an 80 GB NPPES history database, a licensed HRSA extract, a CMS download.
+# They are read from the environment so that a missing input is a clear stop rather than a
+# silent fallback.
+CENSUS_API_KEY <- Sys.getenv("CENSUS_API_KEY", "")
+NPPES_DUCKDB   <- Sys.getenv("NPPES_HISTORY_DUCKDB", "")
+AHRF_DB        <- Sys.getenv("HRSA_AHRF_PATH", "")
+CMS_CSV        <- Sys.getenv("CMS_ENROLLMENT_CSV", "")
+
+require_input <- function(value, name, what) {
+  if (!nzchar(value)) {
+    stop(sprintf(paste0(
+      "\n\n  %s is not set.\n  %s\n\n",
+      "  This script will not substitute simulated values for a missing input. That is what\n",
+      "  produced the covariate defect documented in Appendix S2. Set the variable, or do not\n",
+      "  run this step and leave the columns absent.\n"), name, what), call. = FALSE)
   }
-  
-  con <- dbConnect(duckdb::duckdb(), db_path, read_only = TRUE)
-  on.exit(dbDisconnect(con, shutdown = TRUE))
-  
-  # Standardize inputs for SQL matching
-  addr_clean <- toupper(trimws(street_address))
-  zip_clean <- substr(trimws(zip_code), 1, 5)
-  
-  # Query based on selected table name
-  if (table_name == "temporal_obgyn_only_all_years") {
-    query <- sprintf("
-      SELECT year, npi, first_name as provider_first_name, last_name as provider_last_name
-      FROM temporal_obgyn_only_all_years
-      WHERE UPPER(TRIM(practice_address_street)) = '%s'
-        AND SUBSTR(practice_address_zip, 1, 5) = '%s'
-      ORDER BY year, npi
-    ", addr_clean, zip_clean)
-  } else {
-    query <- sprintf("
-      SELECT year, npi, provider_first_name, provider_last_name
-      FROM nppes_history
-      WHERE UPPER(TRIM(practice_address_line1)) = '%s'
-        AND SUBSTR(practice_postal_code, 1, 5) = '%s'
-        AND entity_type_code = 1
-      ORDER BY year, npi
-    ", addr_clean, zip_clean)
+  if (grepl("PATH|DUCKDB|CSV", name) && !file.exists(value)) {
+    stop(sprintf("%s points at a path that does not exist: %s", name, value), call. = FALSE)
   }
-  
-  df <- dbGetQuery(con, query)
-  if (nrow(df) == 0) {
-    message("No clinicians found matching the specified address and ZIP.")
-    return(NULL)
-  }
-  
-  years <- sort(unique(df$year))
-  churn_results <- data.frame()
-  
-  for (i in seq_along(years)) {
-    yr <- years[i]
-    current_npis <- df$npi[df$year == yr]
-    
-    if (i == 1) {
-      # Baseline year
-      churn_results <- rbind(churn_results, data.frame(
-        Year = yr,
-        Staff_Count = length(current_npis),
-        Joined = 0,
-        Left = 0,
-        Churn_Rate = 0.0
-      ))
-    } else {
-      prev_yr <- years[i - 1]
-      prev_npis <- df$npi[df$year == prev_yr]
-      
-      joined <- sum(!current_npis %in% prev_npis)
-      left <- sum(!prev_npis %in% current_npis)
-      retained <- sum(current_npis %in% prev_npis)
-      
-      # Churn rate: (Joined + Left) / Baseline Staff
-      baseline_staff <- length(prev_npis)
-      churn_rate <- if (baseline_staff > 0) (joined + left) / baseline_staff else 0.0
-      
-      churn_results <- rbind(churn_results, data.frame(
-        Year = yr,
-        Staff_Count = length(current_npis),
-        Joined = joined,
-        Left = left,
-        Churn_Rate = round(churn_rate, 3)
-      ))
-    }
-  }
-  
-  return(churn_results)
+  value
 }
 
-
-#' 2. Extract Female Insurance Percentages from Census ACS Table S2701
-#' Queries the US Census Bureau API for the smallest geographic unit (Census Tract).
-#'
-#' @param api_key Character. US Census API key.
-#' @param state_fips Character. Two-digit State FIPS code.
-#' @param county_fips Character. Three-digit County FIPS code.
-#' @return A data frame containing percentages of females enrolled in Medicaid, Medicare, private plans, and uninsured.
-#' @export
-mysterycall_get_acs_female_insurance <- function(api_key, state_fips, county_fips) {
-  # ACS 5-year Table S2701 variables for females:
-  # C01_010E: Total Female Population
-  # C02_010E: Female with Private Health Insurance
-  # C03_010E: Female with Public Health Insurance
-  # C04_010E: Female with Medicaid/means-tested coverage
-  # C05_010E: Female with Medicare
-  # C06_010E: Female Uninsured
-  
-  base_url <- "https://api.census.gov/data/2022/acs/acs5/subject"
-  vars <- "S2701_C01_010E,S2701_C02_010E,S2701_C03_010E,S2701_C04_010E,S2701_C05_010E,S2701_C06_010E"
-  
-  url <- sprintf("%s?get=NAME,%s&for=tract:*&in=state:%s+county:%s&key=%s", 
-                 base_url, vars, state_fips, county_fips, api_key)
-  
-  response <- GET(url)
-  if (status_code(response) != 200) {
-    stop(paste("Census API request failed with status:", status_code(response)))
-  }
-  
-  data <- fromJSON(content(response, "text", encoding = "UTF-8"))
-  headers <- data[1, ]
-  rows <- data[-1, ]
-  df <- as.data.frame(rows, stringsAsFactors = FALSE)
-  colnames(df) <- headers
-  
-  # Convert numeric columns
-  num_cols <- c("S2701_C01_010E", "S2701_C02_010E", "S2701_C03_010E", "S2701_C04_010E", "S2701_C05_010E", "S2701_C06_010E")
-  df[num_cols] <- lapply(df[num_cols], as.numeric)
-  
-  # Compute percentages
-  df_clean <- df %>%
-    transmute(
-      Census_Tract = NAME,
-      State_FIPS = state,
-      County_FIPS = county,
-      Tract_FIPS = tract,
-      Total_Females = S2701_C01_010E,
-      Pct_Female_Private = (S2701_C02_010E / S2701_C01_010E) * 100,
-      Pct_Female_Public = (S2701_C03_010E / S2701_C01_010E) * 100,
-      Pct_Female_Medicaid = (S2701_C04_010E / S2701_C01_010E) * 100,
-      Pct_Female_Medicare = (S2701_C05_010E / S2701_C01_010E) * 100,
-      Pct_Female_Uninsured = (S2701_C06_010E / S2701_C01_010E) * 100
-    )
-  
-  return(df_clean)
+# ---------------------------------------------------------------- 1. clinician churn
+#' Annual staffing, entries, exits and churn at a practice location.
+#' Canonical implementation: mysterycall::mysterycall_track_clinician_churn().
+track_churn <- function(street_address, zip_code,
+                        table_name = "temporal_obgyn_only_all_years") {
+  db <- require_input(NPPES_DUCKDB, "NPPES_HISTORY_DUCKDB",
+                      "Path to the NPPES historical DuckDB used to track office staffing.")
+  mysterycall::mysterycall_track_clinician_churn(
+    db_path = db, street_address = street_address, zip_code = zip_code,
+    table_name = table_name)
 }
 
-
-#' 3. Extract County-Level Metrics from HRSA Area Health Resources File (AHRF)
-#'
-#' @param ahrf_db_path Path to the local AHRF DuckDB or CSV database.
-#' @param county_fips Character. Five-digit State-County FIPS code.
-#' @return A data frame containing total population, OB-GYN supply, and public coverage metrics.
-#' @export
-mysterycall_get_hrsa_ahrf <- function(ahrf_db_path, county_fips) {
-  if (!file.exists(ahrf_db_path)) {
-    stop("AHRF database file not found.")
-  }
-  
-  con <- dbConnect(duckdb::duckdb(), ahrf_db_path, read_only = TRUE)
-  on.exit(dbDisconnect(con, shutdown = TRUE))
-  
-  # AHRF stores county data by FIPS.
-  # We query total population, active OB-GYNs (F11942 or similar variable codes),
-  # and total Medicaid enrollment.
-  query <- sprintf("
-    SELECT fips, county_name, state_abbrev,
-           pop_total, 
-           obgyn_count, 
-           medicaid_enrolled
-    FROM ahrf_county_data
-    WHERE fips = '%s'
-  ", county_fips)
-  
-  res <- dbGetQuery(con, query)
-  return(res)
+# ---------------------------------------------------------------- 2. ACS female insurance
+#' Tract-level female health-insurance coverage shares, ACS table S2701.
+#' Canonical implementation: mysterycall::mysterycall_get_acs_female_insurance().
+acs_female_insurance <- function(state_fips, county_fips) {
+  key <- require_input(CENSUS_API_KEY, "CENSUS_API_KEY",
+                       "US Census Bureau API key. Request one at api.census.gov/data/key_signup.html")
+  mysterycall::mysterycall_get_acs_female_insurance(
+    api_key = key, state_fips = state_fips, county_fips = county_fips)
 }
 
+# ---------------------------------------------------------------- 3. HRSA AHRF supply
+#' County-level clinician supply from the HRSA Area Health Resources File.
+#' Canonical implementation: mysterycall::mysterycall_get_hrsa_ahrf().
+ahrf_supply <- function(county_fips) {
+  db <- require_input(AHRF_DB, "HRSA_AHRF_PATH", "Path to the HRSA AHRF extract.")
+  mysterycall::mysterycall_get_hrsa_ahrf(ahrf_db_path = db, county_fips = county_fips)
+}
 
-#' 4. Retrieve CMS Monthly County-Level Enrollment Reports
-#'
-#' @param cms_csv_path Path to the downloaded CMS monthly enrollment CSV.
-#' @param county_fips Character. Five-digit State-County FIPS code.
-#' @return A data frame with monthly Medicare and Medicaid/CHIP enrollment counts.
-#' @export
-mysterycall_get_cms_enrollment <- function(cms_csv_path, county_fips) {
-  if (!file.exists(cms_csv_path)) {
-    stop("CMS monthly enrollment file not found.")
-  }
-  
-  # Read CMS file
-  df <- read.csv(cms_csv_path, stringsAsFactors = FALSE, check.names = FALSE)
-  
-  # Filter by FIPS
-  res <- df %>%
-    filter(FIPS == county_fips) %>%
-    select(FIPS, County, State, `Medicare Enrollment`, `Medicaid/CHIP Enrollment`, Report_Month)
-  
-  return(res)
+# ---------------------------------------------------------------- 4. CMS enrollment
+#' County-level monthly Medicare and Medicaid/CHIP enrollment.
+#' Canonical implementation: mysterycall::mysterycall_get_cms_enrollment().
+cms_enrollment <- function(county_fips) {
+  csv <- require_input(CMS_CSV, "CMS_ENROLLMENT_CSV",
+                       "Path to the CMS monthly county-level enrollment CSV.")
+  mysterycall::mysterycall_get_cms_enrollment(cms_csv_path = csv, county_fips = county_fips)
+}
+
+if (identical(environment(), globalenv()) && !interactive()) {
+  message("Canonical covariate fetchers are available as track_churn(), acs_female_insurance(),")
+  message("ahrf_supply() and cms_enrollment(). Each wraps the mysterycall function of the same")
+  message("purpose and stops if its input is unset. Nothing is fetched by sourcing this file.")
+  present <- c(CENSUS_API_KEY = nzchar(CENSUS_API_KEY), NPPES_HISTORY_DUCKDB = nzchar(NPPES_DUCKDB),
+               HRSA_AHRF_PATH = nzchar(AHRF_DB), CMS_ENROLLMENT_CSV = nzchar(CMS_CSV))
+  message("\nInputs configured: ",
+          if (any(present)) paste(names(present)[present], collapse = ", ") else "none")
+  if (!all(present)) message("Missing: ", paste(names(present)[!present], collapse = ", "))
 }

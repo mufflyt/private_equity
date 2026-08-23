@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Blocking gate. Install with:  bash hooks/install.sh
+#
+# Runs tests/run_blocking.R and refuses the commit on any failure. Bypass with
+# `git commit --no-verify` only when you have a reason you would say out loud.
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+if ! command -v Rscript >/dev/null 2>&1; then
+  echo "pre-commit: Rscript not found; gate skipped." >&2
+  exit 0
+fi
+
+echo "pre-commit: running blocking gates..."
+if ! Rscript tests/run_blocking.R; then
+  echo ""
+  echo "pre-commit: BLOCKED. Commit refused."
+  echo "  Fix the failure, or --no-verify if you genuinely intend to land it red."
+  exit 1
+fi

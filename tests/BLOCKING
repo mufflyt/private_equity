@@ -1,0 +1,49 @@
+# The blocking subset.
+#
+# These test files must pass before a commit lands. The rest of the suite is advisory until it
+# is clean; a gate you routinely bypass is not a gate, so this list starts with the files that
+# are green and grows as others are fixed. Promotion is a one-line edit here.
+#
+# Format: <needs-data> <file>
+#   data  - reads a cohort CSV, so it can only run where the (gitignored) data is present
+#   nodata- runs anywhere, including CI
+#
+# RESOLVED 2026-08-11: the gazetteer question, split in two.
+#   test-geocode-lookup.R is gone. It conflated two questions and pinned the pipeline to a
+#   dependency's storage schema, which is precisely what broke when mysterycall renamed its
+#   columns. It is replaced by:
+#
+#     test-frozen-geo-reference.R      BLOCKING. The coordinate set the fielded cohort's
+#                                      10-mile caliper actually used is immutable, hashed, and
+#                                      covers every fielded clinician.
+#     test-gazetteer-compatibility.R   NON-BLOCKING. Can the CURRENT mysterycall gazetteer be
+#                                      normalised to the four-column pipeline contract? A pass
+#                                      does NOT license substituting it into the primary
+#                                      analysis.
+#
+#   The mysterycall build used to construct the cohort could not be reconstructed and no longer
+#   exists. Re-resolving through the current build reproduces 82.2% of the persisted
+#   coordinates, max discrepancy 54 degrees. See inst/frozen/PROVENANCE.md.
+#
+# Files deliberately NOT yet blocking, with their failure counts as of 2026-08-10:
+#   test-table1-balance.R 12, test-redcap-instrument.R 11, test-taxonomy-eligibility.R 7,
+#   test-artifact-vintage.R 6, test-control-independence.R 6, test-covariate-imputation.R 6,
+#   test-roster-currency.R 5, test-cohort-definition.R 4, test-enrichment-covariates.R 4,
+#   test-matching-balance.R 4, test-pe-exposure.R 4, test-matching-provenance.R 3,
+#   test-name-credential-parsing.R 3, test-pe-universe.R 3, test-coordinate-provenance.R 2,
+#   test-key-joins.R 2, test-coordinate-integrity.R (1 error),
+#   test-geography-and-churn.R (1 error)
+
+nodata  test-pe_helpers.R
+nodata  test-address-key-parity.R
+
+data    test-frozen-geo-reference.R
+data    test-analysis-gates.R
+data    test-svi-provenance.R
+data    test-phone-clustering.R
+data    test-power-and-calibration.R
+data    test-platform-exclusion.R
+data    test-redcap-structure.R
+data    test-pipeline-determinism.R
+data    test-matching-invariants.R
+data    test-activity-recency.R

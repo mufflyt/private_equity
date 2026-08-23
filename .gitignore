@@ -21,3 +21,7 @@ scraped_texts/
 
 # REDCap dropdown choices export (provider data)
 redcap_physician_name_choices.txt
+
+# Configuration that must be versioned despite the blanket *.csv rule
+!analysis_manifest.csv
+!power_analysis_new_results.csv

@@ -5,6 +5,8 @@
 # Step 4: Perform nearest-neighbor PSM matching (1-to-1 match, exact state constraint)
 # Step 5: Save control group, study database, and a clean matched calling list CSV
 
+suppressMessages(library(dplyr))
+
 # Helper to classify subspecialties from taxonomy
 get_subspecialty_from_tax <- function(tax) {
   if (is.na(tax) || tax == "") return("Generalist")
@@ -25,22 +27,108 @@ calling_list_csv <- "/Users/tylermuffly/private_equity/pe_obgyn_matched_calling_
 
 # Load PE active cohort (check.names = FALSE to preserve spaces in headers)
 pe_df <- read.csv(pe_csv, stringsAsFactors = FALSE, na.strings = c("NA", "N/A", ""), check.names = FALSE)
-pe_matched_all <- pe_df[!is.na(pe_df$NPI), ]
+
+# ---------------------------------------------------------------------------------------
+# PLATFORM-LEVEL ELIGIBILITY EXCLUSION
+#
+# Five platforms cannot supply the appointment the study requests. The fielded vignette is
+# abnormal uterine bleeding, a generalist outpatient GYN visit. Four are fertility practices
+# (subspecialty referral settings) and one is an inpatient hospitalist group with no
+# outpatient clinic at all. A caller asking them for this appointment is told none exists,
+# which would enter the obtainment outcome as a refusal.
+#
+# This is an eligibility exclusion at the PLATFORM level, applied before office clustering,
+# propensity estimation and matching. A taxonomy filter cannot do this job: a physician at a
+# fertility platform can carry a generalist OB-GYN taxonomy and pass every subspecialty test.
+#
+# TWO COHORTS ARE MAINTAINED:
+#   pe_roster_all  every PE-owned NPI, including excluded platforms. Used ONLY to keep all
+#                  PE clinicians out of the control pool. Excluding a platform from the
+#                  treated arm must not make its clinicians eligible as "independent".
+#   pe_matched_all the study-eligible treated cohort, which feeds clustering, matching and
+#                  the unified study database.
+EXCLUDED_PLATFORMS <- c("CCRM Fertility", "IVI RMA Global", "US Fertility",
+                        "Kindbody", "OB Hospitalist Group")
+
+# Individually verified non-physicians. NPPES taxonomy alone is not a defensible eligibility
+# criterion (it is self-reported, often a decade stale, and only one taxonomy per NPI is
+# retained upstream), so these were confirmed one by one against the practice's own website
+# rather than filtered by code. Verified 2026-08-10:
+#   1144280553  Cindy Joslyn  - CNM. Women's Health of Central Massachusetts lists her as
+#                               "Certified by the American College of Nurse Midwives"; the
+#                               roster name "Cindy Joslyn, MD" is a scrape error, which is
+#                               how she passed the MD/DO derivation.
+# Checked and RETAINED (taxonomy wrong, clinician eligible):
+#   1932194743  Claire Harraghy - taxonomy reads 363LW0102X (nurse practitioner) but she is a
+#                               board-certified OB-GYN physician at A Woman's View, Hickory NC.
+EXCLUDED_NPIS <- c("1144280553")
+
+pe_roster_all <- pe_df[!is.na(pe_df$NPI), ]
+pe_matched_all <- pe_roster_all
+
+.npi_norm <- sub("\\.0+$", "", trimws(as.character(pe_matched_all$NPI)))
+if (any(.npi_norm %in% EXCLUDED_NPIS)) {
+  cat(sprintf("  Verified non-physicians excluded by NPI: %d\n", sum(.npi_norm %in% EXCLUDED_NPIS)))
+  pe_matched_all <- pe_matched_all[!(.npi_norm %in% EXCLUDED_NPIS), ]
+}
+
+# ---------------------------------------------------------------------------------------
+# ACTIVITY RECENCY EXCLUSION
+#
+# Drop clinicians not observed practising within MAX_INACTIVE_YEARS. A clinician who has
+# left is recorded as a failure to contact, which enters the primary obtainment outcome as
+# if it were a refusal to see the patient.
+#
+# The threshold is anchored to the NEWEST activity year present in the data, not to the
+# calling year. The activity source stops at 2021, so measuring against 2026 would require
+# activity in 2024 or later and would remove every clinician in the cohort. Anchoring to the
+# data's own currency asks the answerable question, "was this clinician still practising at
+# the end of the observation window", and self-calibrates if the source is ever refreshed.
+#
+# Clinicians with NO recorded activity year are RETAINED: absent evidence of activity is not
+# evidence of absence, and excluding them would drop a further 505 roster rows on a missing
+# value rather than an observation.
+MAX_INACTIVE_YEARS <- 2
+
+.last_active <- suppressWarnings(as.numeric(trimws(ifelse(
+  is.na(pe_matched_all[["Last Active Year"]]), "", pe_matched_all[["Last Active Year"]]))))
+ACTIVITY_REFERENCE_YEAR <- suppressWarnings(max(.last_active, na.rm = TRUE))
+
+if (is.finite(ACTIVITY_REFERENCE_YEAR)) {
+  .cutoff <- ACTIVITY_REFERENCE_YEAR - (MAX_INACTIVE_YEARS - 1L)
+  .stale  <- !is.na(.last_active) & .last_active < .cutoff
+  cat("\n=== Activity recency exclusion ===\n")
+  cat(sprintf("  newest activity year in source: %d | keeping clinicians active %d or later\n",
+              ACTIVITY_REFERENCE_YEAR, .cutoff))
+  cat(sprintf("  excluded as inactive: %d | retained with no activity year recorded: %d\n",
+              sum(.stale), sum(is.na(.last_active))))
+  if (sum(.stale) > 0.5 * sum(!is.na(.last_active))) {
+    stop("Activity recency exclusion would remove more than half the cohort; ",
+         "check that Last Active Year is populated and current before proceeding.")
+  }
+  pe_matched_all <- pe_matched_all[!.stale, ]
+}
+
+.plat <- trimws(ifelse(is.na(pe_matched_all[["Platform/Practice"]]), "",
+                       pe_matched_all[["Platform/Practice"]]))
+cat("\n=== Platform-level eligibility exclusion ===\n")
+for (px in EXCLUDED_PLATFORMS) {
+  n_phys <- sum(.plat == px)
+  cat(sprintf("  %-22s excluded: %4d physicians\n", px, n_phys))
+}
+pe_matched_all <- pe_matched_all[!(.plat %in% EXCLUDED_PLATFORMS), ]
+cat(sprintf("  PE roster (all, control-ineligible): %d | study-eligible after exclusion: %d\n",
+            nrow(pe_roster_all), nrow(pe_matched_all)))
 
 # Filter out PE providers with no valid phone numbers (Scraped, NPPES, or DAC)
-has_valid_phone <- function(row) {
-  ph <- row[["Scraped Phone"]]
-  if (is.na(ph) || ph == "" || ph == "N/A" || ph == "NAN") {
-    ph <- row[["NPPES Phone"]]
-    if (is.na(ph) || ph == "" || ph == "N/A" || ph == "NAN") {
-      ph <- row[["DAC Phone"]]
-    }
-  }
-  return(!is.na(ph) && ph != "" && ph != "N/A" && ph != "NAN")
+na_if_invalid <- function(x) {
+  ifelse(is.na(x) | x == "" | x == "N/A" | x == "NAN", NA_character_, as.character(x))
 }
-pe_matched_all$has_phone <- sapply(1:nrow(pe_matched_all), function(i) has_valid_phone(pe_matched_all[i, ]))
-pe_matched_all <- pe_matched_all[pe_matched_all$has_phone, ]
-pe_matched_all$has_phone <- NULL
+
+pe_matched_all <- pe_matched_all %>%
+  filter(!is.na(na_if_invalid(`Scraped Phone`)) | 
+         !is.na(na_if_invalid(`NPPES Phone`)) | 
+         !is.na(na_if_invalid(`DAC Phone`)))
 
 # Filter PE cohort strictly to Generalists only using both NPPES Taxonomy and raw Subspecialty
 pe_matched_all$Subspecialty_clean <- sapply(pe_matched_all[["NPPES Taxonomy"]], get_subspecialty_from_tax)
@@ -73,6 +161,30 @@ candidates_df <- candidates_df[!is.na(candidates_df$Phone_formatted), ]
 candidates_df$Subspecialty_clean <- sapply(candidates_df$taxonomy, get_subspecialty_from_tax)
 candidates_df <- candidates_df[candidates_df$Subspecialty_clean == "Generalist", ]
 candidates_df$Subspecialty_clean <- NULL
+
+# Every PE-owned NPI is ineligible as a control, including clinicians at the five platforms
+# excluded from the treated arm above. Nothing previously enforced this; the pools happened
+# not to overlap, which is a property of the source data rather than a guarantee.
+.pe_all_npi <- sub("\\.0+$", "", trimws(as.character(pe_roster_all$NPI)))
+.cand_npi   <- sub("\\.0+$", "", trimws(as.character(candidates_df$npi)))
+.n_pe_in_ctl <- sum(.cand_npi %in% .pe_all_npi)
+if (.n_pe_in_ctl > 0) {
+  cat(sprintf("Removing %d PE-owned clinicians from the control candidate pool.\n", .n_pe_in_ctl))
+  candidates_df <- candidates_df[!(.cand_npi %in% .pe_all_npi), ]
+}
+
+# Apply the SAME activity recency rule to controls. Filtering only the treated arm would
+# give the two arms different eligibility criteria: PE clinicians would be guaranteed
+# recently active while controls would not, so any difference in reachability between arms
+# would partly reflect the filter rather than ownership. The 10 fielded controls last active
+# before 2020 that this catches were invisible while the rule ran on one arm only.
+if (is.finite(ACTIVITY_REFERENCE_YEAR) && "last_active_year" %in% names(candidates_df)) {
+  .cand_last <- suppressWarnings(as.numeric(trimws(as.character(candidates_df$last_active_year))))
+  .cand_stale <- !is.na(.cand_last) & .cand_last < .cutoff
+  cat(sprintf("  control candidates excluded as inactive (same rule, cutoff %d): %d | retained with no year: %d\n",
+              .cutoff, sum(.cand_stale), sum(is.na(.cand_last))))
+  candidates_df <- candidates_df[!.cand_stale, ]
+}
 
 cat(sprintf("Loaded %d Non-PE private practice control generalist candidates with valid phone numbers.\n", nrow(candidates_df)))
 
@@ -108,10 +220,15 @@ get_address_key <- function(row) {
     return(NA)
   }
   
-  adr_clean <- gsub("[^A-Z0-9]", "", toupper(adr))
-  # Strip suites/unit details
-  adr_clean <- gsub("(SUITE|STE|UNIT|APT|FLOOR|FL|ROOM|RM|NUMBER|NO|DEPT|SUITES|STES|BLDG|BUILDING)[0-9A-Z]*", "", adr_clean)
-  
+  # Strip suites/unit details BEFORE collapsing separators. Removing punctuation first
+  # destroys the word boundaries, after which FL matches the start of FLAGLER and the
+  # greedy [0-9A-Z]* consumes the rest of the street name, merging unrelated offices
+  # (100 FLAGLER ST, 100 FLAMINGO AVE and 100 FLORIDA BLVD all collapsed to one key).
+  # Must stay identical to address_key() in R/pe_helpers.R; a test asserts they agree.
+  adr_up <- gsub("[^A-Z0-9]+", " ", toupper(adr))
+  adr_up <- gsub("\\b(SUITES|SUITE|STES|STE|UNIT|APT|FLOOR|FL|ROOM|RM|NUMBER|NO|DEPT|BLDG|BUILDING)\\b *[0-9A-Z]*", "", adr_up)
+  adr_clean <- gsub("[^A-Z0-9]", "", adr_up)
+
   city_clean <- gsub("[^A-Z0-9]", "", toupper(city))
   zip_clean <- substr(gsub("[^0-9]", "", zip_code), 1, 5)
   
@@ -140,32 +257,34 @@ pe_matched_all$office_id <- sapply(1:nrow(pe_matched_all), function(i) {
 pe_matched_all$address_key <- NULL
 
 # # 3. Clean and Standardize Covariates for PSM Model
-pe_matched_all$Gender_clean <- ifelse(is.na(pe_matched_all$Gender), "Female", pe_matched_all$Gender)
-candidates_df$Gender_clean <- ifelse(is.na(candidates_df$gender), "Female", 
-                                     ifelse(candidates_df$gender == "F", "Female", 
-                                            ifelse(candidates_df$gender == "M", "Male", "Female")))
+STUDY_YEAR <- 2026
+study_year <- STUDY_YEAR
 
-pe_matched_all$MD_vs_DO <- ifelse(is.na(pe_matched_all[["MD vs. DO"]]), "MD", pe_matched_all[["MD vs. DO"]])
-candidates_df$MD_vs_DO <- ifelse(is.na(candidates_df$cred), "MD", 
-                                 ifelse(grepl("DO", toupper(candidates_df$cred)), "DO", "MD"))
+pe_matched_all <- pe_matched_all %>%
+  mutate(
+    Gender_clean = coalesce(Gender, "Female"),
+    MD_vs_DO = coalesce(`MD vs. DO`, "MD"),
+    Years_in_Practice = as.numeric(`Years in Practice`),
+    Years_in_Practice = coalesce(Years_in_Practice, median(Years_in_Practice, na.rm = TRUE)),
+    Open_Payments_Years = as.numeric(`Open Payments Years`),
+    Open_Payments_Years = coalesce(Open_Payments_Years, median(Open_Payments_Years, na.rm = TRUE))
+  )
 
-study_year <- as.numeric(format(Sys.Date(), "%Y"))
-pe_matched_all$Years_in_Practice <- as.numeric(pe_matched_all[["Years in Practice"]])
-pe_years_med <- median(pe_matched_all$Years_in_Practice, na.rm = TRUE)
-pe_matched_all$Years_in_Practice[is.na(pe_matched_all$Years_in_Practice)] <- pe_years_med
-
-candidates_df$Years_in_Practice <- study_year - as.numeric(candidates_df$grad_yr)
-candidates_df$enum_yr <- as.numeric(sapply(strsplit(as.character(candidates_df$enum_date), "-"), `[`, 1))
-candidates_df$Years_in_Practice <- ifelse(is.na(candidates_df$Years_in_Practice), study_year - candidates_df$enum_yr, candidates_df$Years_in_Practice)
-cand_years_med <- median(candidates_df$Years_in_Practice, na.rm = TRUE)
-candidates_df$Years_in_Practice[is.na(candidates_df$Years_in_Practice)] <- cand_years_med
-
-pe_matched_all$Open_Payments_Years <- as.numeric(pe_matched_all[["Open Payments Years"]])
-pe_op_med <- median(pe_matched_all$Open_Payments_Years, na.rm = TRUE)
-pe_matched_all$Open_Payments_Years[is.na(pe_matched_all$Open_Payments_Years)] <- pe_op_med
-
-candidates_df$Open_Payments_Years <- as.numeric(candidates_df$op_years)
-candidates_df$Open_Payments_Years[is.na(candidates_df$Open_Payments_Years)] <- 0
+candidates_df <- candidates_df %>%
+  mutate(
+    Gender_clean = case_when(
+      is.na(gender) ~ "Female",
+      gender == "F" ~ "Female",
+      gender == "M" ~ "Male",
+      TRUE ~ "Female"
+    ),
+    MD_vs_DO = if_else(is.na(cred), "MD", if_else(grepl("DO", toupper(cred)), "DO", "MD")),
+    Years_in_Practice = study_year - as.numeric(grad_yr),
+    enum_yr = as.numeric(sapply(strsplit(as.character(enum_date), "-"), `[`, 1)),
+    Years_in_Practice = coalesce(Years_in_Practice, study_year - enum_yr),
+    Years_in_Practice = coalesce(Years_in_Practice, median(Years_in_Practice, na.rm = TRUE)),
+    Open_Payments_Years = coalesce(as.numeric(op_years), 0)
+  )
 
 # ACOG States Mapping (PR duplicate removed)
 STATE_TO_ACOG <- c(
@@ -227,9 +346,56 @@ haversine_distance <- function(lat1, lon1, lat2, lon2) {
   return(r * c)
 }
 
+# ---------------------------------------------------------------- gazetteer boundary
+#
+# The gazetteer is a FROZEN ANALYSIS DEPENDENCY, not a package implementation detail. The
+# coordinate each clinician was assigned decides which controls fell inside the 10-mile
+# caliper, so replacing the reference is a new matching specification, not an upgrade.
+#
+# mysterycall has since changed the dataset's schema (object renamed to snake_case, columns
+# renamed to latitude/longitude). Re-resolving the fielded cohort through the current build
+# reproduces only 82.2% of the persisted coordinates, with a maximum discrepancy of 54 degrees.
+# The build the cohort was matched against no longer exists anywhere. See
+# inst/frozen/PROVENANCE.md.
+#
+# Everything downstream of this boundary sees exactly four columns -- city, state, lat, long --
+# whatever the package happens to ship. `normalize_gazetteer()` accepts either the historical
+# abbreviated-state schema or the current full-name schema and errors rather than guessing.
+
+#' Reduce any gazetteer schema to the pipeline contract: city, state, lat, long.
+#'
+#' Column resolution is EXACT. `$` partial matching silently rescued `$lat` against a
+#' `latitude` column for months and would have stopped doing so the moment any other `lat*`
+#' column appeared; nothing downstream may rely on it.
+normalize_gazetteer <- function(g, full_to_abbrev) {
+  pick <- function(cands, what) {
+    hit <- cands[cands %in% names(g)]
+    if (!length(hit)) {
+      stop(sprintf(paste0("Gazetteer has no %s column. Looked for: %s. Found: %s.\n",
+                          "  The dependency's schema changed; extend normalize_gazetteer() ",
+                          "rather than\n  relying on partial matching."),
+                   what, paste(cands, collapse = ", "), paste(names(g), collapse = ", ")),
+           call. = FALSE)
+    }
+    g[[hit[1]]]
+  }
+
+  raw_state <- pick(c("state", "state_abbrev", "STATE"), "state")
+  out <- data.frame(
+    city  = toupper(trimws(pick(c("city", "CITY"), "city"))),
+    state = ifelse(nchar(trimws(raw_state)) == 2L, toupper(trimws(raw_state)),
+                   unname(full_to_abbrev[raw_state])),
+    lat   = as.numeric(pick(c("lat", "latitude", "LAT"), "latitude")),
+    long  = as.numeric(pick(c("long", "longitude", "lon", "lng", "LONG"), "longitude")),
+    stringsAsFactors = FALSE
+  )
+  stopifnot(identical(names(out), c("city", "state", "lat", "long")))
+  out
+}
+
 # Set up lat/long lookup reference from package
 data(city_state_to_lat_long, package = "mysterycall")
-lat_long_ref <- city_state_to_lat_long
+lat_long_raw <- city_state_to_lat_long
 full_to_abbrev <- names(c('AL'='Alabama', 'AK'='Alaska', 'AZ'='Arizona', 'AR'='Arkansas', 'CA'='California',
   'CO'='Colorado', 'CT'='Connecticut', 'DE'='Delaware', 'DC'='District of Columbia',
   'FL'='Florida', 'GA'='Georgia', 'HI'='Hawaii', 'ID'='Idaho', 'IL'='Illinois',
@@ -255,10 +421,25 @@ names(full_to_abbrev) <- c('Alabama', 'Alaska', 'Arizona', 'Arkansas', 'Californ
   'Washington', 'West Virginia', 'Wisconsin', 'Wyoming',
   'Puerto Rico', 'Virgin Islands')
 
-lat_long_ref$state_abbrev <- full_to_abbrev[lat_long_ref$state]
-lat_long_ref$city_upper <- toupper(trimws(lat_long_ref$city))
-lat_long_ref$state_upper <- toupper(trimws(lat_long_ref$state_abbrev))
+# city_state_to_lat_long$state already holds two-letter abbreviations ("AL", "AZ"), but
+# full_to_abbrev is keyed by full state names ("Alabama"). Mapping one through the other
+# returned NA for all 31,909 rows, and the !is.na() filter below then emptied the entire
+# gazetteer. get_coords() consequently fell through to the 17-entry manual_coords list and
+# returned NA for every other city, which is why matching reported "Caliper Geo Matches: 0"
+# and produced 2 pairs instead of 511. Accept either vocabulary.
+lat_long_ref <- normalize_gazetteer(lat_long_raw, full_to_abbrev)
+lat_long_ref$city_upper  <- lat_long_ref$city
+lat_long_ref$state_upper <- lat_long_ref$state
 lat_long_ref <- lat_long_ref[!is.na(lat_long_ref$state_upper), ]
+
+# Fail loudly if the gazetteer has been emptied. This filter previously removed all
+# 31,909 rows and the script carried on, geocoding everything to NA and reporting a
+# successful matching run that had in fact matched almost nothing.
+if (nrow(lat_long_ref) == 0L) {
+  stop("Geocoding gazetteer is empty after state normalisation: every row was dropped. ",
+       "Check that city_state_to_lat_long$state and full_to_abbrev use the same vocabulary.")
+}
+cat(sprintf("Gazetteer ready: %d city/state coordinates.\n", nrow(lat_long_ref)))
 lat_long_ref <- lat_long_ref[!duplicated(paste(lat_long_ref$city_upper, lat_long_ref$state_upper, sep="_")), ]
 
 manual_coords <- list(
@@ -285,35 +466,38 @@ get_coords <- function(city, state) {
   key <- paste0(city_clean, "_", state_clean)
   if (key %in% names(manual_coords)) return(manual_coords[[key]])
   match_row <- lat_long_ref[lat_long_ref$city_upper == city_clean & lat_long_ref$state_upper == state_clean, ]
-  if (nrow(match_row) > 0) return(c(match_row$latitude[1], match_row$longitude[1]))
+  # `[[` not `$`: the columns are guaranteed by normalize_gazetteer(), and `$` would partial
+  # match `lat` against a `latitude` column, which is how this survived a schema change
+  # without anyone noticing. `[[` errors on a missing name instead of silently succeeding.
+  if (nrow(match_row) > 0) return(c(match_row[["lat"]][1], match_row[["long"]][1]))
   return(c(NA, NA))
 }
 
 # Pre-map coordinates to candidates
-candidates_df$latitude <- NA
-candidates_df$longitude <- NA
-for (i in 1:nrow(candidates_df)) {
-  coords <- get_coords(candidates_df$city[i], candidates_df$state[i])
-  candidates_df$latitude[i] <- coords[1]
-  candidates_df$longitude[i] <- coords[2]
-}
+candidates_df <- candidates_df %>%
+  rowwise() %>%
+  mutate(
+    coords = list(get_coords(city, state)),
+    latitude = coords[1],
+    longitude = coords[2]
+  ) %>%
+  ungroup() %>%
+  select(-coords)
 
 # Pre-map coordinates to PE clinicians
-pe_matched_all$latitude <- NA
-pe_matched_all$longitude <- NA
-for (i in 1:nrow(pe_matched_all)) {
-  p_city <- pe_matched_all[["DAC City"]][i]
-  if (is.na(p_city) || p_city == "" || p_city == "N/A" || p_city == "NAN") {
-    p_city <- pe_matched_all[["NPPES City"]][i]
-  }
-  p_state <- pe_matched_all[["DAC State"]][i]
-  if (is.na(p_state) || p_state == "" || p_state == "N/A" || p_state == "NAN") {
-    p_state <- pe_matched_all[["NPPES State"]][i]
-  }
-  coords <- get_coords(p_city, p_state)
-  pe_matched_all$latitude[i] <- coords[1]
-  pe_matched_all$longitude[i] <- coords[2]
-}
+pe_matched_all <- pe_matched_all %>%
+  mutate(
+    p_city = coalesce(na_if_invalid(`DAC City`), na_if_invalid(`NPPES City`)),
+    p_state = coalesce(na_if_invalid(`DAC State`), na_if_invalid(`NPPES State`))
+  ) %>%
+  rowwise() %>%
+  mutate(
+    coords = list(get_coords(p_city, p_state)),
+    latitude = coords[1],
+    longitude = coords[2]
+  ) %>%
+  ungroup() %>%
+  select(-coords, -p_city, -p_state)
 
 matched_pairs <- list()
 used_npis <- numeric()
@@ -326,6 +510,13 @@ candidates_df$acog_district[is.na(candidates_df$acog_district)] <- 4
 # Sort unique office IDs to be deterministic
 pe_unique_offices <- sort(unique(pe_matched_all$office_id))
 
+# Seed ONCE, outside the loop. Re-seeding inside the loop restarts the same stream for
+# every office, so sample(seq_len(n)) returned the identical permutation at each office
+# of a given size, always beginning with index 1. The selection was therefore not random
+# at all: it deterministically took the first-listed physician per office, which is not
+# what the Methods claims. Seeding here keeps the run reproducible AND random.
+set.seed(42)
+
 for (office in pe_unique_offices) {
   office_subset <- pe_matched_all[pe_matched_all$office_id == office, ]
   
@@ -337,7 +528,6 @@ for (office in pe_unique_offices) {
   if (nrow(office_subset) == 1) {
     shuffled_indices <- 1
   } else {
-    set.seed(42)
     shuffled_indices <- sample(seq_len(nrow(office_subset)))
   }
   
@@ -358,7 +548,19 @@ for (office in pe_unique_offices) {
     if (is.na(p_coords[1])) next # skip if coords missing
     
     # Get candidates in the same State
-    state_cands <- candidates_df[toupper(trimws(candidates_df$state)) == toupper(trimws(p_state)) & 
+    # EXACT GENDER MATCH. The Methods states clinicians were matched "on provider gender
+    # (exact match)". Gender previously entered only through the propensity score, which
+    # balances the marginal distribution but not the pairs: 79 of 200 fielded pairs had
+    # members of different gender while the marginal SMD was a well-balanced -0.011.
+    # Aggregate balance and pair-level matching are different properties, so the constraint
+    # is enforced here, in the candidate pool, where it can actually bind.
+    #
+    # Gender_clean defaults a missing value to "Female" (27 of 1,537 PE clinicians, none of
+    # the controls), so those clinicians are matched to women by that default rather than by
+    # an observation. Recorded rather than silently relied upon.
+    p_gender <- phys$Gender_clean
+    state_cands <- candidates_df[toupper(trimws(candidates_df$state)) == toupper(trimws(p_state)) &
+                                  candidates_df$Gender_clean == p_gender &
                                   !(candidates_df$npi %in% used_npis), ]
     if (nrow(state_cands) == 0) next
     
@@ -438,10 +640,19 @@ get_subspecialty_from_tax <- function(tax) {
 
 control_records <- list()
 start_id <- 2001
-current_time <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
+# Control records are drawn from the CMS Doctors and Clinicians registry, not scraped from a
+# platform directory, so they have no scrape time. Stamping them with the run clock both
+# mislabels their provenance and makes the study database non-reproducible: two identical
+# runs differed in exactly the 459 control rows. The run timestamp belongs in a sidecar,
+# not in a data column, so the artifact is byte-identical across runs.
+current_time <- NA_character_
+run_stamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
 for (i in 1:nrow(controls_matched_df)) {
   crow <- controls_matched_df[i, ]
+  # Coordinates of the exact candidate row the matcher selected, not a later NPI lookup.
+  ctrl_lat <- if ("latitude"  %in% names(crow)) crow$latitude[1]  else NA_real_
+  ctrl_lon <- if ("longitude" %in% names(crow)) crow$longitude[1] else NA_real_
   cnpi <- as.numeric(crow$npi)
   first <- TitleCase(trimws(crow$first_name))
   last <- TitleCase(trimws(crow$last_name))
@@ -536,7 +747,13 @@ for (i in 1:nrow(controls_matched_df)) {
     "DAC Zip" = clean_zip,
     "DAC Phone" = formatted_phone,
     "PE_or_Not" = "Non-PE",
-    "office_id" = control_office_id
+    "office_id" = control_office_id,
+    # Carry the coordinates of the control row the matcher actually selected. NPI is not
+    # unique in the candidate pool (one clinician can appear at several addresses), so
+    # recovering coordinates later by NPI picks an arbitrary row and was wrong for 19% of
+    # controls, making matched pairs appear to violate a caliper the matcher had enforced.
+    "Matcher_Latitude"  = ctrl_lat,
+    "Matcher_Longitude" = ctrl_lon
   )
   control_records[[i]] <- as.data.frame(rec, check.names = FALSE, stringsAsFactors = FALSE)
   start_id <- start_id + 1
@@ -586,7 +803,10 @@ cat(sprintf("Matched calling list exported to: %s (%d records)\n", calling_list_
 # 8. Save unified study database files
 # In study database, we want to include the full integrated active PE cohort (1,537 rows)
 # and union it with the matched controls (778 rows) to ensure downstream regression scripts compile properly.
-pe_full_df <- pe_df
+# The unified study database must be built from the STUDY-ELIGIBLE cohort. Resetting this to
+# pe_df would reintroduce all five excluded platforms downstream, silently undoing the
+# eligibility exclusion for every artifact derived from this database.
+pe_full_df <- pe_matched_all
 pe_full_df$PE_or_Not <- "PE"
 
 # Map office_id and Matched_Pair_Group back to the full PE cohort
@@ -607,6 +827,13 @@ pe_full_df$Matched_Pair_Group[is.na(pe_full_df$Matched_Pair_Group)] <- "N/A"
 # First standardise colnames in control_df to match pe_full_df
 control_df$Matched_Pair_Group <- control_df$Matched_Pair_Group
 # Make sure control_df has the same columns as pe_full_df, fill missing with N/A
+# Attach the PE side's matcher coordinates before column alignment, so that both arms carry
+# Matcher_Latitude/Longitude and the alignment below preserves the control values already
+# recorded from the selected candidate row.
+pe_coord_idx <- match(pe_full_df$NPI, pe_matched_all$NPI)
+pe_full_df$Matcher_Latitude  <- pe_matched_all$latitude[pe_coord_idx]
+pe_full_df$Matcher_Longitude <- pe_matched_all$longitude[pe_coord_idx]
+
 missing_cols <- setdiff(colnames(pe_full_df), colnames(control_df))
 for (c in missing_cols) {
   control_df[[c]] <- "N/A"
@@ -614,7 +841,22 @@ for (c in missing_cols) {
 control_df <- control_df[, colnames(pe_full_df)]
 
 combined_study_df <- rbind(pe_full_df, control_df)
+
+# Persist the coordinates the caliper actually matched on. Without this the study's central
+# geographic claim is unauditable: the matcher computed latitude/longitude, used them for
+# the 10-mile caliper, then discarded them, and the Latitude/Longitude columns that appeared
+# downstream came from apply_hq_distance.R / calculate_pair_distances.R instead. Any audit
+# of the 10-mile constraint was therefore measuring a different coordinate source than the
+# one matching used. Writing them here makes the two the same by construction.
+cat(sprintf("Persisted matcher coordinates for %d of %d records (PE %d, control %d).\n",
+            sum(!is.na(combined_study_df$Matcher_Latitude)), nrow(combined_study_df),
+            sum(!is.na(combined_study_df$Matcher_Latitude) & combined_study_df$PE_or_Not != "Non-PE"),
+            sum(!is.na(combined_study_df$Matcher_Latitude) & combined_study_df$PE_or_Not == "Non-PE")))
+
 write.csv(combined_study_df, study_output_csv, row.names = FALSE)
+writeLines(sprintf("study_database_generated_at: %s\nrows: %d\nmatched_pairs: %d",
+                   run_stamp, nrow(combined_study_df), nrow(controls_matched_df)),
+           file.path(dirname(study_output_csv), "pe_obgyn_study_database.provenance.txt"))
 cat(sprintf("Unified study database exported to: %s (%d records)\n", study_output_csv, nrow(combined_study_df)))
 
 write.csv(control_df, control_output_csv, row.names = FALSE)

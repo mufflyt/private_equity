@@ -1,78 +1,174 @@
 #!/usr/bin/env Rscript
-# Trim the 300-pair calling sheet to a geographically balanced 200-pair / 800-call
-# set (round-robin across states -> minimum Florida share), then build the REDCap
-# import for that fielded set. Uses mysterycall::parse_redcap_labels for codes.
-suppressMessages({library(mysterycall); library(readr); library(dplyr); library(stringr)})
+# Build the REDCap load files for the fielded 200-pair / 800-call set.
+#
+# GUARD (changed 2026-08-09): this script used to *re-derive* the fielded 200 from
+# pe_obgyn_final_calling_sheet_300.csv and overwrite pe_obgyn_final_calling_sheet_200.csv
+# as a side effect of building the REDCap files. That silently destroys any downstream
+# correction to the fielded sheet -- in particular the office de-duplication produced by
+# dedup_offices_and_backfill_200.R, which cannot be reproduced from the 300-pair sheet at
+# all (only ~184 office-disjoint pairs exist there, short of the 200 needed).
+#
+# The fielded sheet is now an INPUT. This script never writes it unless you explicitly
+# pass --redraw, which restores the old round-robin selection.
+#
+# Usage:
+#   Rscript build_200_redcap_import.R                                  # from the default sheet
+#   Rscript build_200_redcap_import.R --sheet=FILE.csv --suffix=_dedup # from a specific sheet
+#   Rscript build_200_redcap_import.R --redraw                         # legacy: re-draw + overwrite
+#
+# Record structure: one REDCap record per physician per insurance arm, i.e. 400
+# physicians x 2 arms = 800 records. A record cannot hold both arms, because appdate,
+# calltime, holdtime and medicaid_status are single-valued per record and
+# medicaid_status option 3 is literally "NA as this was a Blue Cross/Blue Shield call".
+# contacted2/calldate2 are a *retry* of the same insurance call ("second attempt with
+# this insurance type"), not the other arm.
 
-DICT  <- "ICVsPOPVsSUI_DataDictionary_2026-07-05.csv"
-SHEET <- "pe_obgyn_final_calling_sheet_300.csv"
-FORM  <- "acost_three_dx_urogyn_2"
-N_TARGET <- 200L
-set.seed(1978)
+suppressMessages({library(readr); library(dplyr); library(stringr)})
 
-cs <- read_csv(SHEET, show_col_types = FALSE)
+SHEET300 <- "pe_obgyn_final_calling_sheet_300.csv"
+SHEET    <- "pe_obgyn_final_calling_sheet_200.csv"
+FORM     <- "acost_three_dx_urogyn_2"
+N_TARGET <- 200L                       # pairs
+ARMS     <- c("Medicaid", "Blue Cross/Blue Shield")
+SEED     <- 1978L
 
-# 1. Round-robin pair selection across states (fills small states first, caps big ones)
-pair_state <- cs %>% distinct(pair = `Matched Pair ID`, State)
-selected <- pair_state %>%
-  group_by(State) %>% slice_sample(prop = 1) %>% mutate(rank = row_number()) %>% ungroup() %>%
-  arrange(rank, State) %>% slice_head(n = N_TARGET)
+args   <- commandArgs(trailingOnly = TRUE)
+REDRAW <- "--redraw" %in% args
+argval <- function(flag, default) {
+  v <- sub(paste0("^", flag, "="), "", grep(paste0("^", flag, "="), args, value = TRUE))
+  if (length(v) > 0) v[1] else default
+}
+SHEET  <- argval("--sheet", SHEET)
+SUFFIX <- argval("--suffix", "")
 
-sheet200 <- cs %>% filter(`Matched Pair ID` %in% selected$pair)
-write_csv(sheet200, "pe_obgyn_final_calling_sheet_200.csv")
-cat(sprintf("Selected %d pairs (%d clinicians) across %d states\n",
-            n_distinct(sheet200$`Matched Pair ID`), nrow(sheet200), n_distinct(sheet200$State)))
-cat("Pairs per state (fielded 200):\n")
-print(selected %>% count(State, sort = TRUE), n = 30)
+OUT_IMPORT   <- sprintf("redcap_import_ready_200%s.csv", SUFFIX)
+OUT_CHOICES  <- sprintf("redcap_physician_name_choices%s.txt", SUFFIX)
+OUT_SCHEDULE <- sprintf("redcap_call_schedule_800%s.csv", SUFFIX)
 
-# 2. Map the fielded physicians to their REDCap dropdown codes
-choices <- read.csv(DICT, check.names = FALSE) %>%
-  {.[.[[1]] == "physician_name", "Choices, Calculations, OR Slider Labels"]}
-lab <- as.data.frame(mysterycall_parse_redcap_labels(choices))
-lab$code <- as.integer(str_trim(lab$code))
-lab$npi  <- str_match(lab$label, "NPI:\\s*(\\d+)")[, 2]
+set.seed(SEED)
 
-fielded_npi <- as.character(sheet200$NPI)
-code_by_npi <- lab %>% transmute(npi, code)
+# ---------------------------------------------------------------- fielded sheet
 
-# physician_name is a human-readable calling string built from the calling sheet:
-# "Dr. Name, City, State, Phone: <phone>, NPI: <npi>". record_id stays the REDCap
-# dropdown code (mapped by NPI) so records remain traceable to the instrument.
-imp <- sheet200 %>%
-  transmute(
-    npi            = as.character(NPI),
-    physician_name = sprintf("%s, %s, %s, Phone: %s, NPI: %s",
-                             `Provider Name`, City, State, Phone, NPI)
-  ) %>%
-  left_join(code_by_npi, by = "npi") %>%
-  arrange(code) %>%
-  transmute(record_id = row_number(), physician_name)  # fresh contiguous ids 1..N (no gaps)
+if (REDRAW) {
+  # Legacy path. Round-robin pair selection across states (fills small states first,
+  # caps big ones) drawn from the 300-pair sheet, then OVERWRITES the fielded sheet.
+  cat("--redraw: re-deriving the fielded 200 from", SHEET300, "and OVERWRITING", SHEET, "\n")
+  cat("  WARNING: this discards any office de-duplication already applied to", SHEET, "\n")
+  cs <- read_csv(SHEET300, show_col_types = FALSE)
+  pair_state <- cs %>% distinct(pair = `Matched Pair ID`, State)
+  selected <- pair_state %>%
+    group_by(State) %>% slice_sample(prop = 1) %>% mutate(rank = row_number()) %>% ungroup() %>%
+    arrange(rank, State) %>% slice_head(n = N_TARGET)
+  sheet <- cs %>% filter(`Matched Pair ID` %in% selected$pair)
+  write_csv(sheet, SHEET)
+  cat(sprintf("Wrote %s\n", SHEET))
+} else {
+  if (!file.exists(SHEET)) stop(sprintf("Fielded sheet not found: %s", SHEET))
+  sheet <- read_csv(SHEET, show_col_types = FALSE)
+  cat(sprintf("Reading fielded sheet as-is (not re-derived): %s\n", SHEET))
+}
+
+# The sheet is authoritative; fail loudly rather than silently emitting a short load.
+stopifnot(
+  "fielded sheet must have 2 rows per pair" = all(table(sheet$`Matched Pair ID`) == 2L),
+  "unexpected pair count"                   = n_distinct(sheet$`Matched Pair ID`) == N_TARGET,
+  "arms not balanced"                       = all(table(sheet$PE_or_Not) == N_TARGET),
+  "duplicate NPI in fielded sheet"          = !any(duplicated(sheet$NPI))
+)
+
+# A physician appearing twice under one phone number would be called 4 times, not 2.
+dial <- gsub("\\D", "", sheet$Phone)
+dial <- ifelse(nchar(dial) >= 10, substr(dial, nchar(dial) - 9, nchar(dial)), NA_character_)
+shared <- sum(dial %in% dial[duplicated(dial)], na.rm = TRUE)
+if (shared > 0) {
+  cat(sprintf("  WARNING: %d of %d clinicians share a dialed number with another clinician.\n",
+              shared, nrow(sheet)))
+  cat("  Those offices will be called more than twice. Run dedup_offices_and_backfill_200.R.\n")
+} else {
+  cat("  Office check: all dialed numbers distinct -> exactly 2 calls per office.\n")
+}
+
+has_backup <- all(c("Backup Provider Name", "Backup Phone") %in% names(sheet))
+if (!has_backup)
+  cat("  NOTE: no Backup Provider columns on this sheet; labels omit backups and\n",
+      "        doctor_called should be recorded as 1 (Primary) for every call.\n")
+
+# ---------------------------------------------------------------- 800 records
+
+# Dropdown codes are DEFINED here, not looked up from the old data dictionary (whose
+# physician_name choices belong to the earlier urogyn study). Codes 1..400 are the
+# Medicaid calls and 401..800 the BCBS calls, same physicians in the same order, so
+# code i and code i+400 are the two calls to one physician.
+phys <- sheet %>%
+  arrange(as.numeric(str_remove(`Matched Pair ID`, "pair_")), PE_or_Not) %>%
+  mutate(
+    slot  = row_number(),
+    label = if (has_backup)
+      sprintf("%s (Backup: %s), %s, %s, Phone: %s, NPI: %s",
+              `Provider Name`, `Backup Provider Name`, City, State, Phone, NPI)
+    else
+      sprintf("%s, %s, %s, Phone: %s, NPI: %s", `Provider Name`, City, State, Phone, NPI)
+  )
+
+n <- nrow(phys)
+combo <- bind_rows(lapply(seq_along(ARMS), function(a) {
+  phys %>% transmute(
+    code = slot + (a - 1L) * n,
+    NPI, `Provider Name`, City, State, Phone, PE_or_Not,
+    pair = `Matched Pair ID`, insurance = ARMS[a], label
+  )
+})) %>% arrange(code)
+
+# physician_name is a dropdown: REDCap imports the CODE, not the label text. Writing the
+# human-readable string here (as the previous version did) leaves the field blank on import.
+imp <- combo %>%
+  transmute(record_id = code, physician_name = code)
 imp[[paste0(FORM, "_complete")]] <- 0L
 
-matched <- sum(fielded_npi %in% lab$npi)
-cat(sprintf("\nFielded physicians: %d | matched to dropdown code: %d | import records: %d\n",
-            length(fielded_npi), matched, nrow(imp)))
-if (nrow(imp) != length(fielded_npi) || any(is.na(imp$record_id)))
-  cat("  WARNING: some fielded physicians did not map to a dropdown code.\n")
-
-write_csv(imp, "redcap_import_ready_200.csv")
-
-# REDCap dropdown CHOICES for the physician_name field: one "code, label" line per
-# physician, to copy/paste into the "Choices (one choice per line)" box in the
-# Online Designer. REDCap splits each line on the first comma only, so the label's
-# internal commas (city, state, phone, NPI) are preserved.
-# 800 physician x insurance choices: ids 1..400 = Medicaid, 401..800 = Blue Cross/
-# Blue Shield (the same 400 physicians, same order, in each block). id 1 and id 401
-# are the same physician (Medicaid vs BCBS). Each line is REDCap "code, label".
-phys  <- imp$physician_name
-n     <- nrow(imp)
-combo <- rbind(
-  data.frame(id = seq_len(n),     name = phys, ins = "Medicaid",               stringsAsFactors = FALSE),
-  data.frame(id = n + seq_len(n), name = phys, ins = "Blue Cross/Blue Shield", stringsAsFactors = FALSE)
+stopifnot(
+  "record count != physicians x arms" = nrow(imp) == n * length(ARMS),
+  "record_id not contiguous 1..N"     = identical(imp$record_id, seq_len(nrow(imp))),
+  "physician_name must be a code"     = is.numeric(imp$physician_name)
 )
+
+write_csv(imp, OUT_IMPORT)
+
+# REDCap dropdown CHOICES for physician_name: one "code, label" line per physician x
+# insurance. REDCap splits each line on the first comma only, so the label's internal
+# commas (city, state, phone, NPI) are preserved.
 choice_lines <- sprintf("%d, id: %d, %s, Insurance: %s, id: %d",
-                        combo$id, combo$id, combo$name, combo$ins, combo$id)
-writeLines(choice_lines, "redcap_physician_name_choices.txt")
-cat("Wrote pe_obgyn_final_calling_sheet_200.csv, redcap_import_ready_200.csv, and redcap_physician_name_choices.txt\n")
-cat(sprintf("Calls implied: %d records x 2 calls = %d (<= 800 ceiling: %s)\n",
-            nrow(imp), nrow(imp) * 2, ifelse(nrow(imp) * 2 <= 800, "YES", "NO")))
+                        combo$code, combo$code, combo$label, combo$insurance, combo$code)
+writeLines(choice_lines, OUT_CHOICES)
+
+# ---------------------------------------------------------------- call schedule
+
+# The Methods claim randomised arm order with >=48h spacing, but nothing in the
+# instrument assigns or enforces it -- calldate1 only lets you recover the order after
+# the fact. This emits the assignment the caller should follow.
+sched <- phys %>%
+  mutate(first_arm = ifelse(runif(n()) < 0.5, ARMS[1], ARMS[2])) %>%
+  mutate(second_arm = ifelse(first_arm == ARMS[1], ARMS[2], ARMS[1])) %>%
+  transmute(
+    `Provider Name`, City, State, Phone, PE_or_Not, pair = `Matched Pair ID`,
+    first_arm, second_arm,
+    first_record_id  = ifelse(first_arm == ARMS[1], slot, slot + n),
+    second_record_id = ifelse(first_arm == ARMS[1], slot + n, slot),
+    min_hours_between_calls = 48L
+  )
+write_csv(sched, OUT_SCHEDULE)
+
+# ---------------------------------------------------------------- report
+
+cat(sprintf("\nFielded: %d pairs / %d clinicians across %d states\n",
+            n_distinct(sheet$`Matched Pair ID`), n, n_distinct(sheet$State)))
+cat(sprintf("Records: %d clinicians x %d arms = %d  (ceiling 800: %s)\n",
+            n, length(ARMS), nrow(imp), ifelse(nrow(imp) <= 800, "YES", "NO")))
+cat(sprintf("  codes %d-%d = %s | codes %d-%d = %s\n",
+            1, n, ARMS[1], n + 1, 2 * n, ARMS[2]))
+cat(sprintf("Arm order randomised: %d %s-first, %d %s-first\n",
+            sum(sched$first_arm == ARMS[1]), ARMS[1],
+            sum(sched$first_arm == ARMS[2]), ARMS[2]))
+cat(sprintf("\nWrote %s (%d records)\n      %s (%d choice lines)\n      %s (%d clinicians)\n",
+            OUT_IMPORT, nrow(imp), OUT_CHOICES, length(choice_lines), OUT_SCHEDULE, nrow(sched)))
+cat("\nPaste the choices file into the physician_name field in the REDCap Online Designer\n")
+cat("before importing the records, or every physician_name code will be rejected.\n")
