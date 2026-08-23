@@ -28,3 +28,6 @@ redcap_physician_name_choices.txt
 
 # Local virtualenv
 .venv/
+
+# Local R package library (created by ad hoc install.packages() during this session)
+.Rlib/
