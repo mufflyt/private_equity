@@ -31,6 +31,26 @@ Steps 2–4 require `CENSUS_API_KEY` (in `~/.Renviron`).
 | `County_Medicare_Enrollment` | CMS Medicare Monthly Enrollment (latest annual, `TOT_BENES`) | |
 | `County_Medicaid_Enrollment` | ACS **C27007** county total "With Medicaid/means-tested" | |
 
+## `CDC_SVI` is still simulated
+
+`CDC_SVI` was **not** among the seven columns replaced above. It remains the
+`Normal(0.434, 0.193)` draw truncated to [0.01, 0.99] that
+`apply_demographic_covariates.R` produced, and it is measurable as such: over the
+600 fielded rows the column tests KS p = 0.90 against a fitted Normal and
+p < 1e-6 against Uniform(0, 1). A CDC SVI percentile rank is uniform by
+construction, so normality is disqualifying.
+
+It has therefore been renamed **`SIMULATED_CDC_SVI`** in the calling sheet, matching
+the convention `analysis_manifest.csv` and `tests/testthat/test-svi-provenance.R`
+already apply to the fielded 200 sheet: no column name in a fielded artifact may
+assert a measurement that was not made. The values are untouched — only the header
+changed — so nothing downstream changes meaning. No script that reads
+`pe_obgyn_final_calling_sheet_300.csv` referenced the column.
+
+The real replacement, `CDC_SVI_real`, is built by `build_svi_covariate.R` from the
+CDC/ATSDR tract-level SVI and exists only on the 200 sheet. Until that runs against
+the 300 sheet, `SIMULATED_CDC_SVI` is provenance only and is never analytic.
+
 ## Coverage & missingness
 
 Addresses that did not geocode to a tract keep **NA** (honest missingness, not a
