@@ -2,7 +2,7 @@ import csv
 import pandas as pd
 
 calling_sheet_path = "pe_obgyn_final_calling_sheet_300.csv"
-dictionary_path = "ICVsPOPVsSUI_DataDictionary_2026-07-05.csv"
+dictionary_path = "PrivateVsPublicDoesEquityOwner_DataDictionary_2026-08-23.csv"
 
 # Load calling sheet
 df_sheet = pd.read_csv(calling_sheet_path)
