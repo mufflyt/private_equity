@@ -457,6 +457,115 @@ gate_manifest_sources_populated <- function(manifest = read_manifest(),
                                         nrow(rows) - length(bad), nrow(rows)))
 }
 
+#' Gate 10. A computed business-days-to-appointment column must match the canonical calculator.
+#'
+#' There is no local business-day arithmetic in this pipeline, and there should not be: getting
+#' Mon-Fri-excluding-federal-holidays counting right by hand is exactly the kind of thing that
+#' looks correct on a spot check and is quietly wrong on the case that matters (a call placed the
+#' Friday before a federal Monday holiday, a same-day appointment, a multi-week span). The
+#' canonical calculator is mysterycall_count_business_days(): start_date exclusive, end_date
+#' inclusive, `end_date < start_date` or either NA returns NA, `end_date == start_date` returns 0.
+#' This gate does not recompute the arithmetic itself; it re-derives the column from the raw
+#' dates via that canonical function and asserts agreement, so a hand-rolled `as.numeric(appt -
+#' call)` (which counts calendar days, includes weekends, and is off by the inclusive/exclusive
+#' boundary) fails loudly instead of silently corrupting the primary outcome.
+#'
+#' @param df           data frame holding the raw dates and the already-computed column
+#' @param call_col     column of call dates (Date, POSIXct, or "YYYY-MM-DD" character)
+#' @param appt_col     column of appointment dates, same accepted types
+#' @param computed_col column already claiming to hold business days from call_col to appt_col
+#' @param calendar     passed through to mysterycall_count_business_days(); NULL uses its
+#'                     built-in 2021-2036 US federal holiday calendar
+gate_business_days_correct <- function(df, call_col = "call_date", appt_col = "appointment_date",
+                                       computed_col = "business_days_until_appointment",
+                                       calendar = NULL, label = "business days") {
+  need <- c(call_col, appt_col, computed_col)
+  miss <- setdiff(need, names(df))
+  if (length(miss)) gate_fail(label, "missing column(s): ", paste(miss, collapse = ", "))
+
+  want <- mysterycall::mysterycall_count_business_days(df[[call_col]], df[[appt_col]],
+                                                       calendar = calendar)
+  got  <- suppressWarnings(as.numeric(df[[computed_col]]))
+
+  both_na <- is.na(want) & is.na(got)
+  mism <- which(!both_na & (is.na(want) != is.na(got) | want != got))
+  if (length(mism)) {
+    show <- head(mism, 10)
+    gate_fail(label,
+              sprintf("%d/%d row(s) disagree with mysterycall_count_business_days(); row(s): %s%s",
+                      length(mism), nrow(df), paste(show, collapse = ", "),
+                      if (length(mism) > 10) ", ..." else ""),
+              "\n\n  Detail for the first mismatch (row ", mism[1], "): ", call_col, " = ",
+              as.character(df[[call_col]][mism[1]]), ", ", appt_col, " = ",
+              as.character(df[[appt_col]][mism[1]]), ", stored ", computed_col, " = ",
+              format(got[mism[1]]), ", canonical value = ", format(want[mism[1]]),
+              "\n\n  Recompute ", computed_col, " with mysterycall::mysterycall_business_days() ",
+              "or\n  mysterycall::mysterycall_count_business_days() rather than manual date ",
+              "arithmetic.")
+  }
+  gate_pass(label, sprintf("%d row(s) match mysterycall_count_business_days()", nrow(df)))
+}
+
+# ---------------------------------------------------------------------------- overdispersion
+
+#' Gate 11. A fitted Poisson model must not be overdispersed; if it is, say so and name the fix.
+#'
+#' Wait time, hold time, transfer count and calls-per-office are all counts in this study, and
+#' count data this heterogeneous (physician-level random effects, insurance-arm heterogeneity,
+#' a small number of clinics driving many calls) is routinely overdispersed -- which is exactly
+#' why the frozen analysis plan already specifies glmmTMB(..., family = nbinom2) rather than
+#' Poisson (SAP.lock; see also run_new_power_analysis.R's header note on the glm.nb-vs-glmmTMB
+#' choice). A Poisson fit understates standard errors under overdispersion, which overstates
+#' significance -- a silent false positive, not a crash, which is why this needs to be a gate
+#' and not just a reviewer's habit of remembering to check. Uses the standard Pearson
+#' chi-square/df dispersion statistic; a well-specified Poisson model has this near 1.
+#'
+#' Only fires for a Poisson family. A model already fit as negative-binomial (family name
+#' matching "Negative Binomial" or "nbinom", e.g. MASS::glm.nb or glmmTMB(family = nbinom2))
+#' passes without comment, since that is already the recommended remedy, not the defect.
+#'
+#' @param model     a fitted model with `family()`, `residuals(type = "pearson")` and
+#'                  `df.residual()` methods (glm, MASS::glm.nb, glmmTMB, ...)
+#' @param threshold dispersion ratio above which a Poisson fit is flagged
+gate_overdispersion <- function(model, threshold = 1.5, label = "overdispersion") {
+  fam <- tryCatch(family(model)$family, error = function(e) NA_character_)
+  if (is.na(fam)) {
+    gate_fail(label, "could not determine the model's family via family(model)$family; ",
+              "pass a glm, MASS::glm.nb, or glmmTMB object")
+  }
+  if (grepl("negative binomial|nbinom", fam, ignore.case = TRUE)) {
+    gate_pass(label, sprintf("family '%s' is already negative-binomial; not applicable", fam))
+    return(invisible(TRUE))
+  }
+  if (!grepl("poisson", fam, ignore.case = TRUE)) {
+    gate_pass(label, sprintf("family '%s' is neither Poisson nor negative-binomial; not applicable", fam))
+    return(invisible(TRUE))
+  }
+
+  df_resid <- tryCatch(df.residual(model), error = function(e) NA_real_)
+  if (is.na(df_resid) || df_resid <= 0) {
+    gate_fail(label, "model has no usable residual degrees of freedom (df.residual() <= 0 or NA)")
+  }
+  pr <- tryCatch(residuals(model, type = "pearson"), error = function(e) {
+    gate_fail(label, "could not extract Pearson residuals via residuals(model, type = 'pearson')")
+  })
+  ratio <- sum(pr^2, na.rm = TRUE) / df_resid
+
+  if (ratio > threshold) {
+    gate_fail(label,
+              sprintf("Pearson dispersion ratio %.2f exceeds the threshold of %.2f for a Poisson fit",
+                      ratio, threshold),
+              "\n\n  A ratio this far above 1 means the variance is not equal to the mean the way ",
+              "a Poisson\n  model assumes; standard errors from this fit are too small and P-",
+              "values too optimistic.\n  Refit with MASS::glm.nb(...) or glmmTMB(..., family = ",
+              "nbinom2), which this study's\n  own frozen plan already specifies for its count ",
+              "outcomes. Do not raise `threshold` to make\n  this pass -- that hides the same ",
+              "problem it is built to catch.")
+  }
+  gate_pass(label, sprintf("Pearson dispersion ratio %.2f (Poisson fit, threshold %.2f)",
+                           ratio, threshold))
+}
+
 #' Run every gate that can be run before a model is fitted.
 #'
 #' Call this at the top of an analysis script. It throws on the first failure.

@@ -39,6 +39,8 @@ nodata  test-address-key-parity.R
 nodata  test-tract-geoid-vintage.R
 nodata  test-power-curve-integrity.R
 nodata  test-manifest-sources-populated.R
+nodata  test-business-days-correct.R
+nodata  test-overdispersion-suggests-nb.R
 
 data    test-frozen-geo-reference.R
 data    test-analysis-gates.R

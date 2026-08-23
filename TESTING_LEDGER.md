@@ -2395,3 +2395,69 @@ before this entry, and none of the three new files nor `test-pe_helpers.R` /
 `tests/BLOCKING` (+3 registrations), `tests/testthat/test-tract-geoid-vintage.R` (new, 5
 assertions), `tests/testthat/test-power-curve-integrity.R` (new, 12 assertions),
 `tests/testthat/test-manifest-sources-populated.R` (new, 11 assertions).
+
+## Post-audit — 2026-08-23 — BUSINESS-DAYS ARITHMETIC AND POISSON OVERDISPERSION
+
+**Scope.** Two more gates, same session: verify the primary outcome's business-day arithmetic
+against the canonical calculator, and flag a Poisson fit that should be negative-binomial.
+
+**`gate_business_days_correct()` (Gate 10).** Nothing in this repo computes business days from
+real dates yet — the calling campaign has not launched, and `dry_run_analysis.R`'s
+`business_days` is `rnbinom()`-simulated for the power dry run, not derived from `calldate`/
+`appdate`. The canonical calculator already exists — `mysterycall::mysterycall_count_business_
+days()` — and is unused anywhere in this repo (checked by grep before writing anything, so as
+not to duplicate a canonical function per the standing rule in `docs/CANONICAL_SOURCES_AUDIT.md`).
+Read its documented contract before writing a single test rather than guessing at it:
+`start_date` exclusive, `end_date` inclusive, `end_date < start_date` or either `NA` returns `NA`,
+`end_date == start_date` returns `0`, weekends and US federal holidays excluded. Verified both
+worked examples from its own help page against the live function before trusting them (Mon
+2026-02-02 -> Fri 2026-02-06 = 4; a span crossing Presidents Day 2026 also = 4, not 5). The gate
+does not reimplement the arithmetic; it re-derives the column from the raw dates via the
+canonical function and asserts agreement, so a hand-rolled `as.numeric(appt - call)` — which
+counts calendar days and gets the inclusive/exclusive boundary wrong — fails loudly. The
+adversarial test for this deliberately does NOT use a same-week Mon-Fri pair, because naive and
+canonical counting coincide there by chance (verified: both give 4) and would not actually
+exercise the defect; it uses a Friday-to-Monday pair instead, where they must diverge (3 calendar
+days vs. 1 business day) and do.
+
+**`gate_overdispersion()` (Gate 11).** Wait time, hold time and transfer count are all counts in
+this study, and count data this heterogeneous is routinely overdispersed — which is exactly why
+`SAP.lock` already specifies `glmmTMB(..., family = nbinom2)` rather than Poisson. A Poisson fit
+on overdispersed data understates standard errors and overstates significance, silently — not a
+crash, which is why it needs a gate rather than a reviewer's habit. Uses the standard Pearson
+chi-square/df dispersion statistic (`sum(residuals(m, type = "pearson")^2) / df.residual(m)`),
+computed with base `glm()` throughout rather than `glmmTMB`, since `glmmTMB` is not a CI
+dependency (`.github/workflows/gates.yml`) and the arithmetic is identical either way; `MASS` is
+a base-R recommended package and needs no new CI install. Verified the statistic discriminates on
+real simulated data before writing the gate: a true-Poisson DGP fit with `glm(family = poisson)`
+gives a ratio of 1.02; an NB(theta = 1.2) DGP fit the same way gives 3.55. The gate only fires for
+a Poisson family — an already-negative-binomial fit (`family` matching `nbinom`/"Negative
+Binomial", e.g. `MASS::glm.nb` or `glmmTMB(family = nbinom2)`) passes without comment, since
+refitting as NB is the remedy the gate recommends, not a second defect. One test pins the default
+`threshold = 1.5` via `formals()` specifically so a future accidental edit to that constant — a
+scientific judgment call, not an implementation detail — fails a test instead of silently
+changing what counts as overdispersed.
+
+**Same class of self-authoring bug as the previous entry, caught the same way.** Both new files
+first defined a local string-concatenation helper (`%pp%` / `%+%`) *after* the `test_that()`
+blocks that used it, so the first test run in each file failed on "could not find function"
+before a single assertion executed. Not a gate defect — an ordering defect in my own test file,
+found only because every new file gets run for real before being trusted, not because it was
+inspected for correctness. Fixed by removing the custom operators entirely and using `paste()`
+throughout, matching every other gate test file in this repo, rather than introducing a new
+string-joining convention this repo doesn't otherwise use.
+
+**Registered as `nodata`** (`test-business-days-correct.R`, `test-overdispersion-suggests-nb.R`),
+both synthetic-data-only so they run in CI without needing the gitignored cohort.
+
+**Suite, `--no-data` (CI-equivalent):** 7 files, 88 passed, 0 failed — up from 5 files / 67
+passed.
+
+**Suite, full (this machine):** 236 passed, 1 failed, 32 errored — identical fail/error counts to
+before this entry (confirmed by direct comparison, not just totals), all pre-existing and
+needing the same unrecoverable gitignored cohort data as before. Both new files: 0 failed, 0
+errored.
+
+**Files changed:** `R/analysis_gates.R` (+2 gates), `tests/BLOCKING` (+2 registrations),
+`tests/testthat/test-business-days-correct.R` (new, 9 assertions),
+`tests/testthat/test-overdispersion-suggests-nb.R` (new, 12 assertions).
