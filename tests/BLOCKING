@@ -28,6 +28,7 @@
 # Files deliberately NOT yet blocking, with their failure counts as of 2026-08-10:
 #   test-table1-balance.R 12, test-redcap-instrument.R 11, test-taxonomy-eligibility.R 7,
 #   test-artifact-vintage.R 6, test-control-independence.R 6, test-covariate-imputation.R 6,
+#   (test-taxonomy-eligibility.R was promoted to blocking on 2026-08-24, green at 27 assertions)
 #   test-roster-currency.R 5, test-cohort-definition.R 4, test-enrichment-covariates.R 4,
 #   test-matching-balance.R 4, test-pe-exposure.R 4, test-matching-provenance.R 3,
 #   test-name-credential-parsing.R 3, test-pe-universe.R 3, test-coordinate-provenance.R 2,
@@ -53,3 +54,4 @@ data    test-redcap-structure.R
 data    test-pipeline-determinism.R
 data    test-matching-invariants.R
 data    test-activity-recency.R
+data    test-taxonomy-eligibility.R

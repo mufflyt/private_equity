@@ -8,9 +8,27 @@
 suppressMessages(library(dplyr))
 
 # Helper to classify subspecialties from taxonomy
+# Classify a CMS taxonomy within the OB-GYN family.
+#
+# THIS FUNCTION USED TO FAIL OPEN, and it is the root cause of the non-OB-GYN clinicians in the
+# fielded frame. Every branch below is a specific 207V subspecialty; anything that matched none
+# of them fell through to return("Generalist") -- including 208800000X urology, 208000000X
+# pediatrics, 207P00000X emergency medicine and 367A00000X midwifery. A blank taxonomy returned
+# "Generalist" too.
+#
+# That would be a mild labelling error on its own. It is not, because the caller filters TO the
+# label: `pe_matched_all[pe_matched_all$Subspecialty_clean == "Generalist", ]`. So the filter
+# meant to retain generalist OB-GYNs excluded the four OB-GYN subspecialties, exactly as
+# intended, and admitted every specialty outside obstetrics and gynecology entirely. It
+# inverted its own purpose for everything it did not recognise.
+#
+# The family test is now positive: a taxonomy must be inside 207V to be eligible for any
+# OB-GYN label at all. Unknown and absent are distinct from Generalist, and neither survives
+# the caller's filter.
 get_subspecialty_from_tax <- function(tax) {
-  if (is.na(tax) || tax == "") return("Generalist")
+  if (is.na(tax) || !nzchar(trimws(tax))) return("Unknown")
   t <- toupper(trimws(tax))
+  if (!startsWith(t, "207V")) return("Not OB-GYN")
   if (t == "207VE0102X") return("Reproductive Endocrinology/Infertility")
   if (t == "207VX0201X") return("Gynecologic Oncology")
   if (t == "207VM2500X") return("Maternal-Fetal Medicine")

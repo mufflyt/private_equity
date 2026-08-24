@@ -52,11 +52,11 @@ obtainment_secondary_scale   = odds ratio
 # Eligible is a committed column on the fielded sheet, derived as
 #   Credentials in (MD, DO) AND Taxonomy_Is_OBGYN AND NOT Platform_Excluded
 # and every input to it is committed alongside it, so the restriction is auditable rather
-# than asserted. 157 of 200 pairs qualify. Analysing all 200 is sensitivity_6, not the
+# than asserted. 156 of 200 pairs qualify. Analysing all 200 is sensitivity_6, not the
 # primary, so the unrestricted result is always reported next to the restricted one.
 analytic_population          = pairs where Eligible is TRUE for both members
 analytic_population_column   = Eligible
-analytic_population_n_pairs  = 157
+analytic_population_n_pairs  = 156
 
 # ---------------------------------------------------------------- shared settings
 alpha                        = 0.05
@@ -94,4 +94,10 @@ sensitivity_7 = restrict to pairs where both members are OB/GYN by taxonomy, ign
 # PE-arm. The amendment is made BEFORE any call is placed and BEFORE any outcome exists, so
 # it cannot have been chosen to favour a result. It narrows the population; it does not touch
 # a formula, a family, an estimand or alpha.
-# sha256 = 486fe6a33b86c92c563ba0c0b2f6a1f65d97306553df944592b75e73c0ab9e6a
+# 2026-08-24 | analytic population | Taxonomy_Is_OBGYN corrected from a substring match on
+# taxonomy descriptions to the CMS 207V family test on the primary taxonomy code, which is
+# the standard the rest of the repository already uses. The loose rule admitted one nurse
+# practitioner (363LW0102X, Women's Health) into the analytic population of a physician
+# study, because a secondary taxonomy mentioned obstetrics. analytic_population_n_pairs
+# falls from 157 to 156. Still before any call and any outcome.
+# sha256 = 112fb2f5284287f09d935179592762a72aa11f3c05e077e998ae56851eea4204

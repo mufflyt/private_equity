@@ -329,17 +329,28 @@ wrong. Credentials are now backfilled from NPPES (350 MD, 45 DO), and the sheet 
 
 | Reason | n | Arm |
 |---|---|---|
-| Primary taxonomy is not obstetrics or gynecology | 24 | mostly PE |
+| Primary taxonomy is outside the CMS 207V OB-GYN family | 33 | 29 PE / 4 control |
 | Platform is one of the five the protocol excludes | 18 | PE only |
 | Credential is still not MD or DO | 2 | PE |
 
-The taxonomy cases are urologists, pediatricians, emergency physicians, a radiologist, a
-dermatologist, a thoracic surgeon, a neurologist, a colorectal surgeon and a midwife. The
+**Root cause of the taxonomy cases: a classifier that failed open.**
+`get_subspecialty_from_tax()` returned `"Generalist"` for any taxonomy it did not recognise,
+and its caller filters *to* `"Generalist"`. So the filter meant to retain generalist OB-GYNs
+excluded the four OB-GYN subspecialties exactly as intended, and admitted every specialty
+outside obstetrics and gynecology entirely — urologists, pediatricians, emergency physicians,
+a radiologist, a dermatologist, a thoracic surgeon, a neurologist, a colorectal surgeon, a
+midwife. It inverted its own purpose for everything it did not recognise. The family test is
+now positive: a taxonomy must be inside 207V to earn any OB-GYN label, and `Unknown` and
+`Not OB-GYN` are distinct from `Generalist` so neither survives the filter.
+
+Four OB-GYN **subspecialists** also reached the frame (three FPMRS, one gynecologic
+oncologist) through the same non-pool path. They are obstetrics and gynecology, so the
+eligibility rule retains them; the count is pinned by a test so a change is visible. The
 platform cases are US Fertility (6), IVI RMA Global (5), Kindbody (5) and OB Hospitalist
 Group (2) — fertility clinics and an inpatient hospitalist group, none of which schedules a
 routine new-patient OB/GYN visit.
 
-Eligible clinicians: **160 of 200 PE, 196 of 200 control. 157 of 200 pairs have both members
+Eligible clinicians: **159 of 200 PE, 196 of 200 control. 156 of 200 pairs have both members
 eligible.** That imbalance is the danger: an office that does not provide the service will
 refuse or redirect, and concentrated 10-to-1 in the PE arm it will read as reduced access at
 private-equity practices. It biases the primary outcome in the direction the study is looking.
