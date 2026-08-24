@@ -41,6 +41,7 @@ nodata  test-power-curve-integrity.R
 nodata  test-manifest-sources-populated.R
 nodata  test-business-days-correct.R
 nodata  test-overdispersion-suggests-nb.R
+nodata  test-blinded-slot-assignment.R
 
 data    test-frozen-geo-reference.R
 data    test-analysis-gates.R

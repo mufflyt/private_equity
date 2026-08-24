@@ -19,8 +19,10 @@ scraped_texts/
 # Transient run logs (figures/_run.log, figures/_simr.log, etc.)
 *.log
 
-# REDCap dropdown choices export (provider data)
-redcap_physician_name_choices.txt
+# REDCap dropdown choices export (provider data). Globbed, not an exact name: the builder
+# writes redcap_physician_name_choices<SUFFIX>.txt, so --suffix runs produced files that
+# this rule did not cover and that git would happily have taken.
+redcap_physician_name_choices*.txt
 
 # Configuration that must be versioned despite the blanket *.csv rule
 !analysis_manifest.csv

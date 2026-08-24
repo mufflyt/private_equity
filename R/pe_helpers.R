@@ -61,3 +61,55 @@ address_key <- function(df) {
   ok <- adr_clean != "" & city_clean != "" & nchar(zip_clean) == 5 & !blank(st)
   ifelse(ok, paste(adr_clean, city_clean, toupper(st), zip_clean, sep = "_"), NA_character_)
 }
+
+# Record numbering must not encode the exposure.
+#
+# The original build sorted by (pair, PE_or_Not) and numbered rows. "Non-PE" sorts before
+# "PE", so every pair landed control-then-PE: record parity became a perfect predictor of
+# ownership across all 200 pairs, and the two members of a pair sat adjacent in the dropdown.
+# A caller who noticed either pattern was unblinded, and no @HIDDEN on an ownership field
+# fixes that, because the leak is in the record id itself.
+#
+# assign_blinded_slots() returns a permutation with two properties the sorted version cannot
+# have. Exact parity balance: each arm occupies exactly half the odd slots and half the even
+# slots, so parity carries zero information rather than merely little. No pair adjacency: the
+# two members of a matched pair never occupy consecutive slots.
+#
+# The permutation is seeded, so a build is reproducible, but it cannot be re-derived from the
+# sheet the way the sorted contract could. The caller must persist the crosswalk it returns.
+assign_blinded_slots <- function(pair, group, seed = 20260824L, max_tries = 1000L) {
+  n <- length(pair)
+  if (length(group) != n) stop("pair and group must be the same length")
+  if (n %% 2L != 0L)      stop("need an even number of records to balance parity; got ", n)
+  arms <- sort(unique(as.character(group)))
+  if (length(arms) != 2L)
+    stop("expected exactly 2 arms, found ", length(arms), ": ", paste(arms, collapse = ", "))
+  sizes <- vapply(arms, function(a) sum(group == a), integer(1))
+  if (any(sizes %% 2L != 0L))
+    stop("each arm must have an even size for exact parity balance; got ",
+         paste(sprintf("%s=%d", arms, sizes), collapse = ", "))
+
+  odd  <- seq.int(1L, n, by = 2L)
+  even <- seq.int(2L, n, by = 2L)
+  set.seed(seed)
+
+  for (try in seq_len(max_tries)) {
+    # Half of each arm to odd slots, half to even, then shuffle the members within each
+    # parity class so the arms are not blocked into low and high slots either.
+    halves <- lapply(arms, function(a) {
+      idx <- sample(which(group == a))
+      split(idx, rep(c("odd", "even"), each = length(idx) / 2L))
+    })
+    to_odd  <- sample(unlist(lapply(halves, `[[`, "odd"),  use.names = FALSE))
+    to_even <- sample(unlist(lapply(halves, `[[`, "even"), use.names = FALSE))
+
+    slot <- integer(n)
+    slot[to_odd]  <- odd
+    slot[to_even] <- even
+
+    by_slot <- as.character(pair)[order(slot)]
+    if (!any(by_slot[-1L] == by_slot[-n])) return(slot)
+  }
+  stop("could not place ", n, " records without a matched pair landing on consecutive slots ",
+       "in ", max_tries, " attempts")
+}
