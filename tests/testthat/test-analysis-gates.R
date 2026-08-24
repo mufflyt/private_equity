@@ -307,3 +307,37 @@ test_that("semantic: the analysis reads its covariate and estimand from the froz
   expect_false(grepl('as.numeric(CDC_SVI)', src, fixed = TRUE),
                info = "the simulated column must not be read by name anywhere in the analysis")
 })
+
+# ---------------------------------------------------------------- population gate
+
+test_that("adversarial: the population gate catches a plan that names a restriction nothing applies", {
+  # The defect: SAP.lock was amended on 2026-08-24 to name analytic_population, and no script
+  # applied it. The plan read as restricted while the fit was unrestricted, and nothing in the
+  # output showed the difference. This is the gate_sap failure shape, one level up.
+  expect_error(gate_population(sheet, sap), "outside the declared analytic population")
+})
+
+test_that("the population gate accepts data that has been restricted", {
+  expect_true(gate_population(sap_restrict(sheet, sap), sap))
+})
+
+test_that("semantic: the restriction keeps whole pairs and matches the declared count", {
+  r <- sap_restrict(sheet, sap)
+  expect_equal(length(unique(r[["Matched Pair ID"]])),
+               as.integer(sap[["analytic_population_n_pairs"]]))
+  expect_true(all(r$Eligible == "TRUE"))
+  # A pair is kept only if BOTH members survive; a half-pair would break the (1 | pair) term.
+  expect_true(all(table(r[["Matched Pair ID"]]) == 2L))
+  expect_setequal(unique(r$PE_or_Not), c("PE", "Non-PE"))
+})
+
+test_that("BVA: a stale declared pair count is itself a gate failure", {
+  s2 <- sap; s2[["analytic_population_n_pairs"]] <- "999"
+  expect_error(gate_population(sap_restrict(sheet, sap), s2), "declares analytic_population_n_pairs")
+})
+
+test_that("semantic: both helpers are no-ops when the plan declares no population", {
+  s2 <- sap; s2[["analytic_population_column"]] <- ""
+  expect_equal(nrow(sap_restrict(sheet, s2)), nrow(sheet))
+  expect_true(gate_population(sheet, s2))
+})

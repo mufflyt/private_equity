@@ -22,8 +22,9 @@ haversine <- function(lat1, lon1, lat2, lon2) {
 pair_distance <- local({
   d <- merge(
     data.frame(k = npi_key(sheet$NPI), pair = sheet$`Matched Pair ID`, stringsAsFactors = FALSE),
-    data.frame(k = npi_key(db$NPI), lat = suppressWarnings(as.numeric(db$Latitude)),
-               lon = suppressWarnings(as.numeric(db$Longitude)), stringsAsFactors = FALSE),
+    # Spelling differs between database builds; ask by meaning. See col_ci() in R/pe_helpers.R.
+    data.frame(k = npi_key(db$NPI), lat = suppressWarnings(as.numeric(col_ci(db, "latitude"))),
+               lon = suppressWarnings(as.numeric(col_ci(db, "longitude"))), stringsAsFactors = FALSE),
     by = "k")
   s <- split(d, d$pair)
   v <- vapply(s, function(x) if (nrow(x) == 2L && !anyNA(x$lat) && !anyNA(x$lon))

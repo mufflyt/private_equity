@@ -21,6 +21,9 @@
 #                      pairs put both arms on one line.
 #   gate_analytic_n    The power calculation gave all 800 calls a wait time. The study will
 #                      observe about 622, and the identifying cell falls from 200 to ~82.
+#   gate_population    SAP.lock was amended to name an analytic_population and nothing applied
+#                      it. The plan read as restricted while the fit was unrestricted, which is
+#                      invisible in the output -- the same shape as the gate_sap defect.
 #
 # Sourcing this file has no side effects.
 
@@ -190,6 +193,60 @@ gate_missingness <- function(df, analytic, arm_col = "PE_or_Not", alpha = 0.01) 
   }
   gate_pass("missingness", sprintf("independent of arm for %d covariate(s)", length(analytic)))
   invisible(out)
+}
+
+#' Gate 6. The fitted data must be the population the plan declares.
+#'
+#' SAP.lock can name an analytic_population -- a restriction of the fielded frame that the
+#' primary estimand refers to. A named population that nothing applies is worse than no
+#' population at all: the plan reads as restricted while the fit is unrestricted, and the
+#' difference is invisible in the output. That is the same failure shape as gate_sap, where a
+#' 2-df joint test was reported as the 1-df interaction the plan named.
+#'
+#' sap_restrict() applies the restriction. gate_population() refuses to certify data that has
+#' not had it applied, so the restriction cannot be skipped by forgetting to call the first one.
+#' Both are no-ops when SAP.lock declares no population, so a plan without one is unaffected.
+sap_restrict <- function(df, sap = read_sap(), pair_col = "Matched Pair ID") {
+  col <- sap[["analytic_population_column"]]
+  if (is.null(col) || !nzchar(trimws(col))) return(df)
+  col <- trimws(col)
+  if (!col %in% names(df))
+    gate_fail("population", "SAP names analytic_population_column '", col,
+              "' but the data has no such column")
+  if (!pair_col %in% names(df))
+    gate_fail("population", "no pair column '", pair_col, "' to restrict on")
+  ok <- toupper(trimws(as.character(df[[col]]))) %in% "TRUE"
+  whole <- tapply(ok, df[[pair_col]], all)
+  keep  <- as.character(df[[pair_col]]) %in% names(whole)[whole]
+  message(sprintf("  [pass] %-22s %d of %d pairs retained (%d of %d rows)",
+                  "population", sum(whole), length(whole), sum(keep), length(keep)))
+  df[keep, , drop = FALSE]
+}
+
+gate_population <- function(df, sap = read_sap(), pair_col = "Matched Pair ID") {
+  col <- sap[["analytic_population_column"]]
+  if (is.null(col) || !nzchar(trimws(col))) return(invisible(TRUE))
+  col <- trimws(col)
+  if (!col %in% names(df))
+    gate_fail("population", "SAP names analytic_population_column '", col,
+              "' but the data has no such column")
+  bad <- sum(!toupper(trimws(as.character(df[[col]]))) %in% "TRUE")
+  if (bad > 0L)
+    gate_fail("population", sprintf(
+      "%d of %d rows are outside the declared analytic population.\n%s = %s\n",
+      bad, nrow(df), "analytic_population", sap[["analytic_population"]]),
+      "Call sap_restrict() before fitting. The plan names a restricted population; ",
+      "fitting the whole frame reports a different estimand than the one pre-specified.")
+  declared <- suppressWarnings(as.integer(sap[["analytic_population_n_pairs"]]))
+  if (!is.na(declared) && pair_col %in% names(df)) {
+    have <- length(unique(df[[pair_col]]))
+    if (have != declared)
+      gate_fail("population", sprintf(
+        "SAP declares analytic_population_n_pairs = %d; the data carries %d. ", declared, have),
+        "Either the frame changed or the declaration is stale; both require an amendment.")
+  }
+  gate_pass("population", sprintf("restricted as declared (%s)", sap[["analytic_population"]]))
+  invisible(TRUE)
 }
 
 # ---------------------------------------------------------------------------- joins
@@ -615,6 +672,7 @@ analysis_preflight <- function(df, analytic, arm_col = "PE_or_Not",
   gate_provenance(df, analytic, manifest)
   gate_missingness(df, analytic, arm_col)
   if (!is.null(clustering_unit)) gate_clustering(df, clustering_unit)
+  gate_population(df, sap)
   if (!is.null(expected_cells) && !is.null(observed_cells)) {
     gate_analytic_n(observed_cells, expected_cells)
   }

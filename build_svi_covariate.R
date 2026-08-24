@@ -170,10 +170,7 @@ pull_geoid <- function(url) {
 # data frame with a name it does not have returns NULL, and `nzchar(trimws(NULL)) && ...` is a
 # zero-length condition, which is an error in R >= 4.2 rather than a skipped branch. So the
 # fallback did not merely fail to fire on the churn build -- it halted the whole run.
-col_ci <- function(df, nm) {
-  hit <- match(tolower(nm), tolower(names(df)))
-  if (is.na(hit)) NULL else df[[hit]]
-}
+# col_ci() is shared, in R/pe_helpers.R, sourced above.
 LAT <- col_ci(db, "latitude"); LON <- col_ci(db, "longitude")
 if (is.null(LAT) || is.null(LON))
   message("  note: no coordinate columns in the address source; stored-coordinate fallback is off")

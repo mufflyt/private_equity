@@ -32,8 +32,9 @@ BOX <- list(
 
 coords <- data.frame(
   npi = npi_key(db$NPI),
-  lat = suppressWarnings(as.numeric(db$Latitude)),
-  lon = suppressWarnings(as.numeric(db$Longitude)),
+  # Spelling differs between database builds; ask by meaning. See col_ci() in R/pe_helpers.R.
+  lat = suppressWarnings(as.numeric(col_ci(db, "latitude"))),
+  lon = suppressWarnings(as.numeric(col_ci(db, "longitude"))),
   stringsAsFactors = FALSE
 )
 fielded <- merge(data.frame(npi = npi_key(sheet$NPI), state = toupper(trimws(sheet$State)),

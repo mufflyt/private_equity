@@ -7,8 +7,13 @@
 root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
 p <- function(...) file.path(root, ...)
 
-dict <- utils::read.csv(p("ICVsPOPVsSUI_DataDictionary_2026-07-05.csv"),
-                        check.names = FALSE, colClasses = "character")
+# This read ICVsPOPVsSUI_DataDictionary_2026-07-05.csv -- the urogyn study's instrument, a
+# different project, and a file that is not in this repository at all, so the whole file
+# errored on load and none of its ten contracts ever ran. The instrument this study records
+# its outcomes on is the fielded PE dictionary, which is committed under redcap/.
+dict <- utils::read.csv(
+  p("redcap", "PrivateVsPublicDoesEquityOwner_DataDictionary_2026-08-24_blinded.csv"),
+  check.names = FALSE, colClasses = "character")
 names(dict)[1] <- "field"
 fld <- function(f) dict[dict$field == f, , drop = FALSE]
 req <- function(f) trimws(fld(f)[["Required Field?"]]) == "y"
