@@ -1,0 +1,801 @@
+old_record_id,new_record_id,npi,name,insurance
+1,9,1912969700,Dr. Elizabeth Ferik,Medicaid
+2,222,1972949220,Dr. Elise Simpson,Medicaid
+3,329,1437443835,Dr. Emma Rodgers Biebuyck,Medicaid
+4,285,1205060761,Dr. Kendra Johnson,Medicaid
+5,147,1609119890,Dr. Tavor Sondheimer,Medicaid
+6,41,1346789690,Dr. Millet Yang,Medicaid
+7,5,1053394205,Dr. Robert Feldman,Medicaid
+8,218,1831129584,Dr. Leonardo Blachar,Medicaid
+9,342,1316149909,Dr. Adegboyega Adejana,Medicaid
+10,283,1679708416,Dr. Rachel Schleichert,Medicaid
+11,49,1902149743,Dr. Soyoun Bark,Medicaid
+12,43,1922082437,Dr. Hamid Banooni,Medicaid
+13,363,1144222985,Dr. Carrie Speier Schafer,Medicaid
+14,130,1699034215,Dr. Lena Carr,Medicaid
+15,245,1811071764,Dr. Diana Cohen,Medicaid
+16,24,1790346948,Dr. Ariel Gruda,Medicaid
+17,96,1417901174,Dr. Daphne Tumaneng,Medicaid
+18,266,1598855678,Dr. Esther Zekman,Medicaid
+19,56,1356845903,Dr. Mitchell Bitran,Medicaid
+20,216,1174506323,Dr. Janet Gersten,Medicaid
+21,341,1821228008,Dr. Christina Caito,Medicaid
+22,185,1578662276,Dr. Gene Krishingner,Medicaid
+23,290,1205872314,Dr. Rolando Gonzalez,Medicaid
+24,159,1417986381,Dr. Jeffrey Litt,Medicaid
+25,132,1053707034,Dr. Samantha Bunting,Medicaid
+26,228,1790746279,Dr. Mark Grenitz,Medicaid
+27,154,1376611202,Dr. Richard Biggs,Medicaid
+28,104,1659383008,Dr. Richard Peterson,Medicaid
+29,136,1619905387,Dr. Jonathan Zaidan,Medicaid
+30,213,1932188760,Dr. Frederick Bartholomew,Medicaid
+31,64,1932510393,Dr. Lisamarie Colon Ramirez,Medicaid
+32,155,1982686275,Dr. Anthony Martell,Medicaid
+33,311,1760758411,Dr. Jeffrey Schachar,Medicaid
+34,255,1245478916,Dr. Alvin Martinez,Medicaid
+35,233,1639147911,Dr. Cynthia Baldwin,Medicaid
+36,134,1588663363,Dr. Joseph Kerpsack,Medicaid
+37,312,1124381108,Dr. Gabriel Valverde Tavarez,Medicaid
+38,386,1720196454,Dr. Nathan Hirsch,Medicaid
+39,293,1851360945,Dr. Susanne Archer,Medicaid
+40,102,1336762681,Dr. Leigh Durudogan,Medicaid
+41,187,1033174644,Dr. Emilio Gomez-Madrazo,Medicaid
+42,177,1891172201,Dr. Julia Cooper,Medicaid
+43,153,1508050162,Dr. Maria Pimentel,Medicaid
+44,206,1851612477,Dr. Robert Sherman,Medicaid
+45,284,1003815895,Dr. Kelly Vangilder,Medicaid
+46,19,1114347655,Dr. Sharise Richardson,Medicaid
+47,70,1336200351,Dr. Jorge Pimienta,Medicaid
+48,270,1124084413,Dr. Michael Hellinger,Medicaid
+49,221,1447250964,Dr. Jose Berthe,Medicaid
+50,231,1518145473,Dr. Mark Zakaria,Medicaid
+51,391,1669430328,Dr. Randy Fink,Medicaid
+52,384,1871084970,Dr. Karan Arora,Medicaid
+53,236,1396187449,Dr. Estrella Chavez Benzaquen,Medicaid
+54,196,1902301112,Dr. Alexandra Levy,Medicaid
+55,114,1205056645,Dr. Joseph Prezzato,Medicaid
+56,393,1740542141,Dr. Jennifer Borson,Medicaid
+57,313,1003896507,Dr. Jane Matos-Fraebel,Medicaid
+58,42,1689802670,Dr. Jenny Valencia,Medicaid
+59,367,1699793042,Dr. Julio Arronte,Medicaid
+60,377,1902149511,Dr. Brianna Varas,Medicaid
+61,79,1023284494,Dr. Rachel Urrutia,Medicaid
+62,291,1407829815,Dr. Aimee Ferrandino,Medicaid
+63,25,1154614576,Dr. Christopher Bauer,Medicaid
+64,168,1417290719,Dr. Philip Cheng,Medicaid
+65,398,1376656264,Dr. Daniel Kaelberer,Medicaid
+66,145,1235249509,Dr. James Hotaling,Medicaid
+67,91,1669496949,Dr. Jaime Santiago-Lopetegui,Medicaid
+68,21,1023277704,Dr. Puneet Masson,Medicaid
+69,165,1003347055,Dr. Elizabeth Isak,Medicaid
+70,195,1346771698,Dr. Jennifer Weiss,Medicaid
+71,286,1447612973,Dr. Katherine Garfield,Medicaid
+72,83,1154785632,Dr. Jessica Marinaro,Medicaid
+73,395,1932490711,Dr. Amy Gueye,Medicaid
+74,103,1851880652,Dr. Shelley Dolitsky,Medicaid
+75,7,1306073127,Dr. Lethenia Baker,Medicaid
+76,250,1922530120,Dr. Victoria Jiang,Medicaid
+77,249,1790997443,Dr. Alexander Shapiro,Medicaid
+78,350,1700103868,Dr. Ryan Martin,Medicaid
+79,61,1790177574,Dr. Rafael Marquez,Medicaid
+80,39,1376770370,Dr. Ha Nguyen,Medicaid
+81,309,1790834190,Dr. James Leonelli,Medicaid
+82,180,1659348563,Dr. Virginia Banks,Medicaid
+83,108,1871860510,Dr. Shaunte Gray,Medicaid
+84,156,1316309172,Dr. Abigail Armstrong,Medicaid
+85,149,1427120948,Dr. Meera Patel,Medicaid
+86,296,1598118218,Dr. Kelsey Anderson,Medicaid
+87,241,1053717306,Dr. Felix Cohen,Medicaid
+88,325,1306005145,Dr. Fahimeh Sasan,Medicaid
+89,223,1962433250,Dr. Shayna Rubin,Medicaid
+90,292,1689803199,Dr. Sara Rizk,Medicaid
+91,306,1326281023,Dr. Amber Jaeger,Medicaid
+92,85,1770105405,Dr. Emily Ager,Medicaid
+93,385,1629262126,Dr. Marcela Lazo,Medicaid
+94,346,1447363478,Dr. Sylvia Siegfried,Medicaid
+95,226,1104171297,Dr. Sierra Cuthpert,Medicaid
+96,219,1639801947,Dr. Alycia Cucka,Medicaid
+97,314,1164467338,Dr. Darcy Bryan,Medicaid
+98,225,1790765857,Dr. Beth Diner,Medicaid
+99,365,1659682664,Dr. Teri Forney,Medicaid
+100,349,1881902823,Dr. Jessica Barker,Medicaid
+101,144,1326499849,Dr. David Doyle,Medicaid
+102,387,1548840630,Dr. Alyse Victor,Medicaid
+103,131,1588834329,Dr. Ana Benitez Prieto,Medicaid
+104,203,1336390970,Dr. Melissa Lee,Medicaid
+105,388,1457519738,Dr. Eva Crooke,Medicaid
+106,137,1982894879,Dr. Jill Botelho,Medicaid
+107,11,1225296940,Dr. Nikkita Wilkes,Medicaid
+108,71,1437788312,Dr. Kharian Youmans,Medicaid
+109,163,1437177334,Dr. Elina Burstyn,Medicaid
+110,244,1336366699,Dr. Simone Piraino,Medicaid
+111,336,1639261738,Dr. Bruce Breit,Medicaid
+112,80,1952807273,Dr. Aimee Bethancourt,Medicaid
+113,33,1114347283,Dr. Paul Kuder,Medicaid
+114,302,1174552038,Dr. Michelle Luthringshausen,Medicaid
+115,212,1851586770,Dr. Karolina Borodo,Medicaid
+116,390,1821408287,Dr. Jinny Gunn,Medicaid
+117,210,1629042460,Dr. Elliot Cazes,Medicaid
+118,372,1508852567,Dr. Allyson Jones,Medicaid
+119,272,1174514020,Dr. Marwan Shaykh,Medicaid
+120,369,1710340591,Dr. Nicole Melanson,Medicaid
+121,2,1639468531,Dr. Joanna Dalton Ayoung,Medicaid
+122,295,1104354208,Dr. Margaret Capobianco,Medicaid
+123,78,1457660664,Dr. Leslie Bender,Medicaid
+124,113,1992019822,Dr. Nadia Pile,Medicaid
+125,348,1275783300,Dr. Meredith Martin Johnston,Medicaid
+126,259,1457615742,Dr. Ashley Abraham,Medicaid
+127,148,1881893212,Dr. Xochitl Garcia,Medicaid
+128,324,1386212280,Dr. Nabeel Salka,Medicaid
+129,319,1942299045,Dr. Michelle Goldin,Medicaid
+130,356,1154859973,Dr. Devoni Bruns,Medicaid
+131,76,1053391649,Dr. Carmen Doty-Armstrong,Medicaid
+132,36,1396179073,Dr. Robert Drenchko,Medicaid
+133,354,1063417137,Dr. Sherri Graf,Medicaid
+134,67,1487149779,Dr. Whitney Nieland,Medicaid
+135,370,1588609101,Dr. Crista Crisler,Medicaid
+136,308,1467016196,Dr. Andres Hernandez,Medicaid
+137,229,1861659708,Dr. Alexandria Reyes,Medicaid
+138,234,1629247515,Dr. Carlos Reyes,Medicaid
+139,200,1093120800,Dr. Shivali Raav,Medicaid
+140,310,1740817071,Dr. Sarah Bechay,Medicaid
+141,247,1801903372,Dr. David Szentes,Medicaid
+142,86,1609866763,Dr. Scott Bowers,Medicaid
+143,142,1083772461,Dr. Gretchen Makai,Medicaid
+144,321,1265011761,Dr. Alice Cai,Medicaid
+145,55,1346216595,Dr. Scott Kagan,Medicaid
+146,171,1710953617,Dr. Margaret Nettleton,Medicaid
+147,278,1699822320,Dr. Jon Hoversland,Medicaid
+148,161,1801359690,Dr. Cody Campbell,Medicaid
+149,275,1083636831,Dr. Jennifer Gilbert,Medicaid
+150,201,1316948748,Dr. Melissa Delaney,Medicaid
+151,397,1891122818,Dr. Dhruv Rathod,Medicaid
+152,152,1043892326,Dr. Tyler Desmond,Medicaid
+153,138,1194087270,Dr. Paula Edelson,Medicaid
+154,100,1205894219,Dr. Alan Donnenfeld,Medicaid
+155,334,1720304595,Dr. Suzanne Nogami,Medicaid
+156,26,1629284955,Dr. Kim Einhorn,Medicaid
+157,68,1609047026,Dr. Sandra Krizmanich,Medicaid
+158,232,1790949477,Dr. Francis Esguerra,Medicaid
+159,190,1427311729,Dr. Daniel Cibulsky,Medicaid
+160,45,1538742028,Dr. Nashali Ferrara,Medicaid
+161,112,1093079410,Dr. Sofia Mccotter,Medicaid
+162,44,1316938277,Dr. Michael Fesenmeier,Medicaid
+163,338,1720125586,Dr. Steven Troy,Medicaid
+164,127,1326435645,Dr. Nicole Haslett,Medicaid
+165,235,1811991276,Dr. Joseph Castelli,Medicaid
+166,257,1316560451,Dr. Hilary Hinton,Medicaid
+167,15,1700948395,Dr. David Hadley,Medicaid
+168,191,1043232382,Dr. Philip Hirshman,Medicaid
+169,150,1821067539,Dr. Amy Cadieux,Medicaid
+170,205,1003882978,Dr. Melodie Icasiano,Medicaid
+171,184,1104260686,Dr. Rohini Sarin Oneil,Medicaid
+172,107,1770795106,Dr. Lea Isaac,Medicaid
+173,335,1730470402,Dr. Catherine Bailey,Medicaid
+174,116,1619555968,Dr. Connell Kling,Medicaid
+175,282,1295116309,Dr. Kristin Kean,Medicaid
+176,151,1770539314,Dr. Ravy Lu,Medicaid
+177,169,1669470126,Dr. George Talbot,Medicaid
+178,125,1013903541,Dr. Jonathan Lupton,Medicaid
+179,3,1952450652,Dr. Rakhi Shah,Medicaid
+180,126,1902187867,Dr. Natasha Harvey,Medicaid
+181,248,1598723819,Dr. Helene Koch,Medicaid
+182,32,1538320783,Dr. Dana Mahlab,Medicaid
+183,189,1235440140,Dr. Katherine Bohnert,Medicaid
+184,246,1982164695,Dr. Cynthia Mckinney,Medicaid
+185,74,1447546338,Dr. Jacqueline Kohl,Medicaid
+186,256,1144386582,Dr. Stephanie Mcknight,Medicaid
+187,77,1548619596,Dr. Christian Dawes,Medicaid
+188,400,1073073565,Dr. Caroline Mecker,Medicaid
+189,374,1417190125,Dr. Valerie Gathers,Medicaid
+190,262,1386692028,Dr. Michelle Neff,Medicaid
+191,208,1457768178,Dr. Lauren Mason-Cederberg,Medicaid
+192,48,1386214641,Dr. Savannah Nightingale,Medicaid
+193,63,1275543720,Dr. Sandra Neal,Medicaid
+194,333,1265432397,Dr. Soheyla Pezeshki,Medicaid
+195,192,1366436388,Dr. Akemi Nakanishi,Medicaid
+196,316,1174515035,Dr. Anita Iyer,Medicaid
+197,46,1629496294,Dr. Justen Sumner,Medicaid
+198,174,1952381196,Dr. Suzanne Pugh,Medicaid
+199,237,1508858614,Dr. Scott Dinesen,Medicaid
+200,339,1356871917,Dr. Gabriella Pugliese,Medicaid
+201,95,1265963615,Dr. Mary Lynch,Medicaid
+202,396,1497307052,Dr. Samantha So,Medicaid
+203,54,1225025547,Dr. Daniel Roshan,Medicaid
+204,299,1295735934,Dr. Charles Touey,Medicaid
+205,271,1861651176,Dr. Sara Rinala,Medicaid
+206,375,1881669356,Dr. Elizabeth Venard,Medicaid
+207,89,1467686162,Dr. Diana Huang,Medicaid
+208,101,1932786480,Dr. Tery Vinh,Medicaid
+209,4,1679838296,Dr. Ruchira Sharma,Medicaid
+210,305,1578067187,Dr. Catherine Yu,Medicaid
+211,224,1952530628,Dr. Virginia Smith,Medicaid
+212,84,1437144839,Dr. Akram Zalatimo,Medicaid
+213,143,1760644090,Dr. Karen Wolowick,Medicaid
+214,357,1275641003,Dr. Robin Whatley,Medicaid
+215,69,1972578375,Dr. Bridget Frangella,Medicaid
+216,115,1740374909,Dr. Donna Sweetland,Medicaid
+217,240,1700084779,Dr. Alka Bennion,Medicaid
+218,315,1437140589,Dr. Judy Tom,Medicaid
+219,18,1942643895,Dr. Lauren Maher,Medicaid
+220,58,1831415231,Dr. James Miller,Medicaid
+221,267,1376574673,Dr. Antonia Williams,Medicaid
+222,119,1740244383,Dr. Lance Radbill,Medicaid
+223,359,1629464003,Dr. Shruti Bala,Medicaid
+224,268,1417026188,Dr. Stephanie Chin,Medicaid
+225,17,1750481610,Dr. Shahla Ighani,Medicaid
+226,204,1518196443,Dr. Anna Nelson-Moseke,Medicaid
+227,176,1366633620,Dr. Stephanie Mayes,Medicaid
+228,106,1972777134,Dr. Emily Cyr,Medicaid
+229,146,1619271947,Dr. Carlos Flores,Medicaid
+230,253,1053653105,Dr. Lia Labrant,Medicaid
+231,389,1689661928,Dr. Jose Picazo,Medicaid
+232,260,1831124270,Dr. Diane Mccracken,Medicaid
+233,362,1447341920,Dr. Anthony Sciscione,Medicaid
+234,12,1699941989,Dr. Jessica Apel,Medicaid
+235,53,1700043460,Dr. Abby Otto,Medicaid
+236,399,1578721155,Dr. Lina Millan,Medicaid
+237,8,1316234081,Dr. Karanvir Virk,Medicaid
+238,366,1083633101,Dr. Kimberly Mcintosh,Medicaid
+239,92,1972504488,Dr. Clyde Jacob,Medicaid
+240,62,1881859825,Dr. Maria Bendana,Medicaid
+241,166,1194820753,Dr. Ruthann Rees,Medicaid
+242,123,1962575597,Dr. Michael Dempsey,Medicaid
+243,276,1700998366,Dr. Michael Noone,Medicaid
+244,65,1275620700,Dr. Kathryn Ray,Medicaid
+245,214,1669562880,Dr. Steven Valfer,Medicaid
+246,328,1104454545,Dr. Natalia J,Medicaid
+247,252,1801355243,Dr. Petra Voigt,Medicaid
+248,118,1851956353,Dr. Nancy Singh,Medicaid
+249,355,1073904256,Dr. Andrew Ewbank,Medicaid
+250,298,1639129455,Dr. Ronald Miller,Medicaid
+251,175,1275618985,Dr. Scott Multack,Medicaid
+252,343,1093078388,Dr. Bishara Facs,Medicaid
+253,88,1619157526,Dr. Kathleen Slugocki,Medicaid
+254,279,1952332165,Dr. John Bush,Medicaid
+255,40,1699760108,Dr. Kristin Mcday,Medicaid
+256,162,1952835829,Dr. Ahmad Kerr,Medicaid
+257,178,1457437162,Dr. Jennifer Santiago,Medicaid
+258,294,1609286848,Dr. Kirsten Ely,Medicaid
+259,124,1376528265,Dr. Michelle Spector,Medicaid
+260,198,1942645874,Dr. Arifa Khokar,Medicaid
+261,120,1053308411,Dr. Steven Lacher,Medicaid
+262,181,1194380428,Dr. Ibrahim Tsolakian,Medicaid
+263,230,1083868764,Dr. Sami Mufarrij,Medicaid
+264,289,1144858689,Dr. Andre Hall,Medicaid
+265,251,1245505684,Dr. Latasha Murphy,Medicaid
+266,173,1700413499,Dr. Mary Ahern,Medicaid
+267,135,1750474813,Dr. Daniel Greene,Medicaid
+268,320,1508902370,Dr. Carole Condevaux,Medicaid
+269,87,1295705168,Dr. Lisa Gilbertahee,Medicaid
+270,337,1801235148,Dr. Steven Lefkowitz,Medicaid
+271,73,1902862436,Dr. Michele Thomas,Medicaid
+272,199,1588678932,Dr. Andrea Schiller,Medicaid
+273,376,1477711158,Dr. Lauren Callahan,Medicaid
+274,182,1457693293,Dr. Cassandra Mscp,Medicaid
+275,220,1437354099,Dr. Matthew Palmer,Medicaid
+276,263,1114216355,Dr. Megan Bina,Medicaid
+277,332,1659678753,Dr. Vanessa Knoedler,Medicaid
+278,197,1699949776,Dr. Georgina Greil,Medicaid
+279,358,1225415789,Dr. Lindsay Lewis,Medicaid
+280,82,1477933513,Dr. Annalise Almdale,Medicaid
+281,16,1174966808,Dr. Erin Stevens,Medicaid
+282,111,1255913141,Dr. Brianna Dickson,Medicaid
+283,347,1164746772,Dr. Golnaz Alemi,Medicaid
+284,164,1629031117,Dr. Sheldon Paul,Medicaid
+285,382,1477896702,Dr. Philip Mclemore,Medicaid
+286,274,1457808651,Dr. Brian Vu,Medicaid
+287,392,1366550188,Dr. Robi Burns,Medicaid
+288,110,1598764771,Dr. Keith Brill,Medicaid
+289,172,1063602597,Dr. Elena Zenkin,Medicaid
+290,261,1720582737,Dr. Haleigh Edgar,Medicaid
+291,297,1619932506,Dr. Linh Nguyen,Medicaid
+292,269,1831501055,Dr. Navpreet Chattha,Medicaid
+293,105,1114908480,Dr. Paul Neumann,Medicaid
+294,277,1912303033,Dr. Masuma Bahora,Medicaid
+295,378,1952373912,Dr. Lisa Eng,Medicaid
+296,81,1265530679,Dr. Audrey Buxbaum,Medicaid
+297,340,1205276193,Dr. Peter Sticco,Medicaid
+298,28,1710927363,Dr. Matthew Dilena,Medicaid
+299,128,1164420493,Dr. Evan Shapiro,Medicaid
+300,304,1902977796,Dr. Gary Levine,Medicaid
+301,353,1225290455,Dr. Renata Scott-Ram,Medicaid
+302,194,1619053535,Dr. Yulia Aronovich,Medicaid
+303,211,1114373784,Dr. James Miller,Medicaid
+304,59,1932194743,Dr. Claire Harraghy,Medicaid
+305,141,1871759258,Dr. Li Xu,Medicaid
+306,6,1437264389,Dr. Zoe Beatty,Medicaid
+307,179,1104182385,Dr. Diana Mccarthy,Medicaid
+308,243,1275500779,Dr. Katherine Barrett,Medicaid
+309,273,1265745327,Dr. Elizabeth England,Medicaid
+310,239,1982936860,Dr. Ladson Gaddy-Dubac,Medicaid
+311,265,1205869096,Dr. Anna Tatarchuk,Medicaid
+312,215,1083076236,Dr. Kirsten Beeson,Medicaid
+313,37,1568464568,Dr. Joel Kramer,Medicaid
+314,281,1407903495,Dr. Jocelyn Craparo,Medicaid
+315,117,1144885997,Dr. Lauren Roberts,Medicaid
+316,381,1265842090,Dr. Mais Arwani,Medicaid
+317,29,1295938090,Dr. Carmen Selman,Medicaid
+318,238,1235118399,Dr. Kompal Gadh,Medicaid
+319,326,1215466818,Dr. Kylee Clyatt,Medicaid
+320,34,1174514061,Dr. Dipti Shah-Parikh,Medicaid
+321,121,1689837015,Dr. Caton Simoni,Medicaid
+322,323,1841635851,Dr. Brittney Schumann,Medicaid
+323,75,1730360439,Dr. Beth Thai,Medicaid
+324,94,1821288465,Dr. Kelly Montiville,Medicaid
+325,139,1588898415,Dr. Arminda Callejas Weintz,Medicaid
+326,361,1275736092,Dr. Christi Kidd,Medicaid
+327,99,1851647887,Dr. Marianne Peck,Medicaid
+328,60,1346486743,Dr. Jennifer Huebner,Medicaid
+329,97,1295868883,Dr. John Visintine,Medicaid
+330,22,1508862723,Dr. Benjamin Supnet,Medicaid
+331,351,1194879445,Dr. Andrew Engel,Medicaid
+332,133,1356795595,Dr. Sharon Kim,Medicaid
+333,303,1407266901,Dr. Maria Munoz,Medicaid
+334,57,1831280452,Dr. Josie Stone,Medicaid
+335,167,1093700072,Dr. Prafulla Koneru,Medicaid
+336,345,1093203036,Dr. Nicole Lomotan,Medicaid
+337,394,1841324514,Dr. Freddy Montero,Medicaid
+338,66,1902987977,Dr. Amy Sonnenblick,Medicaid
+339,368,1013012541,Dr. Marie Carmelle Liburd,Medicaid
+340,129,1023041688,Dr. Alexandria Angelides,Medicaid
+341,383,1649251729,Dr. James Mcbride,Medicaid
+342,264,1467984831,Dr. Myah Bell,Medicaid
+343,122,1043284425,Dr. Leroy Charles,Medicaid
+344,217,1073518130,Dr. Lawrence Bergman,Medicaid
+345,317,1356735542,Dr. Stephanie Roy,Medicaid
+346,301,1629572847,Dr. Huiwen Liu,Medicaid
+347,50,1457335499,Dr. Katia Apollon,Medicaid
+348,364,1437117793,Dr. Andrew Shapiro,Medicaid
+349,318,1457374068,Dr. Jorge Gomez,Medicaid
+350,379,1225142938,Dr. Jaime Mercado,Medicaid
+351,352,1457731994,Dr. Frances Perez-Suarez,Medicaid
+352,109,1114949559,Dr. Cecilia Grande,Medicaid
+353,140,1144532805,Dr. Leigh Behring,Medicaid
+354,23,1003308057,Dr. Jessica Frost,Medicaid
+355,322,1265432785,Dr. Bruce Zafran,Medicaid
+356,288,1508063041,Dr. Carlos Barrionuevo,Medicaid
+357,344,1669979795,Dr. Priyanga Jeyasri,Medicaid
+358,38,1306336706,Dr. Samantha Seidor,Medicaid
+359,254,1578615084,Dr. Anne Petit,Medicaid
+360,327,1972513935,Dr. Marc Siegel,Medicaid
+361,98,1376785881,Dr. Jacqueline Roman,Medicaid
+362,27,1548467137,Dr. John Vaclavik,Medicaid
+363,371,1780818146,Dr. Eric Liberman,Medicaid
+364,209,1568952877,Dr. Grace Wey,Medicaid
+365,47,1952411696,Dr. Amy Harvey O'Keeffe,Medicaid
+366,20,1013438308,Dr. Jessica Williams,Medicaid
+367,51,1811955628,Dr. Timothy Hale,Medicaid
+368,380,1144280553,Dr. Cindy Joslyn,Medicaid
+369,52,1598759334,Dr. Mark Simonelli,Medicaid
+370,93,1174574008,Dr. Kerri Osterhaus-Houle,Medicaid
+371,90,1619076403,Dr. Daniel Gottschall,Medicaid
+372,300,1801459706,Dr. Amalia Kotlyar,Medicaid
+373,207,1851354534,Dr. Linda Matonis,Medicaid
+374,72,1588678270,Dr. Thomas Helm,Medicaid
+375,183,1730408535,Dr. Magdalena Szutowska,Medicaid
+376,30,1184727265,Dr. Gene Freylikhman,Medicaid
+377,1,1336174416,Dr. Wendy Cervi,Medicaid
+378,186,1538570833,Dr. Kristin Kinsler,Medicaid
+379,280,1891358891,Dr. Katrina Marcinkowski,Medicaid
+380,360,1831696277,Dr. Molly Amero,Medicaid
+381,193,1952465163,Dr. Eddy Joseph,Medicaid
+382,330,1427081736,Dr. Dilip Bharucha,Medicaid
+383,14,1285716829,Dr. Elizabeth Ramirez,Medicaid
+384,258,1720045750,Dr. Abigail Gleason,Medicaid
+385,227,1457328064,Dr. Paul Vetter,Medicaid
+386,158,1134217292,Dr. Arthur Gross,Medicaid
+387,373,1952488280,Dr. Norma Milanes Roberts,Medicaid
+388,160,1992740385,Dr. Marianne Herrighty,Medicaid
+389,35,1295018133,Dr. Rebecca Metz,Medicaid
+390,13,1700951589,Dr. Alissa Kaye,Medicaid
+391,157,1154530301,Dr. Adebola Nnewihe,Medicaid
+392,307,1720050776,Dr. Philip Korzeniowski,Medicaid
+393,188,1932139631,Dr. Sardana Belkin,Medicaid
+394,242,1730259094,Dr. Peter Mandel,Medicaid
+395,31,1376920165,Dr. Daniel Martingano,Medicaid
+396,170,1124069018,Dr. Bharti Mavani,Medicaid
+397,202,1023041100,Dr. Natalia Rezvina,Medicaid
+398,287,1154310811,Dr. Daniel Morgan,Medicaid
+399,10,1487747283,Dr. Robin Wilson-Smith,Medicaid
+400,331,1033520838,Dr. Sabrina Rabau,Medicaid
+401,409,1912969700,Dr. Elizabeth Ferik,Blue Cross/Blue Shield
+402,622,1972949220,Dr. Elise Simpson,Blue Cross/Blue Shield
+403,729,1437443835,Dr. Emma Rodgers Biebuyck,Blue Cross/Blue Shield
+404,685,1205060761,Dr. Kendra Johnson,Blue Cross/Blue Shield
+405,547,1609119890,Dr. Tavor Sondheimer,Blue Cross/Blue Shield
+406,441,1346789690,Dr. Millet Yang,Blue Cross/Blue Shield
+407,405,1053394205,Dr. Robert Feldman,Blue Cross/Blue Shield
+408,618,1831129584,Dr. Leonardo Blachar,Blue Cross/Blue Shield
+409,742,1316149909,Dr. Adegboyega Adejana,Blue Cross/Blue Shield
+410,683,1679708416,Dr. Rachel Schleichert,Blue Cross/Blue Shield
+411,449,1902149743,Dr. Soyoun Bark,Blue Cross/Blue Shield
+412,443,1922082437,Dr. Hamid Banooni,Blue Cross/Blue Shield
+413,763,1144222985,Dr. Carrie Speier Schafer,Blue Cross/Blue Shield
+414,530,1699034215,Dr. Lena Carr,Blue Cross/Blue Shield
+415,645,1811071764,Dr. Diana Cohen,Blue Cross/Blue Shield
+416,424,1790346948,Dr. Ariel Gruda,Blue Cross/Blue Shield
+417,496,1417901174,Dr. Daphne Tumaneng,Blue Cross/Blue Shield
+418,666,1598855678,Dr. Esther Zekman,Blue Cross/Blue Shield
+419,456,1356845903,Dr. Mitchell Bitran,Blue Cross/Blue Shield
+420,616,1174506323,Dr. Janet Gersten,Blue Cross/Blue Shield
+421,741,1821228008,Dr. Christina Caito,Blue Cross/Blue Shield
+422,585,1578662276,Dr. Gene Krishingner,Blue Cross/Blue Shield
+423,690,1205872314,Dr. Rolando Gonzalez,Blue Cross/Blue Shield
+424,559,1417986381,Dr. Jeffrey Litt,Blue Cross/Blue Shield
+425,532,1053707034,Dr. Samantha Bunting,Blue Cross/Blue Shield
+426,628,1790746279,Dr. Mark Grenitz,Blue Cross/Blue Shield
+427,554,1376611202,Dr. Richard Biggs,Blue Cross/Blue Shield
+428,504,1659383008,Dr. Richard Peterson,Blue Cross/Blue Shield
+429,536,1619905387,Dr. Jonathan Zaidan,Blue Cross/Blue Shield
+430,613,1932188760,Dr. Frederick Bartholomew,Blue Cross/Blue Shield
+431,464,1932510393,Dr. Lisamarie Colon Ramirez,Blue Cross/Blue Shield
+432,555,1982686275,Dr. Anthony Martell,Blue Cross/Blue Shield
+433,711,1760758411,Dr. Jeffrey Schachar,Blue Cross/Blue Shield
+434,655,1245478916,Dr. Alvin Martinez,Blue Cross/Blue Shield
+435,633,1639147911,Dr. Cynthia Baldwin,Blue Cross/Blue Shield
+436,534,1588663363,Dr. Joseph Kerpsack,Blue Cross/Blue Shield
+437,712,1124381108,Dr. Gabriel Valverde Tavarez,Blue Cross/Blue Shield
+438,786,1720196454,Dr. Nathan Hirsch,Blue Cross/Blue Shield
+439,693,1851360945,Dr. Susanne Archer,Blue Cross/Blue Shield
+440,502,1336762681,Dr. Leigh Durudogan,Blue Cross/Blue Shield
+441,587,1033174644,Dr. Emilio Gomez-Madrazo,Blue Cross/Blue Shield
+442,577,1891172201,Dr. Julia Cooper,Blue Cross/Blue Shield
+443,553,1508050162,Dr. Maria Pimentel,Blue Cross/Blue Shield
+444,606,1851612477,Dr. Robert Sherman,Blue Cross/Blue Shield
+445,684,1003815895,Dr. Kelly Vangilder,Blue Cross/Blue Shield
+446,419,1114347655,Dr. Sharise Richardson,Blue Cross/Blue Shield
+447,470,1336200351,Dr. Jorge Pimienta,Blue Cross/Blue Shield
+448,670,1124084413,Dr. Michael Hellinger,Blue Cross/Blue Shield
+449,621,1447250964,Dr. Jose Berthe,Blue Cross/Blue Shield
+450,631,1518145473,Dr. Mark Zakaria,Blue Cross/Blue Shield
+451,791,1669430328,Dr. Randy Fink,Blue Cross/Blue Shield
+452,784,1871084970,Dr. Karan Arora,Blue Cross/Blue Shield
+453,636,1396187449,Dr. Estrella Chavez Benzaquen,Blue Cross/Blue Shield
+454,596,1902301112,Dr. Alexandra Levy,Blue Cross/Blue Shield
+455,514,1205056645,Dr. Joseph Prezzato,Blue Cross/Blue Shield
+456,793,1740542141,Dr. Jennifer Borson,Blue Cross/Blue Shield
+457,713,1003896507,Dr. Jane Matos-Fraebel,Blue Cross/Blue Shield
+458,442,1689802670,Dr. Jenny Valencia,Blue Cross/Blue Shield
+459,767,1699793042,Dr. Julio Arronte,Blue Cross/Blue Shield
+460,777,1902149511,Dr. Brianna Varas,Blue Cross/Blue Shield
+461,479,1023284494,Dr. Rachel Urrutia,Blue Cross/Blue Shield
+462,691,1407829815,Dr. Aimee Ferrandino,Blue Cross/Blue Shield
+463,425,1154614576,Dr. Christopher Bauer,Blue Cross/Blue Shield
+464,568,1417290719,Dr. Philip Cheng,Blue Cross/Blue Shield
+465,798,1376656264,Dr. Daniel Kaelberer,Blue Cross/Blue Shield
+466,545,1235249509,Dr. James Hotaling,Blue Cross/Blue Shield
+467,491,1669496949,Dr. Jaime Santiago-Lopetegui,Blue Cross/Blue Shield
+468,421,1023277704,Dr. Puneet Masson,Blue Cross/Blue Shield
+469,565,1003347055,Dr. Elizabeth Isak,Blue Cross/Blue Shield
+470,595,1346771698,Dr. Jennifer Weiss,Blue Cross/Blue Shield
+471,686,1447612973,Dr. Katherine Garfield,Blue Cross/Blue Shield
+472,483,1154785632,Dr. Jessica Marinaro,Blue Cross/Blue Shield
+473,795,1932490711,Dr. Amy Gueye,Blue Cross/Blue Shield
+474,503,1851880652,Dr. Shelley Dolitsky,Blue Cross/Blue Shield
+475,407,1306073127,Dr. Lethenia Baker,Blue Cross/Blue Shield
+476,650,1922530120,Dr. Victoria Jiang,Blue Cross/Blue Shield
+477,649,1790997443,Dr. Alexander Shapiro,Blue Cross/Blue Shield
+478,750,1700103868,Dr. Ryan Martin,Blue Cross/Blue Shield
+479,461,1790177574,Dr. Rafael Marquez,Blue Cross/Blue Shield
+480,439,1376770370,Dr. Ha Nguyen,Blue Cross/Blue Shield
+481,709,1790834190,Dr. James Leonelli,Blue Cross/Blue Shield
+482,580,1659348563,Dr. Virginia Banks,Blue Cross/Blue Shield
+483,508,1871860510,Dr. Shaunte Gray,Blue Cross/Blue Shield
+484,556,1316309172,Dr. Abigail Armstrong,Blue Cross/Blue Shield
+485,549,1427120948,Dr. Meera Patel,Blue Cross/Blue Shield
+486,696,1598118218,Dr. Kelsey Anderson,Blue Cross/Blue Shield
+487,641,1053717306,Dr. Felix Cohen,Blue Cross/Blue Shield
+488,725,1306005145,Dr. Fahimeh Sasan,Blue Cross/Blue Shield
+489,623,1962433250,Dr. Shayna Rubin,Blue Cross/Blue Shield
+490,692,1689803199,Dr. Sara Rizk,Blue Cross/Blue Shield
+491,706,1326281023,Dr. Amber Jaeger,Blue Cross/Blue Shield
+492,485,1770105405,Dr. Emily Ager,Blue Cross/Blue Shield
+493,785,1629262126,Dr. Marcela Lazo,Blue Cross/Blue Shield
+494,746,1447363478,Dr. Sylvia Siegfried,Blue Cross/Blue Shield
+495,626,1104171297,Dr. Sierra Cuthpert,Blue Cross/Blue Shield
+496,619,1639801947,Dr. Alycia Cucka,Blue Cross/Blue Shield
+497,714,1164467338,Dr. Darcy Bryan,Blue Cross/Blue Shield
+498,625,1790765857,Dr. Beth Diner,Blue Cross/Blue Shield
+499,765,1659682664,Dr. Teri Forney,Blue Cross/Blue Shield
+500,749,1881902823,Dr. Jessica Barker,Blue Cross/Blue Shield
+501,544,1326499849,Dr. David Doyle,Blue Cross/Blue Shield
+502,787,1548840630,Dr. Alyse Victor,Blue Cross/Blue Shield
+503,531,1588834329,Dr. Ana Benitez Prieto,Blue Cross/Blue Shield
+504,603,1336390970,Dr. Melissa Lee,Blue Cross/Blue Shield
+505,788,1457519738,Dr. Eva Crooke,Blue Cross/Blue Shield
+506,537,1982894879,Dr. Jill Botelho,Blue Cross/Blue Shield
+507,411,1225296940,Dr. Nikkita Wilkes,Blue Cross/Blue Shield
+508,471,1437788312,Dr. Kharian Youmans,Blue Cross/Blue Shield
+509,563,1437177334,Dr. Elina Burstyn,Blue Cross/Blue Shield
+510,644,1336366699,Dr. Simone Piraino,Blue Cross/Blue Shield
+511,736,1639261738,Dr. Bruce Breit,Blue Cross/Blue Shield
+512,480,1952807273,Dr. Aimee Bethancourt,Blue Cross/Blue Shield
+513,433,1114347283,Dr. Paul Kuder,Blue Cross/Blue Shield
+514,702,1174552038,Dr. Michelle Luthringshausen,Blue Cross/Blue Shield
+515,612,1851586770,Dr. Karolina Borodo,Blue Cross/Blue Shield
+516,790,1821408287,Dr. Jinny Gunn,Blue Cross/Blue Shield
+517,610,1629042460,Dr. Elliot Cazes,Blue Cross/Blue Shield
+518,772,1508852567,Dr. Allyson Jones,Blue Cross/Blue Shield
+519,672,1174514020,Dr. Marwan Shaykh,Blue Cross/Blue Shield
+520,769,1710340591,Dr. Nicole Melanson,Blue Cross/Blue Shield
+521,402,1639468531,Dr. Joanna Dalton Ayoung,Blue Cross/Blue Shield
+522,695,1104354208,Dr. Margaret Capobianco,Blue Cross/Blue Shield
+523,478,1457660664,Dr. Leslie Bender,Blue Cross/Blue Shield
+524,513,1992019822,Dr. Nadia Pile,Blue Cross/Blue Shield
+525,748,1275783300,Dr. Meredith Martin Johnston,Blue Cross/Blue Shield
+526,659,1457615742,Dr. Ashley Abraham,Blue Cross/Blue Shield
+527,548,1881893212,Dr. Xochitl Garcia,Blue Cross/Blue Shield
+528,724,1386212280,Dr. Nabeel Salka,Blue Cross/Blue Shield
+529,719,1942299045,Dr. Michelle Goldin,Blue Cross/Blue Shield
+530,756,1154859973,Dr. Devoni Bruns,Blue Cross/Blue Shield
+531,476,1053391649,Dr. Carmen Doty-Armstrong,Blue Cross/Blue Shield
+532,436,1396179073,Dr. Robert Drenchko,Blue Cross/Blue Shield
+533,754,1063417137,Dr. Sherri Graf,Blue Cross/Blue Shield
+534,467,1487149779,Dr. Whitney Nieland,Blue Cross/Blue Shield
+535,770,1588609101,Dr. Crista Crisler,Blue Cross/Blue Shield
+536,708,1467016196,Dr. Andres Hernandez,Blue Cross/Blue Shield
+537,629,1861659708,Dr. Alexandria Reyes,Blue Cross/Blue Shield
+538,634,1629247515,Dr. Carlos Reyes,Blue Cross/Blue Shield
+539,600,1093120800,Dr. Shivali Raav,Blue Cross/Blue Shield
+540,710,1740817071,Dr. Sarah Bechay,Blue Cross/Blue Shield
+541,647,1801903372,Dr. David Szentes,Blue Cross/Blue Shield
+542,486,1609866763,Dr. Scott Bowers,Blue Cross/Blue Shield
+543,542,1083772461,Dr. Gretchen Makai,Blue Cross/Blue Shield
+544,721,1265011761,Dr. Alice Cai,Blue Cross/Blue Shield
+545,455,1346216595,Dr. Scott Kagan,Blue Cross/Blue Shield
+546,571,1710953617,Dr. Margaret Nettleton,Blue Cross/Blue Shield
+547,678,1699822320,Dr. Jon Hoversland,Blue Cross/Blue Shield
+548,561,1801359690,Dr. Cody Campbell,Blue Cross/Blue Shield
+549,675,1083636831,Dr. Jennifer Gilbert,Blue Cross/Blue Shield
+550,601,1316948748,Dr. Melissa Delaney,Blue Cross/Blue Shield
+551,797,1891122818,Dr. Dhruv Rathod,Blue Cross/Blue Shield
+552,552,1043892326,Dr. Tyler Desmond,Blue Cross/Blue Shield
+553,538,1194087270,Dr. Paula Edelson,Blue Cross/Blue Shield
+554,500,1205894219,Dr. Alan Donnenfeld,Blue Cross/Blue Shield
+555,734,1720304595,Dr. Suzanne Nogami,Blue Cross/Blue Shield
+556,426,1629284955,Dr. Kim Einhorn,Blue Cross/Blue Shield
+557,468,1609047026,Dr. Sandra Krizmanich,Blue Cross/Blue Shield
+558,632,1790949477,Dr. Francis Esguerra,Blue Cross/Blue Shield
+559,590,1427311729,Dr. Daniel Cibulsky,Blue Cross/Blue Shield
+560,445,1538742028,Dr. Nashali Ferrara,Blue Cross/Blue Shield
+561,512,1093079410,Dr. Sofia Mccotter,Blue Cross/Blue Shield
+562,444,1316938277,Dr. Michael Fesenmeier,Blue Cross/Blue Shield
+563,738,1720125586,Dr. Steven Troy,Blue Cross/Blue Shield
+564,527,1326435645,Dr. Nicole Haslett,Blue Cross/Blue Shield
+565,635,1811991276,Dr. Joseph Castelli,Blue Cross/Blue Shield
+566,657,1316560451,Dr. Hilary Hinton,Blue Cross/Blue Shield
+567,415,1700948395,Dr. David Hadley,Blue Cross/Blue Shield
+568,591,1043232382,Dr. Philip Hirshman,Blue Cross/Blue Shield
+569,550,1821067539,Dr. Amy Cadieux,Blue Cross/Blue Shield
+570,605,1003882978,Dr. Melodie Icasiano,Blue Cross/Blue Shield
+571,584,1104260686,Dr. Rohini Sarin Oneil,Blue Cross/Blue Shield
+572,507,1770795106,Dr. Lea Isaac,Blue Cross/Blue Shield
+573,735,1730470402,Dr. Catherine Bailey,Blue Cross/Blue Shield
+574,516,1619555968,Dr. Connell Kling,Blue Cross/Blue Shield
+575,682,1295116309,Dr. Kristin Kean,Blue Cross/Blue Shield
+576,551,1770539314,Dr. Ravy Lu,Blue Cross/Blue Shield
+577,569,1669470126,Dr. George Talbot,Blue Cross/Blue Shield
+578,525,1013903541,Dr. Jonathan Lupton,Blue Cross/Blue Shield
+579,403,1952450652,Dr. Rakhi Shah,Blue Cross/Blue Shield
+580,526,1902187867,Dr. Natasha Harvey,Blue Cross/Blue Shield
+581,648,1598723819,Dr. Helene Koch,Blue Cross/Blue Shield
+582,432,1538320783,Dr. Dana Mahlab,Blue Cross/Blue Shield
+583,589,1235440140,Dr. Katherine Bohnert,Blue Cross/Blue Shield
+584,646,1982164695,Dr. Cynthia Mckinney,Blue Cross/Blue Shield
+585,474,1447546338,Dr. Jacqueline Kohl,Blue Cross/Blue Shield
+586,656,1144386582,Dr. Stephanie Mcknight,Blue Cross/Blue Shield
+587,477,1548619596,Dr. Christian Dawes,Blue Cross/Blue Shield
+588,800,1073073565,Dr. Caroline Mecker,Blue Cross/Blue Shield
+589,774,1417190125,Dr. Valerie Gathers,Blue Cross/Blue Shield
+590,662,1386692028,Dr. Michelle Neff,Blue Cross/Blue Shield
+591,608,1457768178,Dr. Lauren Mason-Cederberg,Blue Cross/Blue Shield
+592,448,1386214641,Dr. Savannah Nightingale,Blue Cross/Blue Shield
+593,463,1275543720,Dr. Sandra Neal,Blue Cross/Blue Shield
+594,733,1265432397,Dr. Soheyla Pezeshki,Blue Cross/Blue Shield
+595,592,1366436388,Dr. Akemi Nakanishi,Blue Cross/Blue Shield
+596,716,1174515035,Dr. Anita Iyer,Blue Cross/Blue Shield
+597,446,1629496294,Dr. Justen Sumner,Blue Cross/Blue Shield
+598,574,1952381196,Dr. Suzanne Pugh,Blue Cross/Blue Shield
+599,637,1508858614,Dr. Scott Dinesen,Blue Cross/Blue Shield
+600,739,1356871917,Dr. Gabriella Pugliese,Blue Cross/Blue Shield
+601,495,1265963615,Dr. Mary Lynch,Blue Cross/Blue Shield
+602,796,1497307052,Dr. Samantha So,Blue Cross/Blue Shield
+603,454,1225025547,Dr. Daniel Roshan,Blue Cross/Blue Shield
+604,699,1295735934,Dr. Charles Touey,Blue Cross/Blue Shield
+605,671,1861651176,Dr. Sara Rinala,Blue Cross/Blue Shield
+606,775,1881669356,Dr. Elizabeth Venard,Blue Cross/Blue Shield
+607,489,1467686162,Dr. Diana Huang,Blue Cross/Blue Shield
+608,501,1932786480,Dr. Tery Vinh,Blue Cross/Blue Shield
+609,404,1679838296,Dr. Ruchira Sharma,Blue Cross/Blue Shield
+610,705,1578067187,Dr. Catherine Yu,Blue Cross/Blue Shield
+611,624,1952530628,Dr. Virginia Smith,Blue Cross/Blue Shield
+612,484,1437144839,Dr. Akram Zalatimo,Blue Cross/Blue Shield
+613,543,1760644090,Dr. Karen Wolowick,Blue Cross/Blue Shield
+614,757,1275641003,Dr. Robin Whatley,Blue Cross/Blue Shield
+615,469,1972578375,Dr. Bridget Frangella,Blue Cross/Blue Shield
+616,515,1740374909,Dr. Donna Sweetland,Blue Cross/Blue Shield
+617,640,1700084779,Dr. Alka Bennion,Blue Cross/Blue Shield
+618,715,1437140589,Dr. Judy Tom,Blue Cross/Blue Shield
+619,418,1942643895,Dr. Lauren Maher,Blue Cross/Blue Shield
+620,458,1831415231,Dr. James Miller,Blue Cross/Blue Shield
+621,667,1376574673,Dr. Antonia Williams,Blue Cross/Blue Shield
+622,519,1740244383,Dr. Lance Radbill,Blue Cross/Blue Shield
+623,759,1629464003,Dr. Shruti Bala,Blue Cross/Blue Shield
+624,668,1417026188,Dr. Stephanie Chin,Blue Cross/Blue Shield
+625,417,1750481610,Dr. Shahla Ighani,Blue Cross/Blue Shield
+626,604,1518196443,Dr. Anna Nelson-Moseke,Blue Cross/Blue Shield
+627,576,1366633620,Dr. Stephanie Mayes,Blue Cross/Blue Shield
+628,506,1972777134,Dr. Emily Cyr,Blue Cross/Blue Shield
+629,546,1619271947,Dr. Carlos Flores,Blue Cross/Blue Shield
+630,653,1053653105,Dr. Lia Labrant,Blue Cross/Blue Shield
+631,789,1689661928,Dr. Jose Picazo,Blue Cross/Blue Shield
+632,660,1831124270,Dr. Diane Mccracken,Blue Cross/Blue Shield
+633,762,1447341920,Dr. Anthony Sciscione,Blue Cross/Blue Shield
+634,412,1699941989,Dr. Jessica Apel,Blue Cross/Blue Shield
+635,453,1700043460,Dr. Abby Otto,Blue Cross/Blue Shield
+636,799,1578721155,Dr. Lina Millan,Blue Cross/Blue Shield
+637,408,1316234081,Dr. Karanvir Virk,Blue Cross/Blue Shield
+638,766,1083633101,Dr. Kimberly Mcintosh,Blue Cross/Blue Shield
+639,492,1972504488,Dr. Clyde Jacob,Blue Cross/Blue Shield
+640,462,1881859825,Dr. Maria Bendana,Blue Cross/Blue Shield
+641,566,1194820753,Dr. Ruthann Rees,Blue Cross/Blue Shield
+642,523,1962575597,Dr. Michael Dempsey,Blue Cross/Blue Shield
+643,676,1700998366,Dr. Michael Noone,Blue Cross/Blue Shield
+644,465,1275620700,Dr. Kathryn Ray,Blue Cross/Blue Shield
+645,614,1669562880,Dr. Steven Valfer,Blue Cross/Blue Shield
+646,728,1104454545,Dr. Natalia J,Blue Cross/Blue Shield
+647,652,1801355243,Dr. Petra Voigt,Blue Cross/Blue Shield
+648,518,1851956353,Dr. Nancy Singh,Blue Cross/Blue Shield
+649,755,1073904256,Dr. Andrew Ewbank,Blue Cross/Blue Shield
+650,698,1639129455,Dr. Ronald Miller,Blue Cross/Blue Shield
+651,575,1275618985,Dr. Scott Multack,Blue Cross/Blue Shield
+652,743,1093078388,Dr. Bishara Facs,Blue Cross/Blue Shield
+653,488,1619157526,Dr. Kathleen Slugocki,Blue Cross/Blue Shield
+654,679,1952332165,Dr. John Bush,Blue Cross/Blue Shield
+655,440,1699760108,Dr. Kristin Mcday,Blue Cross/Blue Shield
+656,562,1952835829,Dr. Ahmad Kerr,Blue Cross/Blue Shield
+657,578,1457437162,Dr. Jennifer Santiago,Blue Cross/Blue Shield
+658,694,1609286848,Dr. Kirsten Ely,Blue Cross/Blue Shield
+659,524,1376528265,Dr. Michelle Spector,Blue Cross/Blue Shield
+660,598,1942645874,Dr. Arifa Khokar,Blue Cross/Blue Shield
+661,520,1053308411,Dr. Steven Lacher,Blue Cross/Blue Shield
+662,581,1194380428,Dr. Ibrahim Tsolakian,Blue Cross/Blue Shield
+663,630,1083868764,Dr. Sami Mufarrij,Blue Cross/Blue Shield
+664,689,1144858689,Dr. Andre Hall,Blue Cross/Blue Shield
+665,651,1245505684,Dr. Latasha Murphy,Blue Cross/Blue Shield
+666,573,1700413499,Dr. Mary Ahern,Blue Cross/Blue Shield
+667,535,1750474813,Dr. Daniel Greene,Blue Cross/Blue Shield
+668,720,1508902370,Dr. Carole Condevaux,Blue Cross/Blue Shield
+669,487,1295705168,Dr. Lisa Gilbertahee,Blue Cross/Blue Shield
+670,737,1801235148,Dr. Steven Lefkowitz,Blue Cross/Blue Shield
+671,473,1902862436,Dr. Michele Thomas,Blue Cross/Blue Shield
+672,599,1588678932,Dr. Andrea Schiller,Blue Cross/Blue Shield
+673,776,1477711158,Dr. Lauren Callahan,Blue Cross/Blue Shield
+674,582,1457693293,Dr. Cassandra Mscp,Blue Cross/Blue Shield
+675,620,1437354099,Dr. Matthew Palmer,Blue Cross/Blue Shield
+676,663,1114216355,Dr. Megan Bina,Blue Cross/Blue Shield
+677,732,1659678753,Dr. Vanessa Knoedler,Blue Cross/Blue Shield
+678,597,1699949776,Dr. Georgina Greil,Blue Cross/Blue Shield
+679,758,1225415789,Dr. Lindsay Lewis,Blue Cross/Blue Shield
+680,482,1477933513,Dr. Annalise Almdale,Blue Cross/Blue Shield
+681,416,1174966808,Dr. Erin Stevens,Blue Cross/Blue Shield
+682,511,1255913141,Dr. Brianna Dickson,Blue Cross/Blue Shield
+683,747,1164746772,Dr. Golnaz Alemi,Blue Cross/Blue Shield
+684,564,1629031117,Dr. Sheldon Paul,Blue Cross/Blue Shield
+685,782,1477896702,Dr. Philip Mclemore,Blue Cross/Blue Shield
+686,674,1457808651,Dr. Brian Vu,Blue Cross/Blue Shield
+687,792,1366550188,Dr. Robi Burns,Blue Cross/Blue Shield
+688,510,1598764771,Dr. Keith Brill,Blue Cross/Blue Shield
+689,572,1063602597,Dr. Elena Zenkin,Blue Cross/Blue Shield
+690,661,1720582737,Dr. Haleigh Edgar,Blue Cross/Blue Shield
+691,697,1619932506,Dr. Linh Nguyen,Blue Cross/Blue Shield
+692,669,1831501055,Dr. Navpreet Chattha,Blue Cross/Blue Shield
+693,505,1114908480,Dr. Paul Neumann,Blue Cross/Blue Shield
+694,677,1912303033,Dr. Masuma Bahora,Blue Cross/Blue Shield
+695,778,1952373912,Dr. Lisa Eng,Blue Cross/Blue Shield
+696,481,1265530679,Dr. Audrey Buxbaum,Blue Cross/Blue Shield
+697,740,1205276193,Dr. Peter Sticco,Blue Cross/Blue Shield
+698,428,1710927363,Dr. Matthew Dilena,Blue Cross/Blue Shield
+699,528,1164420493,Dr. Evan Shapiro,Blue Cross/Blue Shield
+700,704,1902977796,Dr. Gary Levine,Blue Cross/Blue Shield
+701,753,1225290455,Dr. Renata Scott-Ram,Blue Cross/Blue Shield
+702,594,1619053535,Dr. Yulia Aronovich,Blue Cross/Blue Shield
+703,611,1114373784,Dr. James Miller,Blue Cross/Blue Shield
+704,459,1932194743,Dr. Claire Harraghy,Blue Cross/Blue Shield
+705,541,1871759258,Dr. Li Xu,Blue Cross/Blue Shield
+706,406,1437264389,Dr. Zoe Beatty,Blue Cross/Blue Shield
+707,579,1104182385,Dr. Diana Mccarthy,Blue Cross/Blue Shield
+708,643,1275500779,Dr. Katherine Barrett,Blue Cross/Blue Shield
+709,673,1265745327,Dr. Elizabeth England,Blue Cross/Blue Shield
+710,639,1982936860,Dr. Ladson Gaddy-Dubac,Blue Cross/Blue Shield
+711,665,1205869096,Dr. Anna Tatarchuk,Blue Cross/Blue Shield
+712,615,1083076236,Dr. Kirsten Beeson,Blue Cross/Blue Shield
+713,437,1568464568,Dr. Joel Kramer,Blue Cross/Blue Shield
+714,681,1407903495,Dr. Jocelyn Craparo,Blue Cross/Blue Shield
+715,517,1144885997,Dr. Lauren Roberts,Blue Cross/Blue Shield
+716,781,1265842090,Dr. Mais Arwani,Blue Cross/Blue Shield
+717,429,1295938090,Dr. Carmen Selman,Blue Cross/Blue Shield
+718,638,1235118399,Dr. Kompal Gadh,Blue Cross/Blue Shield
+719,726,1215466818,Dr. Kylee Clyatt,Blue Cross/Blue Shield
+720,434,1174514061,Dr. Dipti Shah-Parikh,Blue Cross/Blue Shield
+721,521,1689837015,Dr. Caton Simoni,Blue Cross/Blue Shield
+722,723,1841635851,Dr. Brittney Schumann,Blue Cross/Blue Shield
+723,475,1730360439,Dr. Beth Thai,Blue Cross/Blue Shield
+724,494,1821288465,Dr. Kelly Montiville,Blue Cross/Blue Shield
+725,539,1588898415,Dr. Arminda Callejas Weintz,Blue Cross/Blue Shield
+726,761,1275736092,Dr. Christi Kidd,Blue Cross/Blue Shield
+727,499,1851647887,Dr. Marianne Peck,Blue Cross/Blue Shield
+728,460,1346486743,Dr. Jennifer Huebner,Blue Cross/Blue Shield
+729,497,1295868883,Dr. John Visintine,Blue Cross/Blue Shield
+730,422,1508862723,Dr. Benjamin Supnet,Blue Cross/Blue Shield
+731,751,1194879445,Dr. Andrew Engel,Blue Cross/Blue Shield
+732,533,1356795595,Dr. Sharon Kim,Blue Cross/Blue Shield
+733,703,1407266901,Dr. Maria Munoz,Blue Cross/Blue Shield
+734,457,1831280452,Dr. Josie Stone,Blue Cross/Blue Shield
+735,567,1093700072,Dr. Prafulla Koneru,Blue Cross/Blue Shield
+736,745,1093203036,Dr. Nicole Lomotan,Blue Cross/Blue Shield
+737,794,1841324514,Dr. Freddy Montero,Blue Cross/Blue Shield
+738,466,1902987977,Dr. Amy Sonnenblick,Blue Cross/Blue Shield
+739,768,1013012541,Dr. Marie Carmelle Liburd,Blue Cross/Blue Shield
+740,529,1023041688,Dr. Alexandria Angelides,Blue Cross/Blue Shield
+741,783,1649251729,Dr. James Mcbride,Blue Cross/Blue Shield
+742,664,1467984831,Dr. Myah Bell,Blue Cross/Blue Shield
+743,522,1043284425,Dr. Leroy Charles,Blue Cross/Blue Shield
+744,617,1073518130,Dr. Lawrence Bergman,Blue Cross/Blue Shield
+745,717,1356735542,Dr. Stephanie Roy,Blue Cross/Blue Shield
+746,701,1629572847,Dr. Huiwen Liu,Blue Cross/Blue Shield
+747,450,1457335499,Dr. Katia Apollon,Blue Cross/Blue Shield
+748,764,1437117793,Dr. Andrew Shapiro,Blue Cross/Blue Shield
+749,718,1457374068,Dr. Jorge Gomez,Blue Cross/Blue Shield
+750,779,1225142938,Dr. Jaime Mercado,Blue Cross/Blue Shield
+751,752,1457731994,Dr. Frances Perez-Suarez,Blue Cross/Blue Shield
+752,509,1114949559,Dr. Cecilia Grande,Blue Cross/Blue Shield
+753,540,1144532805,Dr. Leigh Behring,Blue Cross/Blue Shield
+754,423,1003308057,Dr. Jessica Frost,Blue Cross/Blue Shield
+755,722,1265432785,Dr. Bruce Zafran,Blue Cross/Blue Shield
+756,688,1508063041,Dr. Carlos Barrionuevo,Blue Cross/Blue Shield
+757,744,1669979795,Dr. Priyanga Jeyasri,Blue Cross/Blue Shield
+758,438,1306336706,Dr. Samantha Seidor,Blue Cross/Blue Shield
+759,654,1578615084,Dr. Anne Petit,Blue Cross/Blue Shield
+760,727,1972513935,Dr. Marc Siegel,Blue Cross/Blue Shield
+761,498,1376785881,Dr. Jacqueline Roman,Blue Cross/Blue Shield
+762,427,1548467137,Dr. John Vaclavik,Blue Cross/Blue Shield
+763,771,1780818146,Dr. Eric Liberman,Blue Cross/Blue Shield
+764,609,1568952877,Dr. Grace Wey,Blue Cross/Blue Shield
+765,447,1952411696,Dr. Amy Harvey O'Keeffe,Blue Cross/Blue Shield
+766,420,1013438308,Dr. Jessica Williams,Blue Cross/Blue Shield
+767,451,1811955628,Dr. Timothy Hale,Blue Cross/Blue Shield
+768,780,1144280553,Dr. Cindy Joslyn,Blue Cross/Blue Shield
+769,452,1598759334,Dr. Mark Simonelli,Blue Cross/Blue Shield
+770,493,1174574008,Dr. Kerri Osterhaus-Houle,Blue Cross/Blue Shield
+771,490,1619076403,Dr. Daniel Gottschall,Blue Cross/Blue Shield
+772,700,1801459706,Dr. Amalia Kotlyar,Blue Cross/Blue Shield
+773,607,1851354534,Dr. Linda Matonis,Blue Cross/Blue Shield
+774,472,1588678270,Dr. Thomas Helm,Blue Cross/Blue Shield
+775,583,1730408535,Dr. Magdalena Szutowska,Blue Cross/Blue Shield
+776,430,1184727265,Dr. Gene Freylikhman,Blue Cross/Blue Shield
+777,401,1336174416,Dr. Wendy Cervi,Blue Cross/Blue Shield
+778,586,1538570833,Dr. Kristin Kinsler,Blue Cross/Blue Shield
+779,680,1891358891,Dr. Katrina Marcinkowski,Blue Cross/Blue Shield
+780,760,1831696277,Dr. Molly Amero,Blue Cross/Blue Shield
+781,593,1952465163,Dr. Eddy Joseph,Blue Cross/Blue Shield
+782,730,1427081736,Dr. Dilip Bharucha,Blue Cross/Blue Shield
+783,414,1285716829,Dr. Elizabeth Ramirez,Blue Cross/Blue Shield
+784,658,1720045750,Dr. Abigail Gleason,Blue Cross/Blue Shield
+785,627,1457328064,Dr. Paul Vetter,Blue Cross/Blue Shield
+786,558,1134217292,Dr. Arthur Gross,Blue Cross/Blue Shield
+787,773,1952488280,Dr. Norma Milanes Roberts,Blue Cross/Blue Shield
+788,560,1992740385,Dr. Marianne Herrighty,Blue Cross/Blue Shield
+789,435,1295018133,Dr. Rebecca Metz,Blue Cross/Blue Shield
+790,413,1700951589,Dr. Alissa Kaye,Blue Cross/Blue Shield
+791,557,1154530301,Dr. Adebola Nnewihe,Blue Cross/Blue Shield
+792,707,1720050776,Dr. Philip Korzeniowski,Blue Cross/Blue Shield
+793,588,1932139631,Dr. Sardana Belkin,Blue Cross/Blue Shield
+794,642,1730259094,Dr. Peter Mandel,Blue Cross/Blue Shield
+795,431,1376920165,Dr. Daniel Martingano,Blue Cross/Blue Shield
+796,570,1124069018,Dr. Bharti Mavani,Blue Cross/Blue Shield
+797,602,1023041100,Dr. Natalia Rezvina,Blue Cross/Blue Shield
+798,687,1154310811,Dr. Daniel Morgan,Blue Cross/Blue Shield
+799,410,1487747283,Dr. Robin Wilson-Smith,Blue Cross/Blue Shield
+800,731,1033520838,Dr. Sabrina Rabau,Blue Cross/Blue Shield

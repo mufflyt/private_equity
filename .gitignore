@@ -28,6 +28,17 @@ redcap_physician_name_choices*.txt
 !analysis_manifest.csv
 !power_analysis_new_results.csv
 
+# Fielded REDCap artifacts. Versioned deliberately, despite the blanket *.csv / *.xlsx rules
+# and despite carrying provider data, because this repository is private and single-owner and
+# because the alternative -- these files living only in a Downloads folder -- is what produced
+# two near-misses: an obsolete calling sheet nearly emailed to the caller, and a slot crosswalk
+# that cannot be regenerated if lost. See docs/APPENDIX_RECORD_BLINDING.md.
+#
+# Two of these carry the ownership label and must never leave the study team. If a caller is
+# ever granted access to this repository, move them out first.
+!redcap/
+!redcap/**
+
 # Local virtualenv
 .venv/
 

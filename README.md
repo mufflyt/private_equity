@@ -268,6 +268,8 @@ dropdown. The cause was in `build_200_redcap_import.R`, which numbered rows afte
 `arrange(pair, PE_or_Not)`; "Non-PE" sorts before "PE", so the ordering itself encoded the
 arm. Record ids are now assigned by `assign_blinded_slots()`, which guarantees each arm holds
 exactly half the odd and half the even ids and no pair lands on consecutive ids.
+Written up in full in [`docs/APPENDIX_RECORD_BLINDING.md`](docs/APPENDIX_RECORD_BLINDING.md),
+and the rebuilt artifacts are committed under [`redcap/`](redcap/).
 `tests/testthat/test-blinded-slot-assignment.R` reconstructs the old ordering, proves it
 leaks, and holds the new one to both invariants across 40 seeds; it needs no cohort CSV, so
 CI enforces it. The permutation is seeded but no longer derivable from the sheet, so the
