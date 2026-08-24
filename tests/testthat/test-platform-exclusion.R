@@ -14,7 +14,7 @@ rd <- function(f) utils::read.csv(f, colClasses = "character", check.names = FAL
 EXCLUDED <- c("CCRM Fertility", "IVI RMA Global", "US Fertility", "Kindbody",
               "OB Hospitalist Group")
 
-sheet  <- rd(p("pe_obgyn_final_calling_sheet_200.csv"))
+sheet  <- rd(p("pe_obgyn_final_calling_sheet_200_dedup.csv"))
 pool   <- rd(p("pe_obgyn_matched_calling_list.csv"))
 db     <- rd(p("pe_obgyn_study_database.csv"))
 roster <- rd(p("pe_obgyn_providers_active.csv"))

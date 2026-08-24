@@ -11,7 +11,7 @@ psm   <- readLines(p("build_matched_control_group_psm.R"))
 sub3  <- readLines(p("subsample_300_pairs.R"))
 imp2  <- readLines(p("build_200_redcap_import.R"))
 db    <- rd(p("pe_obgyn_study_database.csv"))
-sheet <- rd(p("pe_obgyn_final_calling_sheet_200.csv"))
+sheet <- rd(p("pe_obgyn_final_calling_sheet_200_dedup.csv"))
 
 # ---------------------------------------------------------------- BVA (3)
 

@@ -8,7 +8,7 @@ root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
 p <- function(...) file.path(root, ...)
 rd <- function(f) utils::read.csv(f, colClasses = "character", check.names = FALSE)
 
-sheet  <- rd(p("pe_obgyn_final_calling_sheet_200.csv"))
+sheet  <- rd(p("pe_obgyn_final_calling_sheet_200_dedup.csv"))
 pool   <- rd(p("pe_obgyn_matched_calling_list.csv"))
 db     <- rd(p("pe_obgyn_study_database.csv"))
 ms     <- readLines(p("manuscript", "manuscript_cite.md"))
@@ -19,7 +19,7 @@ n_field  <- length(unique(sheet[["Matched Pair ID"]]))
 n_states <- length(unique(sheet$State))
 
 mtime <- function(f) if (file.exists(p(f))) file.info(p(f))$mtime else NA
-cohort_time <- mtime("pe_obgyn_final_calling_sheet_200.csv")
+cohort_time <- mtime("pe_obgyn_final_calling_sheet_200_dedup.csv")
 
 # ---------------------------------------------------------------- BVA (3)
 

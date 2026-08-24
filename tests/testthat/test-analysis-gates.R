@@ -7,7 +7,7 @@
 root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
 p <- function(...) file.path(root, ...)
 
-sheet <- utils::read.csv(p("pe_obgyn_final_calling_sheet_200.csv"), check.names = FALSE)
+sheet <- utils::read.csv(p("pe_obgyn_final_calling_sheet_200_dedup.csv"), check.names = FALSE)
 sheet$CDC_SVI_real <- suppressWarnings(as.numeric(sheet$CDC_SVI_real))
 sheet$SIMULATED_CDC_SVI <- suppressWarnings(as.numeric(sheet$SIMULATED_CDC_SVI))
 man <- read_manifest(p("analysis_manifest.csv"))
@@ -76,13 +76,28 @@ test_that("BVA: the family check catches out-of-range and non-integer values", {
 # ---------------------------------------------------------------- missingness gate
 
 test_that("adversarial: the missingness gate reproduces and rejects the original SVI pattern", {
-  # 200/200 PE and 106/200 control, which is what shipped.
-  expect_error(gate_missingness(sheet, "SIMULATED_CDC_SVI"), "depends on PE_or_Not")
+  # The shipped defect: SVI present for 200/200 PE and 106/200 control. It is CONSTRUCTED here
+  # rather than read from the sheet. It used to be read from pe_obgyn_final_calling_sheet_200.csv,
+  # which is not the fielded roster -- so this test was asserting a property of a cohort nobody
+  # is calling, and it would have gone green for the wrong reason the moment that file changed.
+  # The defect is historical; the gate that catches it must not be.
+  d <- data.frame(PE_or_Not = rep(c("Non-PE", "PE"), each = 200),
+                  shipped_svi = c(c(runif(106), rep(NA_real_, 94)), runif(200)))
+  expect_error(gate_missingness(d, "shipped_svi"), "depends on PE_or_Not")
   # The message must carry the per-arm counts, not only a p-value, so the reader can see the
   # pattern rather than take the test's word for it.
-  msg <- tryCatch(gate_missingness(sheet, "SIMULATED_CDC_SVI"), error = conditionMessage)
+  msg <- tryCatch(gate_missingness(d, "shipped_svi"), error = conditionMessage)
   expect_match(msg, "94 / 0")
   expect_match(msg, "complete-case")
+})
+
+test_that("the fielded cohort no longer carries that pattern", {
+  # What the fix actually bought. SIMULATED_CDC_SVI is complete on the fielded sheet, and the
+  # reconstructed column's gaps are 2 control / 3 PE, which is not exposure-dependent.
+  expect_false(any(is.na(sheet$SIMULATED_CDC_SVI)))
+  out <- gate_missingness(sheet, "CDC_SVI_real")
+  expect_false(any(out$dependent))
+  expect_equal(sum(is.na(sheet$CDC_SVI_real)), 5L)
 })
 
 test_that("the missingness gate accepts the reconstructed covariate", {
@@ -153,18 +168,19 @@ test_that("the missingness gate reports counts, n and a p-value per covariate", 
   expect_false(any(out$dependent))
 })
 
-test_that("the exposure-dependent missingness is the whole covariate block, not only SVI", {
-  # 11 columns share one pattern: absent for 94 controls and present for every PE clinician.
-  # Recorded here so a future reader does not read the SVI gate failure as an SVI-only problem.
+test_that("the covariate block is complete on the fielded cohort", {
+  # CONTRACT CHANGED. This asserted the 94-control / 0-PE block across eleven columns. That
+  # block is real, but it is in pe_obgyn_final_calling_sheet_200.csv -- the roster that is NOT
+  # fielded. On the cohort actually being called these columns are complete, so asserting the
+  # defect here would fail for the right reason and mislead for the wrong one.
   block <- c("SIMULATED_CDC_SVI", "Medicaid_Fee_Index", "PE_Concentration_15mi",
              "HQ_Distance_Miles")
   for (v in block) {
-    n_ctrl <- sum(is.na(sheet[[v]]) & sheet$PE_or_Not == "Non-PE")
-    n_pe   <- sum(is.na(sheet[[v]]) & sheet$PE_or_Not == "PE")
-    expect_equal(c(n_ctrl, n_pe), c(94L, 0L),
-                 info = sprintf("%s no longer matches the known block pattern", v))
+    expect_false(any(is.na(sheet[[v]])),
+                 info = sprintf("%s has gone missing on the fielded sheet", v))
   }
-  expect_error(gate_missingness(sheet, block), "depends on PE_or_Not")
+  out <- gate_missingness(sheet, block)
+  expect_false(any(out$dependent))
 })
 
 test_that("BVA: the missingness gate honours alpha at the boundary", {
@@ -257,8 +273,10 @@ test_that("adversarial: the clustering gate rejects a unit with blank values", {
 })
 
 test_that("the clustering gate reports the structure the audit found", {
-  expect_true(gate_clustering(sheet, "phone_id", expect_n = 385L, max_size = 4L))
-  expect_error(gate_clustering(sheet, "phone_id", expect_n = 400L), "385 clusters")
+  # 387 practice lines for 400 fielded clinicians: 376 lines carry one, 9 carry two, 2 carry
+  # three. The 385 / max 4 figures this used to assert belong to the unfielded roster.
+  expect_true(gate_clustering(sheet, "phone_id", expect_n = 387L, max_size = 3L))
+  expect_error(gate_clustering(sheet, "phone_id", expect_n = 400L), "387 clusters")
 })
 
 test_that("adversarial: the analytic-N gate catches obtainment censoring", {

@@ -40,3 +40,11 @@ calls_per_phone,derived,count,build_phone_cluster_vars.R,Two per clinician on th
 pairs_per_phone,derived,count,build_phone_cluster_vars.R,
 same_phone_within_pair,derived,categorical,build_phone_cluster_vars.R,TRUE for pair_321 and pair_437.
 same_address_within_pair,derived,categorical,build_phone_cluster_vars.R,FALSE throughout the fielded sample.
+NPPES_Credential,measured,categorical,"CMS NPPES NPI Registry API, retrieved 2026-08-24",
+NPPES_Taxonomy,measured,categorical,"CMS NPPES NPI Registry API, retrieved 2026-08-24",
+NPPES_Taxonomy_Code,measured,identifier,"CMS NPPES NPI Registry API, retrieved 2026-08-24",
+Taxonomy_Is_OBGYN,derived,categorical,Derived from NPPES_Taxonomy: any taxonomy matching Obstetrics or Gynecolog,
+Eligible_MD_DO_OBGYN,derived,categorical,"Derived: Credentials in (MD, DO) AND Taxonomy_Is_OBGYN",
+Platform,measured,categorical,pe_obgyn_providers_active.csv Platform/Practice,
+Platform_Excluded,derived,categorical,Derived: Platform in the five protocol-excluded platforms,
+Eligible,derived,categorical,Derived: Eligible_MD_DO_OBGYN AND NOT Platform_Excluded,

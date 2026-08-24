@@ -2,7 +2,7 @@
 # Build the REDCap load files for the fielded 200-pair / 800-call set.
 #
 # GUARD (changed 2026-08-09): this script used to *re-derive* the fielded 200 from
-# pe_obgyn_final_calling_sheet_300.csv and overwrite pe_obgyn_final_calling_sheet_200.csv
+# pe_obgyn_final_calling_sheet_300.csv and overwrite pe_obgyn_final_calling_sheet_200_dedup.csv
 # as a side effect of building the REDCap files. That silently destroys any downstream
 # correction to the fielded sheet -- in particular the office de-duplication produced by
 # dedup_offices_and_backfill_200.R, which cannot be reproduced from the 300-pair sheet at
@@ -28,7 +28,7 @@ source(file.path(dirname(sub("^--file=", "", grep("^--file=", commandArgs(FALSE)
                                                   value = TRUE)[1])), "R", "pe_helpers.R"))
 
 SHEET300 <- "pe_obgyn_final_calling_sheet_300.csv"
-SHEET    <- "pe_obgyn_final_calling_sheet_200.csv"
+SHEET    <- "pe_obgyn_final_calling_sheet_200_dedup.csv"
 FORM     <- "acost_three_dx_urogyn_2"
 N_TARGET <- 200L                       # pairs
 ARMS     <- c("Medicaid", "Blue Cross/Blue Shield")

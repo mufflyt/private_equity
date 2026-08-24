@@ -7,7 +7,7 @@ root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
 p <- function(...) file.path(root, ...)
 rd <- function(f) utils::read.csv(f, colClasses = "character", check.names = FALSE)
 
-sheet <- rd(p("pe_obgyn_final_calling_sheet_200.csv"))
+sheet <- rd(p("pe_obgyn_final_calling_sheet_200_dedup.csv"))
 db    <- rd(p("pe_obgyn_study_database_with_churn.csv"))
 k_db  <- npi_key(db$NPI)
 blank <- !nzchar(k_db) | is.na(k_db)

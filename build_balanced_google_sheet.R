@@ -24,7 +24,7 @@ suppressMessages(library(mysterycall))
 #'   original survives a re-run.
 #' @return (Invisibly) the ordered data frame that was written.
 build_balanced_google_sheet <- function(
-    src         = "pe_obgyn_final_calling_sheet_200.csv",
+    src         = "pe_obgyn_final_calling_sheet_200_dedup.csv",
     out         = "Gatson_mystery_phase1_needs_be_called.csv",
     backup      = "Gatson_mystery_phase1_ORIGINAL_backup.csv",
     study_title = "Gatson and Muffly Mystery Caller Study",
