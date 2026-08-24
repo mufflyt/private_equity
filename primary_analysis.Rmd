@@ -1,0 +1,338 @@
+---
+title: "Private vs. Public: Does Equity Ownership Influence OB/GYN Appointment Wait Times?"
+subtitle: "Primary pre-registered analysis"
+author: "Muffly T, Gatson T"
+date: "`r format(Sys.Date())`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE)
+suppressMessages({
+  library(readr); library(dplyr); library(tidyr); library(glmmTMB); library(gt)
+})
+root <- normalizePath(".", mustWork = TRUE)
+source(file.path(root, "R", "pe_helpers.R"))
+source(file.path(root, "R", "analysis_gates.R"))
+```
+
+# Status
+
+**This document has not produced a result yet.** It is the real primary analysis, pre-staged
+against the frozen [`SAP.lock`](SAP.lock) so that when calling finishes, running it end to end
+*is* the analysis -- no script is written after the outcomes exist. Every model, gate, and table
+below runs on real fielded data; nothing in this file simulates, infers, or backfills a number.
+
+The setup chunk below fails loudly and stops the knit if the required input is not yet present,
+rather than falling back to anything else. That is deliberate: `dry_run_analysis.R` is the
+rehearsal-with-simulated-outcomes script; this file is not it and must never grow a simulation
+fallback to make itself runnable early.
+
+```{r require-real-data}
+DB_PATH <- file.path(root, "pe_obgyn_study_database.csv")
+
+if (!file.exists(DB_PATH)) {
+  stop(
+    "\n\n  primary_analysis.Rmd cannot run: ", DB_PATH, " does not exist yet.\n",
+    "  This file is the real fielded database with call outcomes merged in -- it does not\n",
+    "  exist until calling finishes and the REDCap export (redcap/pe_mystery_caller_call_sheet_400.csv\n",
+    "  or a later export against the same instrument) is merged onto the fielded sheet.\n\n",
+    "  That merge step -- REDCap raw fields (calldate1/calldate2, appdate, holdtime, transfers,\n",
+    "  contacted1/contacted2) -> obtained / business_days_until_appointment / call_date /\n",
+    "  appointment_date / hold_time / transfers -- does not exist in this repo yet either. It is a\n",
+    "  separate, not-yet-written script, not something to improvise inside this analysis file.\n",
+    "  Write it, derive obtained/business_days_until_appointment there via\n",
+    "  mysterycall::mysterycall_count_business_days(), and verify its output with\n",
+    "  gate_business_days_correct() before this file is run for real.\n",
+    call. = FALSE
+  )
+}
+
+REQUIRED_COLS <- c("NPI", "Matched Pair ID", "PE_or_Not", "State",
+                   "obtained", "business_days_until_appointment",
+                   "call_date", "appointment_date", "hold_time", "transfers",
+                   "phone_id", "same_phone_within_pair", "SVI_geocode_via",
+                   "Eligible", "Taxonomy_Is_OBGYN", "Platform_Excluded")
+db <- read_csv(DB_PATH, show_col_types = FALSE)
+miss <- setdiff(REQUIRED_COLS, names(db))
+if (length(miss)) {
+  stop("\n\n  ", DB_PATH, " is missing required column(s): ", paste(miss, collapse = ", "),
+       "\n  This is not something to work around by relaxing the check -- either the merge\n",
+       "  script that produces this file needs to write these columns, or the analytic\n",
+       "  population columns (Eligible, Taxonomy_Is_OBGYN, Platform_Excluded; see SAP.lock's\n",
+       "  2026-08-24 amendment) were not carried through.\n", call. = FALSE)
+}
+cat(sprintf("Loaded %s: %d rows, %d columns. Proceeding with the real primary analysis.\n",
+            basename(DB_PATH), nrow(db), ncol(db)))
+```
+
+# Pre-flight gates
+
+Every gate below is real and already exists in `R/analysis_gates.R` (or `mysterycall`); none is
+written here for the first time. If any of them fail, this document must not proceed to fitting
+-- fix the data or amend `SAP.lock` with a dated, reasoned entry, never edit a gate to pass.
+
+```{r sap-and-population}
+SAP     <- read_sap()
+SVI_COL <- SAP[["svi_column"]]
+
+# The analytic-population restriction is a SAP.lock amendment (2026-08-24), applied here the
+# same way dry_run_analysis.R applies it: read from the plan, not re-decided in this script.
+db_all      <- db                       # sensitivity_6 needs the unrestricted 200 pairs
+db_eligible <- sap_restrict(db, SAP)    # primary analyses: 156 of 200 pairs
+
+analysis_preflight(db_eligible,
+                   analytic        = SVI_COL,
+                   arm_col         = "PE_or_Not",
+                   clustering_unit = "phone_id",
+                   sap             = SAP)
+```
+
+```{r business-days-gate}
+# gate_business_days_correct(): re-derives business_days_until_appointment from call_date /
+# appointment_date via mysterycall::mysterycall_count_business_days() and asserts agreement.
+# Catches naive calendar-day arithmetic and inclusive-start off-by-one errors in the merge
+# script's output before they reach a model.
+gate_business_days_correct(db_eligible)
+```
+
+# Design
+
+```{r design}
+design <- db_eligible %>%
+  transmute(
+    npi   = as.character(NPI),
+    pair  = `Matched Pair ID`,
+    State = State,
+    pe    = as.integer(PE_or_Not == "PE"),
+    svi   = suppressWarnings(as.numeric(.data[[SVI_COL]])),
+    medicaid       = as.integer(medicaid_status == "Medicaid"),
+    obtained       = as.integer(obtained),
+    business_days  = as.integer(business_days_until_appointment),
+    hold_time      = as.numeric(hold_time),
+    transfers      = as.integer(transfers),
+    phone_id                = phone_id,
+    same_phone_within_pair  = same_phone_within_pair,
+    SVI_geocode_via         = SVI_geocode_via
+  ) %>%
+  mutate(svi_z = as.numeric(scale(ifelse(is.na(svi), median(svi, na.rm = TRUE), svi)))) %>%
+  mutate(cell = paste0(ifelse(pe == 1, "pe", "ctrl"), "_",
+                       ifelse(medicaid == 1, "medicaid", "bcbs")))
+
+cat(sprintf("Design: %d calls | %d clinicians | %d pairs | %d states | SVI missing: %d\n",
+            nrow(design), n_distinct(design$npi), n_distinct(design$pair),
+            n_distinct(design$State), sum(is.na(design$svi))))
+```
+
+# Table 1. Baseline balance
+
+```{r table1}
+t1 <- mysterycall::mysterycall_table1(
+  data          = db_eligible,
+  covariates    = c("State", SVI_COL, "hold_time"),
+  stratify_by   = "PE_or_Not",
+  include_overall = TRUE
+)
+t1
+```
+
+# Table 2. Appointment obtainment
+
+```{r table2}
+t2 <- design %>%
+  group_by(Ownership = ifelse(pe == 1, "PE-backed", "Independent"),
+          Payer = ifelse(medicaid == 1, "Medicaid", "BCBS")) %>%
+  summarise(n = n(), n_obtained = sum(obtained), pct = 100 * mean(obtained), .groups = "drop") %>%
+  arrange(Payer, Ownership)
+t2
+```
+
+# Table 3. Wait time among clinicians who scheduled
+
+```{r table3}
+t3 <- design %>% filter(obtained == 1) %>%
+  group_by(Ownership = ifelse(pe == 1, "PE-backed", "Independent"),
+          Payer = ifelse(medicaid == 1, "Medicaid", "BCBS")) %>%
+  summarise(n = n(), mean_days = mean(business_days), sd = sd(business_days),
+           median_days = median(business_days), .groups = "drop") %>%
+  arrange(Ownership, Payer)
+t3
+
+gap <- t3 %>% select(Ownership, Payer, mean_days) %>%
+  tidyr::pivot_wider(names_from = Payer, values_from = mean_days) %>%
+  mutate(gap_days = Medicaid - BCBS)
+gap
+```
+
+# Primary and secondary models
+
+Formulas are read from and checked against `SAP.lock` via `gate_sap()` before fitting -- the
+same guard `dry_run_analysis.R` exercises, now against real data. A mismatch here means the
+code is about to fit something other than what was pre-registered, and must stop before it does.
+
+```{r formulas}
+F_OB_PRIMARY   <- obtained       ~ pe + svi_z + (1 | pair)
+F_WT_PRIMARY   <- business_days  ~ pe * medicaid + svi_z + (1 | pair) + (1 | npi)
+F_OB_SECONDARY <- obtained       ~ pe * medicaid + svi_z + (1 | pair) + (1 | npi)
+
+TERM_OB_PRIMARY   <- gate_sap(F_OB_PRIMARY,   "obtainment_primary",   family = "binomial", sap = SAP)
+TERM_WT_PRIMARY   <- gate_sap(F_WT_PRIMARY,   "waittime_primary",     family = "nbinom2",  sap = SAP)
+TERM_OB_SECONDARY <- gate_sap(F_OB_SECONDARY, "obtainment_secondary", family = "binomial", sap = SAP)
+```
+
+## Primary obtainment (Medicaid calls only)
+
+```{r fit-obtainment-primary}
+d_medicaid <- filter(design, medicaid == 1)
+fit_ob_primary <- glmmTMB(F_OB_PRIMARY, family = binomial, data = d_medicaid)
+summary(fit_ob_primary)
+```
+
+## Primary wait time (both payers, among clinicians who scheduled)
+
+```{r fit-waittime-primary}
+d_scheduled <- filter(design, obtained == 1)
+fit_wt_primary <- glmmTMB(F_WT_PRIMARY, family = nbinom2, data = d_scheduled)
+summary(fit_wt_primary)
+```
+
+`gate_overdispersion()` is written for a Poisson fit; this model is already `nbinom2` per
+`SAP.lock`, so it is expected to pass without complaint here. If it does not -- if the family
+name it reads is somehow Poisson rather than negative-binomial -- that is itself a defect worth
+stopping on, not a warning to note and move past.
+
+```{r overdispersion-check}
+gate_overdispersion(fit_wt_primary)
+```
+
+## Secondary obtainment (both payers)
+
+```{r fit-obtainment-secondary}
+fit_ob_secondary <- glmmTMB(F_OB_SECONDARY, family = binomial, data = design)
+summary(fit_ob_secondary)
+```
+
+# Table 4. Model estimates
+
+```{r table4}
+grab <- function(m, term) {
+  co <- summary(m)$coefficients$cond
+  if (!term %in% rownames(co)) return(c(est = NA, lo = NA, hi = NA, p = NA))
+  b <- co[term, "Estimate"]; se <- co[term, "Std. Error"]
+  c(est = exp(b), lo = exp(b - 1.96 * se), hi = exp(b + 1.96 * se), p = co[term, "Pr(>|z|)"])
+}
+
+stopifnot(identical(TERM_WT_PRIMARY, "pe:medicaid"), identical(TERM_OB_SECONDARY, "pe:medicaid"))
+
+t4 <- bind_rows(
+  tibble(Model = "Primary obtainment (Medicaid only)", Term = "PE",
+        !!!setNames(as.list(grab(fit_ob_primary, "pe")), c("est", "lo", "hi", "p"))),
+  tibble(Model = "Primary wait time", Term = "PE x Medicaid",
+        !!!setNames(as.list(grab(fit_wt_primary, TERM_WT_PRIMARY)), c("est", "lo", "hi", "p"))),
+  tibble(Model = "Secondary obtainment", Term = "PE x Medicaid",
+        !!!setNames(as.list(grab(fit_ob_secondary, TERM_OB_SECONDARY)), c("est", "lo", "hi", "p")))
+) %>% mutate(CI = sprintf("%.2f-%.2f", lo, hi))
+t4
+```
+
+# Supplemental Table 1. Variance components
+
+```{r variance-components}
+vc <- function(m, lbl) {
+  v <- glmmTMB::VarCorr(m)$cond
+  cat(sprintf("  %-30s pair var = %.4f%s\n", lbl, as.numeric(v$pair),
+              if ("npi" %in% names(v)) sprintf(" | clinician var = %.4f", as.numeric(v$npi)) else ""))
+}
+vc(fit_ob_primary,   "Primary obtainment")
+vc(fit_wt_primary,   "Primary wait time")
+vc(fit_ob_secondary, "Secondary obtainment")
+```
+
+# Pre-specified sensitivities
+
+All seven are declared in `SAP.lock`. None is optional, and none is run only if the primary
+result needs support -- report all seven regardless of what the primary analysis shows.
+
+```{r sensitivities}
+sens_results <- list()
+
+refit_wt <- function(d, formula = F_WT_PRIMARY, label) {
+  m <- tryCatch(glmmTMB(formula, family = nbinom2, data = filter(d, obtained == 1)),
+               error = function(e) NULL)
+  sens_results[[label]] <<- if (is.null(m)) NA else grab(m, "pe:medicaid")
+  m
+}
+
+# sensitivity_1: exclude pairs where same_phone_within_pair is TRUE
+d_s1 <- design %>% group_by(pair) %>%
+  filter(!any(same_phone_within_pair, na.rm = TRUE)) %>% ungroup()
+refit_wt(d_s1, label = "sensitivity_1: exclude same-phone pairs")
+
+# sensitivity_2: cluster on phone_id rather than npi
+F_WT_S2 <- business_days ~ pe * medicaid + svi_z + (1 | pair) + (1 | phone_id)
+refit_wt(design, formula = F_WT_S2, label = "sensitivity_2: cluster on phone_id")
+
+# sensitivity_3: restrict to pairs where both members have address-level SVI linkage
+# (SVI_geocode_via distinguishes true tract-level geocoding from the ZCTA area-weighted
+# fallback build_svi_covariate.R uses when an address can't be placed -- see that script's
+# fallback block for the exact string.)
+d_s3 <- design %>% group_by(pair) %>%
+  filter(all(!is.na(SVI_geocode_via) &
+            SVI_geocode_via != "ZCTA area-weighted (address unplaceable)")) %>% ungroup()
+refit_wt(d_s3, label = "sensitivity_3: address-level SVI only")
+
+# sensitivity_4: refit without svi_z
+F_WT_S4 <- business_days ~ pe * medicaid + (1 | pair) + (1 | npi)
+refit_wt(design, formula = F_WT_S4, label = "sensitivity_4: without svi_z")
+
+# sensitivity_5: complete-case on all analytic covariates
+d_s5 <- design %>% filter(!is.na(svi_z), !is.na(pe), !is.na(medicaid))
+refit_wt(d_s5, label = "sensitivity_5: complete-case")
+
+# sensitivity_6: repeat on all 200 pairs, ignoring analytic_population
+design_all <- db_all %>%
+  transmute(npi = as.character(NPI), pair = `Matched Pair ID`,
+           pe = as.integer(PE_or_Not == "PE"),
+           medicaid = as.integer(medicaid_status == "Medicaid"),
+           obtained = as.integer(obtained),
+           business_days = as.integer(business_days_until_appointment),
+           svi = suppressWarnings(as.numeric(.data[[SVI_COL]]))) %>%
+  mutate(svi_z = as.numeric(scale(ifelse(is.na(svi), median(svi, na.rm = TRUE), svi))))
+refit_wt(design_all, label = "sensitivity_6: all 200 pairs (unrestricted)")
+
+# sensitivity_7: restrict to pairs where both members are OB/GYN by taxonomy, ignoring platform
+d_s7_ids <- db_all %>% filter(Taxonomy_Is_OBGYN) %>% pull(`Matched Pair ID`)
+d_s7_pairs <- names(which(table(d_s7_ids) == 2))
+d_s7 <- design_all %>% filter(pair %in% d_s7_pairs)
+refit_wt(d_s7, label = "sensitivity_7: taxonomy-only eligibility")
+
+sens_table <- bind_rows(lapply(names(sens_results), function(nm) {
+  r <- sens_results[[nm]]
+  if (length(r) == 1 && is.na(r)) return(tibble(Sensitivity = nm, IRR = NA, CI = NA, p = NA))
+  tibble(Sensitivity = nm, IRR = r["est"], CI = sprintf("%.2f-%.2f", r["lo"], r["hi"]), p = r["p"])
+}))
+sens_table
+```
+
+# Provenance
+
+```{r provenance}
+record_output_provenance(
+  "primary_analysis_results.html",
+  c("pe_obgyn_study_database.csv", "SAP.lock"),
+  "primary_analysis.Rmd", "derived",
+  path = file.path(root, "manuscript", "PROVENANCE.csv")
+)
+```
+
+```{r save-results}
+saveRDS(list(fit_ob_primary = fit_ob_primary, fit_wt_primary = fit_wt_primary,
+            fit_ob_secondary = fit_ob_secondary, table1 = t1, table2 = t2, table3 = t3,
+            table4 = t4, sensitivities = sens_table),
+       file.path(root, "primary_analysis_results.rds"))
+cat("Saved primary_analysis_results.rds\n")
+```
