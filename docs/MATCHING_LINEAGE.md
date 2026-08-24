@@ -128,6 +128,43 @@ while performing the audit, and because a wrong catastrophic finding is more dam
 missed one. Neither reached a conclusion, because both were checked against a second
 implementation before being written down.
 
+## S5b. What correcting Finding C would actually cost
+
+Asked on 2026-08-24 to redraw the 200-pair frame from the 459-pair post-exclusion universe.
+Before doing so, the scope was measured, in two independent implementations that agree exactly:
+
+| Quantity | Value |
+|---|---:|
+| Current fielded clinicians | 400 |
+| Present in the 459-pair eligible universe | **227** |
+| **Absent from it, so cannot survive a redraw** | **173** |
+| Current pairs existing as a pair in that universe | **53 / 200** |
+
+A redraw is therefore not a repair of 18 pairs. **It replaces at least 173 of the 400
+clinicians and re-pairs all but 53 of the 200 pairs** — because the 459-pair run is a different
+matching run that pairs people differently, not a filtered version of the one the cohort came
+from. The intended n = 400 is preserved, but it is a substantially different 400, against a
+REDCap project already loaded and caller materials already issued.
+
+That is a defensible thing to do. It is not the small correction the phrase "fix the 18"
+suggests, and the difference is large enough that it should be decided knowingly.
+
+### The stop condition was met
+
+The same instruction said: *"If the protocol explicitly required independent practice, stop and
+quantify that second eligibility defect before generating the final fielded frame."*
+
+It does. COMIRB v2 says "restricted to independent private practices" (see
+`docs/MANUSCRIPT_PROVENANCE_AUDIT.md` and `test-comparator-definition.R`), and the quantified
+defect is that 0 of 200 controls are solo practitioners and 23 sit at or below ten clinicians.
+So the frame has **not** been regenerated: the second defect is quantified and the redraw is
+held pending a decision that now has to settle both at once.
+
+Redrawing from the 459-pair universe corrects the platform-eligibility defect and does nothing
+about the comparator defect — the 459-pair run never enforced organisation size either. A frame
+redrawn today would satisfy the first law and still fail the protocol's own comparator
+definition.
+
 ## S6. CI taxonomy
 
 Three levels, distinguished because they mean different things:

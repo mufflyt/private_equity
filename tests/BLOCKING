@@ -12,6 +12,14 @@
 #   a positive and a negative control, and independent confirmation of any result that could
 #   change the frozen cohort.
 #
+#   NOT YET LISTED, with a stated trigger: test-fielded-frame-eligibility.R holds the two laws
+#   the corrected frame must satisfy -- no Eligible = FALSE clinician in a fielded frame, and
+#   the frame must be a subset of the POST-EXCLUSION eligible universe, pairs included. It
+#   fails today by design (45 ineligible, 173 outside the universe, 147 pairs that do not
+#   exist there). It is advisory only because promoting it now would block the commits that
+#   fix it. PROMOTE IT the moment a corrected frame is generated; it is the regression test
+#   for Finding C and would have prevented it.
+#
 #   publication readiness   Does not stop data collection, but must block any claim that the
 #                           cohort is fully reproducible, and must block final manuscript
 #                           release unless resolved or disclosed. See docs/MATCHING_LINEAGE.md
