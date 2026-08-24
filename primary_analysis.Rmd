@@ -38,21 +38,16 @@ DB_PATH <- file.path(root, "pe_obgyn_study_database.csv")
 if (!file.exists(DB_PATH)) {
   stop(
     "\n\n  primary_analysis.Rmd cannot run: ", DB_PATH, " does not exist yet.\n",
-    "  This file is the real fielded database with call outcomes merged in -- it does not\n",
-    "  exist until calling finishes and the REDCap export (redcap/pe_mystery_caller_call_sheet_400.csv\n",
-    "  or a later export against the same instrument) is merged onto the fielded sheet.\n\n",
-    "  That merge step -- REDCap raw fields (calldate1/calldate2, appdate, holdtime, transfers,\n",
-    "  contacted1/contacted2) -> obtained / business_days_until_appointment / call_date /\n",
-    "  appointment_date / hold_time / transfers -- does not exist in this repo yet either. It is a\n",
-    "  separate, not-yet-written script, not something to improvise inside this analysis file.\n",
-    "  Write it, derive obtained/business_days_until_appointment there via\n",
-    "  mysterycall::mysterycall_count_business_days(), and verify its output with\n",
-    "  gate_business_days_correct() before this file is run for real.\n",
+    "  This file is the real fielded database with call outcomes merged in -- see\n",
+    "  build_study_database_from_redcap.R, which builds it from the raw REDCap export via\n",
+    "  mysterycall::mysterycall_prepare_calls() (contacted1/2, calldate1, appdate, exclusions)\n",
+    "  plus the record-id crosswalk (redcap/redcap_slot_crosswalk_400.csv) and the fielded sheet.\n",
+    "  Run that script against a real REDCap export first; do not improvise the derivation here.\n",
     call. = FALSE
   )
 }
 
-REQUIRED_COLS <- c("NPI", "Matched Pair ID", "PE_or_Not", "State",
+REQUIRED_COLS <- c("NPI", "Matched Pair ID", "PE_or_Not", "State", "payer",
                    "obtained", "business_days_until_appointment",
                    "call_date", "appointment_date", "hold_time", "transfers",
                    "phone_id", "same_phone_within_pair", "SVI_geocode_via",
@@ -110,7 +105,7 @@ design <- db_eligible %>%
     State = State,
     pe    = as.integer(PE_or_Not == "PE"),
     svi   = suppressWarnings(as.numeric(.data[[SVI_COL]])),
-    medicaid       = as.integer(medicaid_status == "Medicaid"),
+    medicaid       = as.integer(payer == "Medicaid"),   # payer: which insurance was presented on THIS call (from the record-id crosswalk, arm assignment) -- distinct from any REDCap field about whether the office itself accepts Medicaid.
     obtained       = as.integer(obtained),
     business_days  = as.integer(business_days_until_appointment),
     hold_time      = as.numeric(hold_time),
@@ -130,12 +125,17 @@ cat(sprintf("Design: %d calls | %d clinicians | %d pairs | %d states | SVI missi
 
 # Table 1. Baseline balance
 
+`mysterycall_table1_gtsummary()`, not `mysterycall_table1()` -- this document renders to
+`html_document`, and the gtsummary variant is the one mysterycall's own table-generation
+vignette recommends for HTML/Word manuscript output rather than plain-text/PDF. Note the
+p-values here test *sampling balance* across the ownership arms, not the study's primary
+hypothesis -- SVI and hold time are baseline/measurement characteristics, not outcomes.
+
 ```{r table1}
-t1 <- mysterycall::mysterycall_table1(
-  data          = db_eligible,
-  covariates    = c("State", SVI_COL, "hold_time"),
-  stratify_by   = "PE_or_Not",
-  include_overall = TRUE
+t1 <- mysterycall::mysterycall_table1_gtsummary(
+  data       = db_eligible,
+  vars       = c("State", SVI_COL, "hold_time"),
+  strata_col = "PE_or_Not"
 )
 t1
 ```
@@ -297,7 +297,7 @@ refit_wt(d_s5, label = "sensitivity_5: complete-case")
 design_all <- db_all %>%
   transmute(npi = as.character(NPI), pair = `Matched Pair ID`,
            pe = as.integer(PE_or_Not == "PE"),
-           medicaid = as.integer(medicaid_status == "Medicaid"),
+           medicaid = as.integer(payer == "Medicaid"),
            obtained = as.integer(obtained),
            business_days = as.integer(business_days_until_appointment),
            svi = suppressWarnings(as.numeric(.data[[SVI_COL]]))) %>%
