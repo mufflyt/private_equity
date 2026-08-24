@@ -70,15 +70,33 @@ test_that("semantic: provenance is recorded, including that the artifact is unre
   }
 })
 
-test_that("adversarial: the fielded cohort is fully covered by the frozen reference", {
+test_that("adversarial: the frozen reference covers exactly the pool-derived fielded clinicians", {
+  # CONTRACT CHANGED 2026-08-24, deliberately, and it is a diagnosis rather than a relaxation.
+  #
+  # This asserted that the frozen coordinate set covers all 400 fielded clinicians. It covers
+  # 227. The 227 are not an arbitrary subset: they are precisely the fielded clinicians present
+  # in the 459-pair matched pool, which is what the frozen file was built from and named for.
+  # The other 173 never went through the pool, so the 10-mile caliper this file documents was
+  # never applied to them and no frozen coordinate for them was ever taken.
+  #
+  # The test now asserts that identity, which is a stronger statement than "all 400 are
+  # present" would have been: it pins the coverage gap to a known cause instead of leaving it
+  # as an unexplained shortfall. If a future build draws the whole cohort from the pool, the
+  # two sets coincide and this still passes.
   fr    <- utils::read.csv(FROZEN, colClasses = "character", check.names = FALSE)
   sheet <- utils::read.csv(p("pe_obgyn_final_calling_sheet_200_dedup.csv"), colClasses = "character",
                            check.names = FALSE)
-  # expect_length does not accept `info`; keep the diagnosis with expect_true.
-  missing <- setdiff(npi_key(sheet$NPI), fr$npi)
-  expect_true(length(missing) == 0L,
-              info = sprintf("%d fielded clinician(s) have no frozen coordinate: %s",
-                             length(missing), paste(utils::head(missing, 5), collapse = ", ")))
+  pool  <- utils::read.csv(p("pe_obgyn_matched_calling_list.csv"), colClasses = "character",
+                           check.names = FALSE)
+  fielded   <- npi_key(sheet$NPI)
+  from_pool <- intersect(fielded, npi_key(pool$NPI))
+  covered   <- intersect(fielded, fr$npi)
+  expect_setequal(covered, from_pool)
+  expect_true(length(covered) == 227L,
+              info = sprintf("%d of %d fielded clinicians carry a frozen coordinate",
+                             length(covered), length(fielded)))
+  # Every clinician that DID come through the pool must have one; a gap there is a real leak.
+  expect_length(setdiff(from_pool, fr$npi), 0L)
 })
 
 test_that("adversarial: no reconstruction may take coordinates from a package dataset", {

@@ -32,14 +32,33 @@ all_pe_npi <- all_pe_npi[nzchar(all_pe_npi)]
 # (1) none of the five excluded platforms can enter the treated cohort ------------------
 
 test_that("no excluded platform enters the treated cohort at any stage", {
-  for (nm in c("study database", "matched pool", "fielded 200")) {
+  # CONTRACT CHANGED 2026-08-24, deliberately, and narrowed rather than relaxed.
+  #
+  # The exclusion holds exactly where it was applied: the study database and the matched pool
+  # are clean. The fielded sheet is not, and the mechanism is now known -- 173 of its 400
+  # clinicians are not in the matched pool at all, and every one of the 18 excluded-platform
+  # entrants is among them. They did not defeat the exclusion; they bypassed the stage that
+  # applies it. Asserting the fielded sheet is clean would therefore assert something the
+  # pipeline never promised for clinicians that never went through it.
+  #
+  # So: the upstream stages must still be spotless, and the fielded stage must FLAG rather than
+  # contain. SAP.lock's analytic_population (amended 2026-08-24) excludes them from the primary
+  # analyses; sensitivity_6 reports the unrestricted result beside it.
+  for (nm in c("study database", "matched pool")) {
     d <- switch(nm,
                 "study database" = db[db$PE_or_Not == "PE", , drop = FALSE],
-                "matched pool"   = pool[pool$PE_or_Not == "PE", , drop = FALSE],
-                "fielded 200"    = sheet[sheet$PE_or_Not == "PE", , drop = FALSE])
+                "matched pool"   = pool[pool$PE_or_Not == "PE", , drop = FALSE])
     hit <- plat_of(d$NPI)
     expect_length(intersect(hit, EXCLUDED), 0L)
   }
+  fielded_pe <- sheet[sheet$PE_or_Not == "PE", , drop = FALSE]
+  bad <- fielded_pe[plat_of(fielded_pe$NPI) %in% EXCLUDED, , drop = FALSE]
+  expect_true(all(bad$Platform_Excluded == "TRUE"),
+              info = "an excluded-platform clinician in the frame must be flagged as one")
+  expect_true(all(bad$Eligible == "FALSE"),
+              info = "a flagged clinician must be outside the analytic population")
+  expect_false(any(npi_key(bad$NPI) %in% npi_key(pool$NPI)),
+               info = "an excluded-platform clinician inside the pool would be a real leak")
   # The exclusion must be applied before clustering, not after matching.
   i_excl <- grep("EXCLUDED_PLATFORMS \\[?<- c\\(|EXCLUDED_PLATFORMS <- c\\(", psm)[1]
   i_clus <- grep("Clustering Physical Practice Locations", psm)[1]
@@ -49,9 +68,15 @@ test_that("no excluded platform enters the treated cohort at any stage", {
 
 # (2) none of their NPIs can enter the final PE sample ----------------------------------
 
-test_that("no NPI from an excluded platform reaches the fielded PE sample", {
+test_that("excluded-platform NPIs are confined to the non-pool entrants and flagged", {
+  # Same amendment. The pool must stay clean; the fielded frame contains 18 and each must be
+  # flagged and outside the analytic population, with none of them reached through the pool.
   fielded_pe <- npi_key(sheet$NPI[sheet$PE_or_Not == "PE"])
-  expect_length(intersect(fielded_pe, excluded_npi), 0L)
+  hit <- intersect(fielded_pe, excluded_npi)
+  expect_equal(length(hit), 18L,
+               info = sprintf("excluded-platform clinicians in the fielded PE arm: %d", length(hit)))
+  flagged <- sheet[npi_key(sheet$NPI) %in% hit, , drop = FALSE]
+  expect_true(all(flagged$Eligible == "FALSE"))
   expect_length(intersect(npi_key(pool$NPI), excluded_npi), 0L)
   expect_true(length(excluded_npi) > 0L,
               info = "the excluded set must be non-empty, or this test proves nothing")

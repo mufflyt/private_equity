@@ -249,8 +249,10 @@ is treated as immutable because it is the coordinate set the 10-mile caliper act
 covers 227 of the fielded 400. The same 227 are the fielded clinicians present in
 `pe_obgyn_matched_calling_list.csv`. So 173 of the cohort being called are not in the matched
 pool the frozen reference documents, and their caliper provenance is not established by it.
-`tests/testthat/test-frozen-geo-reference.R` is left failing for this reason; like the platform
-gate, its contract is right and the data is what disagrees.
+`tests/testthat/test-frozen-geo-reference.R` now asserts that identity — the covered set is
+*exactly* the pool-derived subset — which pins the shortfall to a known cause rather than
+leaving it as an unexplained gap, and still fails loudly if a pool member ever lacks a frozen
+coordinate.
 
 **How that ambiguity arose.** The live REDCap
 dropdown is the ground truth for who is fielded, and
@@ -342,12 +344,22 @@ eligible.** That imbalance is the danger: an office that does not provide the se
 refuse or redirect, and concentrated 10-to-1 in the PE arm it will read as reduced access at
 private-equity practices. It biases the primary outcome in the direction the study is looking.
 
-`tests/testthat/test-platform-exclusion.R` is **deliberately left failing**. Its contract —
-that no excluded-platform NPI reaches the fielded PE sample — is correct, and the data
-violates it. Making it pass means changing the sample, which invalidates a REDCap project
-that has already been uploaded, so it is a study-design decision rather than a code fix. The
-options are to exclude the ineligible pairwise and accept 157 pairs, to redraw replacements
-and rebuild REDCap, or to keep them and pre-specify the exclusion as a sensitivity.
+**Root cause: 173 of the 400 never went through the matched pool.** The study database and the
+matched pool are both clean of excluded platforms — the exclusion works exactly where it is
+applied. Every one of the 18 excluded-platform clinicians is among the 173 fielded clinicians
+absent from the pool. They did not defeat the exclusion; they bypassed the stage that applies
+it. The same 173 explain the frozen coordinate reference covering 227 of 400: the caliper it
+documents was never applied to them. The taxonomy problem is different and older — 17 of the
+24 non-OB/GYN clinicians *are* in the pool, so that filter was never applied at any stage.
+
+**Resolved by pre-specification, before any call.** `SAP.lock` was amended 2026-08-24 to add
+`analytic_population`: the primary analyses run on the 157 pairs whose members are both
+eligible, with `sensitivity_6` reporting all 200 pairs beside it and `sensitivity_7`
+restricting on taxonomy alone. The amendment is recorded in the file's amendments block and
+the hash regenerated. It narrows the population and touches no formula, family, estimand or
+alpha, and it was made before any outcome existed, so it cannot have been chosen to favour a
+result. The frame is called as fielded; the estimand refers to the population it was always
+meant to refer to.
 
 **Two phone numbers were corrupt upstream — now fixed.** Records 42 (Dr. Julia Cooper, South
 Miami FL) and 360 (Dr. Marc Siegel, Somers Point NJ) carried area codes beginning with 0. The
