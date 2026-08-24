@@ -1,0 +1,97 @@
+---
+title: "Title Page"
+date: today
+format:
+  docx:
+    reference-doc: pandoc-reference.docx
+    number-sections: false
+  html:
+    embed-resources: true
+    theme: cosmo
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup, include=FALSE}
+root <- normalizePath("..", mustWork = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+.src <- tryCatch(readLines(file.path(root, "manuscript", "private_equity_manuscript.qmd"),
+                          warn = FALSE), error = function(e) character())
+wc_between <- function(start_re, end_re) {
+  if (!length(.src)) return(NA_integer_)
+  i0 <- grep(start_re, .src)[1]; if (is.na(i0)) return(NA_integer_)
+  rest <- .src[(i0 + 1):length(.src)]
+  i1   <- grep(end_re, rest)[1]
+  seg  <- if (is.na(i1)) rest else rest[seq_len(i1 - 1)]
+  keep <- cumsum(grepl("^```", seg)) %% 2 == 0 & !grepl("^```", seg)
+  txt  <- paste(seg[keep], collapse = " ")
+  txt  <- gsub("`r [^`]+`", " x ", txt)
+  txt  <- gsub("\\[?@[A-Za-z0-9;@ _-]+\\]?", " ", txt)
+  txt  <- gsub("<[^>]+>|[[:punct:]]", " ", txt)
+  length(strsplit(trimws(txt), "\\s+")[[1]])
+}
+wc_abstract <- wc_between("^# Abstract", "^\\*\\*Keywords")
+wc_body     <- wc_between("^# Introduction", "^# References")
+```
+
+# Title Page
+
+**Full title:** Access to Generalist Obstetrics and Gynecology Care at Private Equity-Backed vs.
+Independent Practices: A Mystery Caller Audit Study
+
+**Short title / running head:** Private Equity Ownership and OB-GYN Access
+
+**Authors:**
+
+| Name | Degrees | Affiliation | Role |
+|:--|:--|:--|:--|
+| Tyler Muffly | MD | Department of Obstetrics and Gynecology, Denver Health and Hospital Authority, Denver, CO | Corresponding author |
+| Lizeth [SURNAME NEEDED] | [CREDENTIALS NEEDED] | Department of Obstetrics and Gynecology, University of Colorado School of Medicine, Aurora, CO | Author |
+| Taylor Gatson | MD | Department of Obstetrics and Gynecology, University of Colorado School of Medicine, Aurora, CO | Author |
+
+**Corresponding author:** Tyler Muffly, MD · Denver Health and Hospital Authority · 777 Bannock
+Street, Denver, CO 80204 · tyler.muffly@dhha.org
+
+**Financial disclosure:** The authors did not report any potential conflicts of interest.
+
+**Financial support:** None.
+
+**IRB approval:** Colorado Multiple Institutional Review Board (COMIRB). Protocol status is
+stated as "exempt" in this repository's README but as "approved ... with a waiver of provider
+and patient consent" in an earlier manuscript draft -- **this discrepancy must be reconciled
+against the real COMIRB determination letter, and the protocol number filled in, before
+submission.**
+
+**Précis:** [Must be written from real results once they exist; the current placeholder in
+`private_equity_manuscript.qmd` states a specific directional finding that has not yet been
+observed and must not be copied here as though it were.]
+
+**Condensation:** [One sentence, no more than 25 words, stating what this study adds to the
+literature -- per this journal's own convention, written from the real result once it exists,
+not from the study question alone.]
+
+**Word counts:** Abstract, `r if (is.na(wc_abstract)) "not computable (private_equity_manuscript.qmd not found)" else wc_abstract` words.
+Main text, `r if (is.na(wc_body)) "not computable" else wc_body` words. (Approximate; computed
+the same way as the submission-checklist callout in `private_equity_manuscript.qmd`, not
+independently recounted.)
+
+**Tables:** 4 (plus one supplemental). **Figures:** 3.
+
+**Keywords:** private equity; mystery caller; Medicaid; appointment access; obstetrics and
+gynecology; health disparities.
+
+**Target journal:** *Obstetrics & Gynecology* (the Green Journal).
+
+**Data and code availability:** All analysis code and the reproducible manuscript source are
+available at https://github.com/mufflyt/private_equity.
+
+::: {.content-visible when-format="html"}
+::: {.callout-tip appearance="simple"}
+**Unresolved before submission:** second author's surname/credentials; the COMIRB
+exempt-vs.-waiver discrepancy and protocol number; Précis and Condensation (both depend on real
+results); word counts above are approximate and depend on `private_equity_manuscript.qmd`
+existing at render time.
+:::
+:::

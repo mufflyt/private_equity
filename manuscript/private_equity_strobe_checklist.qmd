@@ -1,0 +1,134 @@
+---
+title: "STROBE Checklist"
+subtitle: "Access to Generalist Obstetrics and Gynecology Care at Private Equity-Backed vs. Independent Practices: A Mystery Caller Audit Study"
+date: today
+bibliography: references.bib
+csl: ama.csl
+link-citations: true
+format:
+  docx:
+    reference-doc: pandoc-reference.docx
+    number-sections: false
+  html:
+    embed-resources: true
+    theme: cosmo
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+Reported per the STROBE (Strengthening the Reporting of Observational Studies in Epidemiology)
+statement [@vonelm2007strobe]. This is a mystery-caller crossover audit rather than a classical
+cohort, case-control, or cross-sectional design; STROBE has no dedicated checklist variant for
+audit studies, so the **cross-sectional checklist** is used, as each clinician's ownership
+status and covariates are fixed at the time of calling and the two insurance-arm calls are
+outcomes of that single fixed exposure rather than repeated measures over time. Item numbers,
+section names, and item text follow the published STROBE cross-sectional checklist verbatim.
+The "Reported" column cites the section of `private_equity_manuscript.qmd` (or this document)
+that addresses each item, not a page number, since the manuscript has not yet been paginated
+for a specific journal template.
+
+```{r setup, include=FALSE}
+root <- normalizePath("..", mustWork = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+# Checklist
+
+| Item | Section/Topic | STROBE item | Reported |
+|:--:|:--|:--|:--|
+| 1a | Title and abstract | Indicate the study's design with a commonly used term in the title or the abstract | Title ("A Mystery Caller Audit Study"); Abstract Methods ("simulated-patient (mystery caller) crossover audit") |
+| 1b | Title and abstract | Provide in the abstract an informative and balanced summary of what was done and what was found | Abstract (Objective/Methods/Results/Conclusion) |
+| 2 | Introduction: Background/rationale | Explain the scientific background and rationale for the investigation being reported | Introduction, ¶1--3 |
+| 3 | Introduction: Objectives | State specific objectives, including any prespecified hypotheses | Introduction, final paragraph (two prespecified hypotheses) |
+| 4 | Methods: Study design | Present key elements of study design early in the paper | Methods > Study Design |
+| 5 | Methods: Setting | Describe the setting, locations, and relevant dates, including periods of recruitment, exposure, follow-up, and data collection | Methods > Study Design (calling week); Methods > Cohort Identification and Matching (26 states) |
+| 6a | Methods: Participants | Give the eligibility criteria, and the sources and methods of selection of participants | Methods > Cohort Identification and Matching; SAP.lock's 2026-08-24 analytic-population amendment (eligibility: MD/DO credential, OB/GYN taxonomy, non-excluded platform) |
+| 6b | Methods: Participants | For matched studies, give matching criteria and number of exposed/unexposed | Methods > Cohort Identification and Matching (state, gender, 10-mile radius, propensity score); Methods > Cohort-Compliant Backup Protocol |
+| 7 | Methods: Variables | Clearly define all outcomes, exposures, predictors, potential confounders, and effect modifiers; give diagnostic criteria, if applicable | Methods > Primary and Secondary Outcomes; Methods > Contextual Covariates and Geographic Linkage (SVI); SAP.lock (formulas, estimands) |
+| 8 | Methods: Data sources/measurement | For each variable of interest, give sources of data and details of methods of assessment (measurement); describe comparability of assessment methods if more than one group | Methods > Call Protocol and Vignette (standardized script, REDCap); Methods > Contextual Covariates and Geographic Linkage (CDC/ATSDR SVI, census geocoder) |
+| 9 | Methods: Bias | Describe any efforts to address potential sources of bias | Methods > Call Protocol and Vignette (randomized presentation order, ≥48h interval, blinded record numbering; see `docs/APPENDIX_RECORD_BLINDING.md`); Methods > Cohort-Compliant Backup Protocol |
+| 10 | Methods: Study size | Explain how the study size was arrived at | Methods > Sample Size and Power (simulation-based; not yet ported into this document -- see `manuscript/manuscript_cite.md`'s Sample Size and Power section and `manuscript/appendix_power.md`) |
+| 11 | Methods: Quantitative variables | Explain how quantitative variables were handled in the analyses; describe which groupings were chosen and why | Methods > Statistical Analysis (SVI as a standardized z-score; business days as a count outcome) |
+| 12a | Methods: Statistical methods | Describe all statistical methods, including those used to control for confounding | Methods > Statistical Analysis |
+| 12b | Methods: Statistical methods | Describe any methods used to examine subgroups and interactions | Methods > Statistical Analysis (ownership-by-insurance interaction, both as primary wait-time estimand and secondary obtainment estimand) |
+| 12c | Methods: Statistical methods | Explain how missing data were addressed | `R/analysis_gates.R`'s `gate_missingness()`/`analysis_preflight()`; sensitivity 5 (complete-case) in Methods > Statistical Analysis |
+| 12d | Methods: Statistical methods | If applicable, describe analytical methods taking account of sampling strategy | Methods > Statistical Analysis (matched-pair random intercept; clustering sensitivities 1--2) |
+| 12e | Methods: Statistical methods | Describe any sensitivity analyses | Methods > Statistical Analysis (all seven SAP.lock sensitivities enumerated) |
+| 13a | Results: Participants | Report numbers of individuals at each stage of the study | Figure 3 (STROBE flow diagram, `manuscript/strobe_diagram.R`) [not currently reproducible -- see note below] |
+| 13b | Results: Participants | Give reasons for non-participation at each stage | Figure 3; SAP.lock's analytic-population amendment (43 ineligible clinicians and why) |
+| 13c | Results: Participants | Consider use of a flow diagram | Figure 3 |
+| 14a | Results: Descriptive data | Give characteristics of study participants and information on exposures and potential confounders | Results > Baseline Cohort Demographics (Table 1) |
+| 14b | Results: Descriptive data | Indicate number of participants with missing data for each variable of interest | `gate_missingness()` output; not yet a standalone reported table in this document |
+| 15 | Results: Outcome data | Report numbers of outcome events or summary measures | Results > Appointment Obtainment (Table 2); Results > Scheduling Wait Times (Table 3) |
+| 16a | Results: Main results | Give unadjusted estimates and, if applicable, confounder-adjusted estimates and their precision; make clear which confounders were adjusted for and why they were included | Results > Mixed-Effects Regression (Table 4/`@tbl-results`) |
+| 16b | Results: Main results | Report category boundaries when continuous variables were categorized | Not applicable -- SVI is entered continuously (standardized z-score), not categorized |
+| 16c | Results: Main results | If relevant, translate estimates of relative risk into absolute risk for a meaningful time period | Results > Appointment Obtainment (absolute risk difference reported alongside the odds ratio) |
+| 17 | Results: Other analyses | Report other analyses done, e.g. subgroup and sensitivity analyses | Results (via `@tbl-results`, all seven sensitivities) |
+| 18 | Discussion: Key results | Summarize key results with reference to study objectives | Discussion [not yet written -- deferred until real results exist; see the bracketed placeholder in `private_equity_manuscript.qmd`'s Discussion section] |
+| 19 | Discussion: Limitations | Discuss limitations of the study, taking into account sources of potential bias or imprecision; discuss both direction and magnitude of any potential bias | Discussion > Limitations [not yet written here -- `manuscript/manuscript_cite.md`'s Limitations section describes real, already-established design properties (single vignette, single calling week, geographic concentration, conditional wait-time selection, shared practice lines, non-uniform SVI precision, ~69% power) and does not depend on results; still needs to be ported in] |
+| 20 | Discussion: Interpretation | Give a cautious overall interpretation considering objectives, limitations, multiplicity of analyses, results from similar studies, and other relevant evidence | Discussion [not yet written -- deferred until real results exist] |
+| 21 | Discussion: Generalisability | Discuss the generalisability (external validity) of the study results | Discussion > Limitations [not yet written here; see the geographic-concentration point already established in `manuscript_cite.md`] |
+| 22 | Other information: Funding | Give the source of funding and the role of the funders for the present study | Title page / manuscript disclosure line: "Funding/Financial Support: None" |
+
+: STROBE checklist for cross-sectional studies, applied to this mystery-caller audit.
+
+**Note on Item 13/Figure 3.** `manuscript/strobe_diagram.R` currently `stop()`s rather than
+render: two of its six flow-diagram stages (the "OB-GYN Generalist Only" count and the
+de-clustered count) could not be reproduced from any committed artifact when last audited, and
+the script refuses to draw a plausible-but-unverified number rather than guess (see the script's
+own header comments and `docs/CANONICAL_SOURCES_AUDIT.md`, item A7). Items 13a--13c cannot be
+marked complete until that script runs and produces a real `figure3.png`.
+
+# Automated cross-check
+
+The items above are the complete, journal-facing STROBE checklist. As an independent,
+programmatic cross-check on a subset of the Results/Methods items,
+`mysterycall::mysterycall_strobe_checklist()` inspects the fitted primary wait-time model
+directly for the specific, machine-checkable subset of STROBE it covers (confidence intervals
+reported, overdispersion assessed and handled, sensitivity analysis performed, flow diagram
+present) and returns PASS/WARN/FAIL per item rather than a self-report. It requires
+`primary_analysis_results.rds`, so it fails closed the same way `private_equity_manuscript.qmd`
+does when no real analysis has been run yet.
+
+```{r automated-check}
+RESULTS_PATH <- file.path(root, "primary_analysis_results.rds")
+if (!file.exists(RESULTS_PATH)) {
+  stop(
+    "\n\n  Cannot run the automated STROBE cross-check: ", RESULTS_PATH, " does not exist yet.\n",
+    "  Render primary_analysis.Rmd first. The 22-item checklist table above does not depend on\n",
+    "  this and can be reviewed regardless.\n",
+    call. = FALSE
+  )
+}
+R <- readRDS(RESULTS_PATH)
+
+# mysterycall_strobe_checklist() expects a mysterycall_poisson_model/mysterycall_nb_model
+# object (irr_table, overdispersion, n_dropped) -- our primary wait-time model is fit directly
+# with glmmTMB() per SAP.lock's exact formula, not through that wrapper (dry_run_analysis.R
+# explains why: the wrapper did not support this study's pe*medicaid interaction with two
+# random intercepts). Wrapped here rather than reimplemented, following the exact shape shown
+# in mysterycall_strobe_checklist()'s own documentation example.
+co <- summary(R$fit_wt_primary)$coefficients$cond
+irr_tbl <- data.frame(
+  term     = rownames(co),
+  irr      = exp(co[, "Estimate"]),
+  ci_lower = exp(co[, "Estimate"] - 1.96 * co[, "Std. Error"]),
+  ci_upper = exp(co[, "Estimate"] + 1.96 * co[, "Std. Error"]),
+  p_value  = co[, "Pr(>|z|)"],
+  stringsAsFactors = FALSE
+)
+overdispersion <- mysterycall::mysterycall_overdispersion_test(R$fit_wt_primary)$phi
+
+wrapped <- structure(
+  list(irr_table = irr_tbl, overdispersion = overdispersion, n_dropped = NA_integer_,
+      model = R$fit_wt_primary),
+  class = "mysterycall_nb_model"
+)
+cl <- mysterycall::mysterycall_strobe_checklist(
+  wrapped, sensitivity_run = TRUE,
+  has_flow_diagram = file.exists(file.path(root, "manuscript", "figure3.png"))
+)
+knitr::kable(cl)
+```

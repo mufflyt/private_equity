@@ -1,0 +1,72 @@
+---
+title: "Cover Letter"
+date: today
+bibliography: references.bib
+csl: ama.csl
+link-citations: true
+format:
+  docx:
+    reference-doc: pandoc-reference.docx
+    number-sections: false
+  html:
+    embed-resources: true
+    theme: cosmo
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+Tyler Muffly, MD
+Denver Health and Hospital Authority
+777 Bannock Street
+Denver, CO 80204
+tyler.muffly@dhha.org
+
+`r format(Sys.Date(), "%B %d, %Y")`
+
+Editor-in-Chief
+*Obstetrics & Gynecology*
+American College of Obstetricians and Gynecologists
+
+Dear Editor,
+
+We are pleased to submit our original research manuscript, "Access to Generalist Obstetrics and
+Gynecology Care at Private Equity-Backed vs. Independent Practices: A Mystery Caller Audit
+Study," for consideration for publication in *Obstetrics & Gynecology*.
+
+Private equity ownership of outpatient physician practices has expanded rapidly over the past
+decade, including within obstetrics and gynecology, and a growing literature links private
+equity ownership in health care to higher costs and mixed-to-worse quality across settings
+[@borsa2023systematic; @bruch2020hospital; @kannan2023adverse]. Audit ("secret shopper") studies
+have separately shown that Medicaid enrollees face higher appointment-denial rates and longer
+waits than commercially insured patients across specialties [@bisgaier2011auditing;
+@asplin2005insurance]. To our knowledge, no prior study has examined whether the ownership
+structure of generalist OB-GYN practices, specifically corporate private equity ownership versus
+independent practice, shapes access and scheduling disparities by insurance type. We addressed
+this gap with a mystery-caller crossover audit of matched private equity-backed and independent
+clinics, pre-registering two hypotheses before any call was placed: that private equity-backed
+clinics decline new Medicaid patients more often than matched independent practices, and that
+among practices that do schedule Medicaid patients, the wait-time gap between public and
+commercial insurance is wider at private equity-backed clinics.
+
+The manuscript reports a matched-pair design across 26 U.S. states, a pre-specified statistical
+analysis plan frozen before fielding (including seven pre-specified sensitivity analyses), and a
+STROBE-compliant reporting checklist submitted alongside this letter. We believe the findings are
+of direct relevance to *Obstetrics & Gynecology*'s readership and to the intensifying federal and
+state scrutiny of health-care consolidation's effect on access to reproductive health care.
+
+This manuscript is original, has not been published previously, and is not under consideration
+elsewhere. All authors have reviewed and approved the submission and have no conflicts of
+interest to disclose. The study protocol was reviewed by the Colorado Multiple Institutional
+Review Board (COMIRB). [Protocol status is stated as "exempt" in the study repository but as
+"approved ... with a waiver of consent" in an earlier manuscript draft; this discrepancy must be
+resolved against the real COMIRB determination letter, and the exact wording of this paragraph
+corrected accordingly, before this letter is sent.]
+
+Thank you for your consideration. We look forward to your response.
+
+Sincerely,
+
+Tyler Muffly, MD
+Corresponding author, on behalf of all authors
