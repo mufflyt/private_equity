@@ -101,8 +101,8 @@ Each clinician is called twice, and the two calls are deliberately separated:
 - Callers request the first available new-patient appointment and record business days to that
   date, hold time, transfers, and whether an appointment was obtained at all.
 
-Callers must remain blinded to ownership. See [Known issues](#known-issues) — at present the
-record numbering itself gives it away.
+Callers must remain blinded to ownership. Record numbering previously leaked it — see
+[Known issues](#known-issues) — and is now assigned by `assign_blinded_slots()`.
 
 ## The frozen analysis plan
 

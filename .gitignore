@@ -45,6 +45,15 @@ redcap_physician_name_choices*.txt
 # also carries PE_or_Not, so it is restricted: study team only.
 !pe_obgyn_final_calling_sheet_200_dedup.csv
 
+# The frozen geo reference the primary 10-mile matching caliper depends on (inst/frozen/
+# PROVENANCE.md). It was gitignored by the blanket *.csv rule above despite being documented
+# as the immutable coordinate set the matched cohort was built on, and as of 2026-08-24 no
+# copy of it exists anywhere on any machine or in git history that was checked -- the same
+# single-point-of-failure shape as the fielded-cohort loss this study already had once.
+# Force-tracked so that whenever it is recovered or re-extracted, it can never be silently
+# lost to this rule again.
+!inst/frozen/geo_reference_fielded_cohort.csv
+
 # Local virtualenv
 .venv/
 

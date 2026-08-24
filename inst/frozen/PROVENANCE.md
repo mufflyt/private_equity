@@ -92,3 +92,36 @@ Option 1 is in force. Running the current gazetteer as a **sensitivity analysis*
 worthwhile exercise: if it reproduces the same matched controls the drift was inconsequential,
 and if it does not, that is a robustness result rather than an undocumented mutation. The 82.2%
 figure above suggests it will not, which is precisely why it must not touch the primary cohort.
+
+## 2026-08-24 addendum: the frozen artifact itself is currently missing
+
+`geo_reference_fielded_cohort.csv` — the file this document names as the frozen dependency,
+SHA-256 `4e825fc798c034944a00a7d11fd15f71f830ff528b8f024cc00493d0d1bb01bc` — does not exist on
+this machine, and `git log --all --diff-filter=A -- inst/frozen/geo_reference_fielded_cohort.csv`
+returns nothing: it was never committed to any branch. It was gitignored by the blanket `*.csv`
+rule from the moment it was extracted on 2026-08-11, so nothing enforced its survival. Checked
+and absent from: this repo's working tree, `~/Downloads`, `~/Desktop`, `~/Documents`, `~/.Trash`,
+git stash, git reflog, `recovery/`, and the leftover `pe_recovery_ALL.tar.gz` / `pe_assets.zip`
+archives from the separate isochrones disaster-recovery effort. Its source,
+`pe_obgyn_study_database.csv`, is equally absent from this machine — it is the same file this
+study already lost once and partially reconstructed from REDCap's dropdown encoding (see
+`recovery/recovered_fielded_400_from_redcap.csv`), so it cannot be re-derived here either.
+
+`.gitignore` now force-tracks this path so a future copy cannot be lost the same way again, but
+that does not restore the missing file — do not read the force-track exception as evidence the
+file exists.
+
+The environment that authored the 18 PRs merged into `main` on 2026-08-23/24 (record-blinding
+fix, `redcap/` artifacts, SVI reconstruction, control-org classification) clearly held
+`pe_obgyn_study_database.csv` locally at the time, since several of those PRs read and derived
+from it. That is the most likely place a copy of `geo_reference_fielded_cohort.csv` — or the
+source needed to re-extract it via the exact procedure in "What is frozen instead" above — still
+exists. **Do not re-extract this file from the current `mysterycall` gazetteer or any other
+source that was not `pe_obgyn_study_database.csv`'s `Matcher_Latitude`/`Matcher_Longitude`
+columns as they stood when the 918-row extraction ran; a substitute built any other way is a
+new matching specification, not this artifact, and must not be represented as it.** Verify any
+recovered candidate against the SHA-256 above before trusting it.
+
+`tests/testthat/test-frozen-geo-reference.R` is failing on this machine for exactly this reason
+and must keep failing until the real file is restored — do not weaken or skip it to make CI
+green.
