@@ -611,8 +611,14 @@ gate_business_days_correct <- function(df, call_col = "call_date", appt_col = "a
 #' Poisson (SAP.lock; see also run_new_power_analysis.R's header note on the glm.nb-vs-glmmTMB
 #' choice). A Poisson fit understates standard errors under overdispersion, which overstates
 #' significance -- a silent false positive, not a crash, which is why this needs to be a gate
-#' and not just a reviewer's habit of remembering to check. Uses the standard Pearson
-#' chi-square/df dispersion statistic; a well-specified Poisson model has this near 1.
+#' and not just a reviewer's habit of remembering to check.
+#'
+#' Delegates the actual dispersion arithmetic to `mysterycall::mysterycall_overdispersion_test()`
+#' rather than recomputing the Pearson chi-square/df statistic locally -- this gate originally
+#' reimplemented that math from scratch, which turned out to duplicate a canonical function that
+#' already existed in mysterycall (same statistic, same default 1.5 threshold, same remedy),
+#' undetected until an audit compared the two. `threshold` now defaults to
+#' `mysterycall::mysterycall_overdispersion_threshold()` so the two never drift apart again.
 #'
 #' Only fires for a Poisson family. A model already fit as negative-binomial (family name
 #' matching "Negative Binomial" or "nbinom", e.g. MASS::glm.nb or glmmTMB(family = nbinom2))
@@ -621,7 +627,8 @@ gate_business_days_correct <- function(df, call_col = "call_date", appt_col = "a
 #' @param model     a fitted model with `family()`, `residuals(type = "pearson")` and
 #'                  `df.residual()` methods (glm, MASS::glm.nb, glmmTMB, ...)
 #' @param threshold dispersion ratio above which a Poisson fit is flagged
-gate_overdispersion <- function(model, threshold = 1.5, label = "overdispersion") {
+gate_overdispersion <- function(model, threshold = mysterycall::mysterycall_overdispersion_threshold(),
+                                label = "overdispersion") {
   fam <- tryCatch(family(model)$family, error = function(e) NA_character_)
   if (is.na(fam)) {
     gate_fail(label, "could not determine the model's family via family(model)$family; ",
@@ -636,28 +643,19 @@ gate_overdispersion <- function(model, threshold = 1.5, label = "overdispersion"
     return(invisible(TRUE))
   }
 
-  df_resid <- tryCatch(df.residual(model), error = function(e) NA_real_)
-  if (is.na(df_resid) || df_resid <= 0) {
-    gate_fail(label, "model has no usable residual degrees of freedom (df.residual() <= 0 or NA)")
-  }
-  pr <- tryCatch(residuals(model, type = "pearson"), error = function(e) {
-    gate_fail(label, "could not extract Pearson residuals via residuals(model, type = 'pearson')")
-  })
-  ratio <- sum(pr^2, na.rm = TRUE) / df_resid
+  chk <- mysterycall::mysterycall_overdispersion_test(model)
 
-  if (ratio > threshold) {
+  if (chk$phi > threshold) {
     gate_fail(label,
               sprintf("Pearson dispersion ratio %.2f exceeds the threshold of %.2f for a Poisson fit",
-                      ratio, threshold),
-              "\n\n  A ratio this far above 1 means the variance is not equal to the mean the way ",
-              "a Poisson\n  model assumes; standard errors from this fit are too small and P-",
-              "values too optimistic.\n  Refit with MASS::glm.nb(...) or glmmTMB(..., family = ",
-              "nbinom2), which this study's\n  own frozen plan already specifies for its count ",
-              "outcomes. Do not raise `threshold` to make\n  this pass -- that hides the same ",
-              "problem it is built to catch.")
+                      chk$phi, threshold),
+              "\n\n  ", chk$sentence,
+              "\n\n  Refit with MASS::glm.nb(...) or glmmTMB(..., family = nbinom2), which this ",
+              "study's own\n  frozen plan already specifies for its count outcomes. Do not raise ",
+              "`threshold` to make\n  this pass -- that hides the same problem it is built to catch.")
   }
   gate_pass(label, sprintf("Pearson dispersion ratio %.2f (Poisson fit, threshold %.2f)",
-                           ratio, threshold))
+                           chk$phi, threshold))
 }
 
 #' Run every gate that can be run before a model is fitted.

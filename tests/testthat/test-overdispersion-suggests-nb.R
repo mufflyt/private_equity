@@ -6,6 +6,13 @@
 # specifies negative-binomial for its count outcomes (wait time, hold time, transfers). Uses
 # base glm() throughout, not glmmTMB, since glmmTMB is not a CI dependency
 # (.github/workflows/gates.yml) and the dispersion arithmetic is identical for either.
+#
+# The dispersion statistic itself is computed by mysterycall::mysterycall_overdispersion_test(),
+# not recomputed here -- gate_overdispersion() originally reimplemented the Pearson chi-square/df
+# math from scratch, unknowingly duplicating that canonical function (same statistic, same
+# default 1.5 threshold, same remedy language), found only by an audit that compared the two.
+# These tests exercise gate_overdispersion()'s own logic (family routing, threshold comparison,
+# error wording) around that delegation, not the arithmetic mysterycall already tests itself.
 
 set.seed(2026)
 n <- 400
@@ -81,8 +88,19 @@ test_that("provenance: an object with no usable family() fails clearly rather th
 test_that("adversarial: raising the threshold to force a pass is not something the gate enables silently", {
   # This does not (and cannot) stop a caller from passing threshold = 100. It documents, in a
   # way that will break loudly if the default ever regresses, what the default protects.
-  expect_equal(formals(gate_overdispersion)$threshold, 1.5,
-               info = paste("the default threshold is a scientific judgment call recorded",
-                            "once, here; a change to it should be a deliberate, reviewed edit",
-                            "to R/analysis_gates.R, not an accidental one this test would miss"))
+  default_threshold <- eval(formals(gate_overdispersion)$threshold)
+  expect_equal(default_threshold, 1.5,
+               info = paste("the default threshold is a scientific judgment call; a change to",
+                            "it should be a deliberate, reviewed edit, not an accidental one",
+                            "this test would miss"))
+})
+
+test_that("delegation: the default threshold tracks mysterycall's own constant, not a local copy", {
+  # gate_overdispersion() used to hardcode threshold = 1.5, duplicating
+  # mysterycall_overdispersion_threshold() without knowing it existed -- caught by an audit, not
+  # by this suite. The default is now the function call itself, so a future change to
+  # mysterycall's constant is inherited automatically instead of silently diverging again.
+  default_threshold <- eval(formals(gate_overdispersion)$threshold)
+  expect_equal(default_threshold, mysterycall::mysterycall_overdispersion_threshold(),
+               info = "the default must be *derived from* mysterycall, not merely equal to it by coincidence")
 })
