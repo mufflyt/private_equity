@@ -1,5 +1,16 @@
 #!/usr/bin/env Rscript
-# Build pe_obgyn_study_database.csv from the raw REDCap export.
+# Build pe_obgyn_fielded_call_outcomes.csv from the raw REDCap export.
+#
+# Named distinctly from pe_obgyn_study_database.csv on purpose. That filename is already the
+# established, widely-referenced output of the MATCHING pipeline (build_matched_control_group_
+# psm.R) -- the pre-calling matched-candidate database with Gender/Years_in_Practice/
+# Open_Payments_Years/Matcher_Latitude/Matcher_Longitude, read by 20+ files across this repo
+# including inst/frozen/PROVENANCE.md and test-table1-balance.R. An earlier version of this
+# script used that same name for this file (the post-calling REDCap-outcomes database) --
+# a real naming collision, not a hypothetical one: had both scripts been run in the same
+# checkout, whichever ran second would have silently overwritten the other's output, and if
+# that happened after real calling finished it would have destroyed real, unrecoverable
+# fielded outcomes data. Caught and fixed before either file existed for real.
 #
 # This is the merge script primary_analysis.Rmd already names as a dependency it does not
 # improvise. It does not exist until calling finishes -- there is no raw REDCap export in this
@@ -26,7 +37,7 @@ source(file.path(root, "R", "analysis_gates.R"))
 RAW_EXPORT_PATH <- file.path(root, "redcap", "redcap_raw_export_800.csv")
 CROSSWALK_PATH  <- file.path(root, "redcap", "redcap_slot_crosswalk_400.csv")
 SHEET_PATH      <- file.path(root, "pe_obgyn_final_calling_sheet_200_dedup.csv")
-OUT_PATH        <- file.path(root, "pe_obgyn_study_database.csv")
+OUT_PATH        <- file.path(root, "pe_obgyn_fielded_call_outcomes.csv")
 
 if (!file.exists(RAW_EXPORT_PATH)) {
   stop(

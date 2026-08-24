@@ -33,13 +33,15 @@ rehearsal-with-simulated-outcomes script; this file is not it and must never gro
 fallback to make itself runnable early.
 
 ```{r require-real-data}
-DB_PATH <- file.path(root, "pe_obgyn_study_database.csv")
+DB_PATH <- file.path(root, "pe_obgyn_fielded_call_outcomes.csv")
 
 if (!file.exists(DB_PATH)) {
   stop(
     "\n\n  primary_analysis.Rmd cannot run: ", DB_PATH, " does not exist yet.\n",
-    "  This file is the real fielded database with call outcomes merged in -- see\n",
-    "  build_study_database_from_redcap.R, which builds it from the raw REDCap export via\n",
+    "  This file is the real fielded database with call outcomes merged in -- named distinctly\n",
+    "  from pe_obgyn_study_database.csv, which is the established, unrelated output of the\n",
+    "  MATCHING pipeline (build_matched_control_group_psm.R); do not confuse the two.\n",
+    "  Built by build_study_database_from_redcap.R, from the raw REDCap export via\n",
     "  mysterycall::mysterycall_prepare_calls() (contacted1/2, calldate1, appdate, exclusions)\n",
     "  plus the record-id crosswalk (redcap/redcap_slot_crosswalk_400.csv) and the fielded sheet.\n",
     "  Run that script against a real REDCap export first; do not improvise the derivation here.\n",
@@ -242,14 +244,46 @@ t4
 # Supplemental Table 1. Variance components
 
 ```{r variance-components}
+# Returns a row rather than only cat()-printing, so the manuscript's Supplemental Table 1 can
+# pull real variance components from primary_analysis_results.rds instead of needing to refit --
+# this was cat()-only until an audit of private_equity_manuscript.qmd found Supplemental Table 1
+# absent because there was nothing in the saved object to build it from.
+#
+# ICC comes from performance::icc() (already a real dependency, via mysterycall's Imports), not
+# a hand-rolled residual-variance formula: attr(VarCorr(.)$cond, "sc") is exactly 1 for the
+# binomial fits and carries `useSc = FALSE` for all three models here, meaning glmmTMB does not
+# treat it as an estimated residual scale for these families -- squaring it and calling the
+# result "residual variance" would report a fabricated-looking constant, not a real quantity.
+# performance::icc() handles the family-appropriate latent/observation-level variance correctly,
+# and can legitimately return NA on a near-singular fit -- exactly the outcome the original
+# draft's own caveat anticipated ("with two calls per clinician [variance components] are weakly
+# identified"), so NA here is an honest result, not a bug to work around.
 vc <- function(m, lbl) {
   v <- glmmTMB::VarCorr(m)$cond
-  cat(sprintf("  %-30s pair var = %.4f%s\n", lbl, as.numeric(v$pair),
-              if ("npi" %in% names(v)) sprintf(" | clinician var = %.4f", as.numeric(v$npi)) else ""))
+  pair_var <- as.numeric(v$pair)
+  npi_var  <- if ("npi" %in% names(v)) as.numeric(v$npi) else NA_real_
+  # performance::icc(by_group = TRUE) returns one row per grouping factor (Group, ICC), not a
+  # single combined value -- verified against its real return shape before trusting it, since a
+  # first attempt at this assumed a column ($ICC_adjusted) that doesn't exist for by-group output.
+  icc_by_group <- tryCatch({
+    ic <- performance::icc(m, by_group = TRUE)
+    if (is.null(ic) || !is.data.frame(ic)) setNames(rep(NA_real_, 2), c("pair", "npi"))
+    else setNames(ic$ICC, ic$Group)[c("pair", "npi")]
+  }, error = function(e) setNames(rep(NA_real_, 2), c("pair", "npi")),
+     warning = function(w) setNames(rep(NA_real_, 2), c("pair", "npi")))
+  icc_pair <- unname(icc_by_group["pair"]); icc_npi <- unname(icc_by_group["npi"])
+  cat(sprintf("  %-30s pair var = %.4f (ICC %s)%s\n", lbl, pair_var,
+              if (is.na(icc_pair)) "not estimable" else sprintf("%.3f", icc_pair),
+              if (!is.na(npi_var)) sprintf(" | clinician var = %.4f (ICC %s)", npi_var,
+                                           if (is.na(icc_npi)) "not estimable" else sprintf("%.3f", icc_npi)) else ""))
+  data.frame(Model = lbl, pair_var = pair_var, pair_icc = icc_pair,
+            npi_var = npi_var, npi_icc = icc_npi)
 }
-vc(fit_ob_primary,   "Primary obtainment")
-vc(fit_wt_primary,   "Primary wait time")
-vc(fit_ob_secondary, "Secondary obtainment")
+variance_components <- rbind(
+  vc(fit_ob_primary,   "Primary obtainment"),
+  vc(fit_wt_primary,   "Primary wait time"),
+  vc(fit_ob_secondary, "Secondary obtainment")
+)
 ```
 
 # Pre-specified sensitivities
@@ -323,7 +357,7 @@ sens_table
 ```{r provenance}
 record_output_provenance(
   "primary_analysis_results.html",
-  c("pe_obgyn_study_database.csv", "SAP.lock"),
+  c("pe_obgyn_fielded_call_outcomes.csv", "SAP.lock"),
   "primary_analysis.Rmd", "derived",
   path = file.path(root, "manuscript", "PROVENANCE.csv")
 )
@@ -332,7 +366,7 @@ record_output_provenance(
 ```{r save-results}
 saveRDS(list(fit_ob_primary = fit_ob_primary, fit_wt_primary = fit_wt_primary,
             fit_ob_secondary = fit_ob_secondary, table1 = t1, table2 = t2, table3 = t3,
-            table4 = t4, sensitivities = sens_table),
+            table4 = t4, sensitivities = sens_table, variance_components = variance_components),
        file.path(root, "primary_analysis_results.rds"))
 cat("Saved primary_analysis_results.rds\n")
 ```

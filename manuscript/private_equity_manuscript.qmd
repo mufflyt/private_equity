@@ -153,27 +153,32 @@ RESULTS_PATH <- file.path(root, "primary_analysis_results.rds")
 if (!file.exists(RESULTS_PATH)) {
   stop(
     "\n\n  private_equity_manuscript.qmd cannot render: ", RESULTS_PATH, " does not exist yet.\n",
-    "  Render primary_analysis.Rmd first (which itself requires pe_obgyn_study_database.csv,\n",
-    "  built by build_study_database_from_redcap.R from a real REDCap export). This file only\n",
-    "  narrates that object -- it does not fit models or derive outcomes itself.\n",
+    "  Render primary_analysis.Rmd first (which itself requires\n",
+    "  pe_obgyn_fielded_call_outcomes.csv, built by build_study_database_from_redcap.R from a\n",
+    "  real REDCap export). This file only narrates that object -- it does not fit models or\n",
+    "  derive outcomes itself.\n",
     call. = FALSE
   )
 }
 R <- readRDS(RESULTS_PATH)
 
-## ---- Table 1's matching covariates live in the matching pipeline's intermediate output, ----
-## not in primary_analysis_results.rds -- pe_obgyn_final_calling_sheet_200_dedup.csv (this
-## study's committed fielded sheet) carries Credentials but not Gender / Years_in_Practice /
-## Open_Payments_Years, which build_matched_control_group_psm.R computes for the propensity
-## model but does not currently write through to the fielded sheet. Fails closed separately
-## from RESULTS_PATH so the two gaps are diagnosable independently.
-MATCH_PATH <- file.path(root, "pe_obgyn_matched_calling_list.csv")
+## ---- Table 1's matching covariates (Gender, Years_in_Practice, Open_Payments_Years) live in ----
+## pe_obgyn_study_database.csv, the MATCHING pipeline's output (build_matched_control_group_
+## psm.R) -- NOT pe_obgyn_matched_calling_list.csv, a subset of the same pipeline's columns that
+## excludes them, and NOT pe_obgyn_fielded_call_outcomes.csv (this study's post-calling REDCap
+## outcomes). test-table1-balance.R already reads Gender from this exact file, confirming the
+## convention. Fails closed separately from RESULTS_PATH so the two gaps are diagnosable
+## independently.
+MATCH_PATH <- file.path(root, "pe_obgyn_study_database.csv")
 if (!file.exists(MATCH_PATH)) {
   stop(
     "\n\n  private_equity_manuscript.qmd cannot build Table 1: ", MATCH_PATH, " does not exist.\n",
     "  Table 1 (credentials, gender, years in practice, Open Payments activity) needs the\n",
     "  matching pipeline's covariates -- run build_matched_control_group_psm.R locally first.\n",
-    "  These columns are not currently carried through to the committed fielded sheet.\n",
+    "  Do not confuse this file with pe_obgyn_fielded_call_outcomes.csv (post-calling outcomes)\n",
+    "  or pe_obgyn_matched_calling_list.csv (a column subset that excludes Gender/Years/Open\n",
+    "  Payments) -- see build_study_database_from_redcap.R's header comment for why these three\n",
+    "  filenames must stay distinct.\n",
     call. = FALSE
   )
 }
@@ -183,6 +188,7 @@ match_cov <- read_csv(MATCH_PATH, show_col_types = FALSE)
 S <- list()
 S$n_total <- nrow(match_cov); S$n_pe <- sum(match_cov$PE_or_Not == "PE")
 S$n_indep <- sum(match_cov$PE_or_Not == "Non-PE")
+S$n_states <- dplyr::n_distinct(match_cov$State)
 
 # primary obtainment (Medicaid-only, PE vs. independent)
 co <- summary(R$fit_ob_primary)$coefficients$cond["pe", ]
@@ -234,7 +240,8 @@ COMIRB determination letter before submission, not guessed here.**
   `r if (!is.na(wc_body) && wc_body <= params$word_limit) "✓ within limit" else "⚠ over limit"`
 - **Unresolved before submission:** second author's surname/credentials (YAML `author:`);
   COMIRB protocol number and exempt-vs.-waiver status (see IRB line above); Table 1's
-  Gender/Years-in-Practice/Open-Payments columns depend on `pe_obgyn_matched_calling_list.csv`
+  Gender/Years-in-Practice/Open-Payments columns depend on `pe_obgyn_study_database.csv`
+  (the matching pipeline's output, not the identically-prefixed post-calling outcomes file)
   existing locally; backup-physician counts in the Cohort-Compliant Backup Protocol paragraph
   need re-verifying against the current 459-pair pool (an earlier draft's 101/243 were computed
   against a superseded 511-pair pool and must not be reused as-is).
@@ -338,8 +345,8 @@ Propensity scores came from a logistic model of PE status on credential (MD vs. 
 in practice, and Open Payments activity as a proxy for industry engagement; state, gender, and the
 10-mile radius were enforced as hard constraints on the candidate pool. To limit within-office
 clustering, exactly one clinician was randomly selected per physical office location. From a
-matched pool of candidate pairs across 26 U.S. states, we fielded `r S$n_total / 2` pairs
-(`r S$n_total` clinicians).
+matched pool of candidate pairs across `r S$n_states` U.S. states, we fielded `r S$n_total / 2`
+pairs (`r S$n_total` clinicians).
 
 ## Cohort-Compliant Backup Protocol
 
@@ -357,10 +364,22 @@ pair, rather than replacing an entire pair that cannot be fielded.
 
 Neighborhood social vulnerability was measured with the Centers for Disease Control and
 Prevention/Agency for Toxic Substances and Disease Registry Social Vulnerability Index
-(CDC/ATSDR SVI), 2022 release, overall summary percentile ranking (`RPL_THEMES`), reconstructed
-from each clinician's practice address to a 2020 census tract via the U.S. Census Bureau batch
-geocoder — see `docs/CANONICAL_SOURCES_AUDIT.md` and `manuscript/appendix_data_provenance.md` for
-the full provenance audit that necessitated this reconstruction.
+(CDC/ATSDR SVI), 2022 release, overall summary percentile ranking (`RPL_THEMES`). A pre-fielding
+audit of the covariate file established that the SVI values initially attached to the cohort
+could not be traced to any geographic linkage and were absent for 94 of 200 control clinicians
+and no PE clinicians, so that missingness was almost perfectly associated with exposure (Fisher
+exact test, *P* = 5.1 × 10⁻³⁵). The variable was therefore reconstructed from source geography
+before any call was placed.
+
+Reconstruction proceeded from each clinician's practice address to a 2020 census tract via the
+U.S. Census Bureau batch geocoder, and from tract to `RPL_THEMES` using the CDC/ATSDR 2022 state
+files, and recovered SVI for 197 of 200 PE clinicians and 198 of 200 controls across 319 census
+tracts, leaving 197 of 200 matched pairs complete. Missingness in the reconstructed variable is
+independent of exposure (Fisher exact test, *P* = 1.00), and the arms are balanced on the measure
+(standardized mean difference −0.03; Welch *P* = 0.79). The original values are retained
+unmodified for provenance and are not used in any analysis — see
+`docs/CANONICAL_SOURCES_AUDIT.md` and `manuscript/appendix_data_provenance.md` for the full audit
+and reconstruction methodology.
 
 ## Call Protocol and Vignette
 
@@ -369,7 +388,10 @@ bleeding (AUB). Each caller presented either as a Medicaid enrollee or as a comm
 enrollee. Insurance-presentation order was randomized, with a minimum 48-hour interval between the
 two calls to a given office. Outcomes were recorded in a blinded REDCap database — record numbers
 were assigned to carry no information about ownership arm (see
-`docs/APPENDIX_RECORD_BLINDING.md`).
+`docs/APPENDIX_RECORD_BLINDING.md`). To ensure data integrity, clinician phone numbers were
+cross-referenced against three independent sources (NPPES, CMS billing records, and platform
+websites); of the numbers checked, 69.0% matched across two or more sources and 100% matched at
+least one registry.
 
 ## Primary and Secondary Outcomes
 
@@ -394,6 +416,40 @@ practice phone line; clustering on phone line rather than clinician; restricting
 address-level SVI linkage; refitting without the SVI covariate; complete-case analysis; repeating
 the primary analyses on all 200 pairs rather than the eligibility-restricted analytic population;
 and restricting eligibility to taxonomy alone. All tests were two-sided at α = 0.05.
+
+## Sample Size and Power
+
+The sample size was evaluated by simulation for the primary wait-time estimand, the
+ownership-by-insurance interaction, tested alone at a two-sided α of 0.05. Each replicate
+reproduced the fielded design — one Medicaid and one commercial call per clinician, two
+clinicians per matched pair — and was analyzed with the same negative-binomial GLMM specified
+above, with a clinician random intercept. Wait times were drawn negative-binomial with dispersion
+solved at a reference mean of 23 business days, under wait-time standard deviations of 10 and 20
+days. Two hundred replicates were run per cell, and all fits converged.
+
+Because no published estimate of a private-equity-by-insurance interaction in obstetric and
+gynecologic wait times exists, the assumed magnitude was anchored to the closest available
+simulated-patient study: Nie et al. reported a mean wait of 17.5 days at private equity-acquired
+urology practices versus 21.4 days at non-acquired practices (*P* = .017), a ratio of 1.22
+[@nie2022urology]. That study reported the ownership and insurance main effects separately and
+did not estimate their interaction for wait time; the figure is therefore used as the magnitude
+of the published private equity-associated wait-time difference in the closest mystery-caller
+study, not as a previously observed interaction. Conservative (1.10) and larger (1.35) scenarios
+were carried alongside.
+
+If every call yielded a wait time, 200 matched pairs would give 87% power at the anchored
+magnitude and a standard deviation of 10 days. Wait times are observed only when a clinic offers
+a date, however, and under the anticipated obtainment proportions the 800 placed calls are
+expected to yield approximately 622 observed wait times, with the private equity-Medicaid cell
+that identifies the interaction falling from 200 calls to approximately 82. Repeating the
+simulation with calls retained at their cell-specific obtainment probability gives **69% power at
+200 pairs**, which is the figure that describes the study as fielded. Power reaches 81% at 244
+pairs, the largest sample the matched pool can supply without dialing any office for two
+different pairs. The minimum interaction detectable with 80% power at the fielded design, before
+censoring, is an incidence rate ratio of approximately 1.19. Dispersion is the binding constraint
+throughout: at a wait-time standard deviation of 20 days, power at the anchored magnitude falls
+to 41% at 200 pairs. The full simulation grid and censoring-aware results are reported in
+`manuscript/appendix_power.md`.
 
 # Results
 
@@ -491,6 +547,26 @@ confidence interval. The primary and secondary models are specified in `SAP.lock
 against it by `gate_sap()` before fitting (`primary_analysis.Rmd`). All seven sensitivity
 analyses are reported regardless of what the primary result shows.
 
+```{r}
+#| label: tbl-variance-components
+#| tbl-cap: "Supplemental Table 1. Random-effect variance components and intraclass correlation coefficients (ICC)."
+vc_display <- R$variance_components
+vc_display$pair_icc <- ifelse(is.na(vc_display$pair_icc), "not estimable", sprintf("%.3f", vc_display$pair_icc))
+vc_display$npi_icc  <- ifelse(is.na(vc_display$npi_var), "--",
+                              ifelse(is.na(vc_display$npi_icc), "not estimable", sprintf("%.3f", vc_display$npi_icc)))
+vc_display$npi_var  <- ifelse(is.na(vc_display$npi_var), "--", sprintf("%.4f", vc_display$npi_var))
+vc_display$pair_var <- sprintf("%.4f", vc_display$pair_var)
+names(vc_display) <- c("Model", "Pair variance", "Pair ICC", "Clinician (NPI) variance", "Clinician (NPI) ICC")
+ftab(vc_display)
+```
+
+ICC computed with `performance::icc()` (Nakagawa \& Schielzeth latent-scale method), not a
+hand-derived formula. Reported as exploratory: each clinician contributes at most two calls and
+each matched pair at most four, so these components are weakly identified, matching the caveat
+already recorded in `manuscript/manuscript_cite.md`'s Statistical Analysis section. "Not
+estimable" reflects a genuinely singular or non-converged variance estimate for that
+model/grouping factor, not a rendering failure.
+
 # Figures
 
 ```{r}
@@ -527,8 +603,8 @@ Figure 3 (STROBE flow diagram) is generated separately by `manuscript/strobe_dia
 
 All analysis code and the reproducible manuscript source are available in the study repository
 (https://github.com/mufflyt/private_equity). All counts, ratios, and *P* values are computed from
-`pe_obgyn_study_database.csv` via `primary_analysis.Rmd`, gated by `SAP.lock` and the analysis
-gates in `R/analysis_gates.R`; this file narrates that precomputed object and fits no models of
+`pe_obgyn_fielded_call_outcomes.csv` via `primary_analysis.Rmd`, gated by `SAP.lock` and the
+analysis gates in `R/analysis_gates.R`; this file narrates that precomputed object and fits no models of
 its own.
 
 # Author Contributions
