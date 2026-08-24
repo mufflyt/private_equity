@@ -38,6 +38,26 @@ obtainment_secondary_family  = binomial
 obtainment_secondary_estimand = pe:medicaid
 obtainment_secondary_scale   = odds ratio
 
+# ---------------------------------------------------------------- analytic population
+# AMENDED 2026-08-24. The fielded frame contains 43 clinicians who cannot supply the
+# appointment the study requests: 24 whose NPPES primary taxonomy is not obstetrics or
+# gynecology, 18 at one of the five platforms the protocol already excludes (US Fertility,
+# IVI RMA Global, Kindbody, OB Hospitalist Group), and 2 without an MD or DO credential.
+# 40 of the 43 are PE-arm. They are called anyway, because the frame was fielded before this
+# was found, but they are not the population the estimand refers to: an office that does not
+# provide the service refuses or redirects, and a refusal concentrated ten to one in the
+# treated arm is not evidence about access, it is evidence about eligibility.
+#
+# The primary analyses are therefore restricted to pairs in which BOTH members are eligible.
+# Eligible is a committed column on the fielded sheet, derived as
+#   Credentials in (MD, DO) AND Taxonomy_Is_OBGYN AND NOT Platform_Excluded
+# and every input to it is committed alongside it, so the restriction is auditable rather
+# than asserted. 157 of 200 pairs qualify. Analysing all 200 is sensitivity_6, not the
+# primary, so the unrestricted result is always reported next to the restricted one.
+analytic_population          = pairs where Eligible is TRUE for both members
+analytic_population_column   = Eligible
+analytic_population_n_pairs  = 157
+
 # ---------------------------------------------------------------- shared settings
 alpha                        = 0.05
 sided                        = two
@@ -60,9 +80,18 @@ sensitivity_2 = cluster on phone_id rather than npi
 sensitivity_3 = restrict to pairs where both members have an address-level SVI linkage
 sensitivity_4 = refit without svi_z
 sensitivity_5 = complete-case on all analytic covariates
+sensitivity_6 = repeat the primary analyses on all 200 pairs, ignoring analytic_population
+sensitivity_7 = restrict to pairs where both members are OB/GYN by taxonomy, ignoring platform
 
 # ---------------------------------------------------------------- amendments
 # date | section | change | reason
 # 2026-08-10 | initial | frozen | first lock; svi_column set to the reconstructed measure
 # because the original CDC_SVI column was established to be simulated (Appendix S2).
-# sha256 = 01f65282d490f79303ba431a5f23b2b66beaff4d0a76394d93c176a6cb5d8789
+# 2026-08-24 | analytic population | added analytic_population, restricting the primary
+# analyses to the 157 pairs whose members are both eligible, and added sensitivity_6 (all 200
+# pairs) and sensitivity_7 (taxonomy only). Reason: checking all 400 fielded NPIs against the
+# NPI Registry showed 43 clinicians who cannot supply the requested appointment, 40 of them
+# PE-arm. The amendment is made BEFORE any call is placed and BEFORE any outcome exists, so
+# it cannot have been chosen to favour a result. It narrows the population; it does not touch
+# a formula, a family, an estimand or alpha.
+# sha256 = 486fe6a33b86c92c563ba0c0b2f6a1f65d97306553df944592b75e73c0ab9e6a
