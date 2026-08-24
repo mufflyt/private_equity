@@ -1,4 +1,25 @@
 # R Script to generate and save Figure 1, 2, and 3 as high-resolution PNGs
+#
+# WARNING, AND THE REASON THE OUTPUT NAMES CARRY A PREFIX.
+#
+# Figures 1 and 2 depict the study's PRIMARY OUTCOMES -- appointment obtainment by ownership
+# and payer, and the wait-time distribution. Neither is measured. Figure 1's rates are typed
+# into this file as literals, confidence intervals included. Figure 2 is rlnorm() draws around
+# medians typed in the same way. No call has been placed, no REDCap outcome export exists, and
+# the analysis in SAP.lock has never been run.
+#
+# Nothing in this script said so. The outputs were named figure1.png and figure2.png and their
+# titles read as findings: "Appointment Obtainment Rates by Practice Ownership", "Distribution
+# of Appointment Wait Times (Business Days)". A file in manuscript/ with that name and that
+# title is one drag away from a draft.
+#
+# This repository already polices exactly this for columns -- CDC_SVI became SIMULATED_CDC_SVI
+# so that "no column name in a fielded artifact asserts a measurement that was not made"
+# (test-svi-provenance.R). The same rule now applies to figures. The outputs are prefixed, the
+# titles say so on their face, and test-artifact-vintage.R fails if either is undone while no
+# outcome data exists.
+#
+# When real outcomes arrive: delete the literals, read the REDCap export, drop the prefix.
 library(ggplot2)
 library(mysterycall)
 library(DiagrammeRsvg)
@@ -26,7 +47,8 @@ p1 <- ggplot(fig1_data, aes(x = Group, y = Rate, fill = Payer)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1), limits = c(0, 1.05)) +
   scale_fill_manual(values = c("BCBS PPO (Commercial)" = green_color, "Medicaid" = gray_color)) +
   labs(
-    title = "Appointment Obtainment Rates by Practice Ownership",
+    title = "SIMULATED - Appointment Obtainment Rates by Practice Ownership",
+    subtitle = "Illustrative values. No calls have been placed; no outcome data exists.",
     x = "Practice Type",
     y = "Appointment Offer Rate (%)",
     fill = "Insurance Presenting"
@@ -39,7 +61,7 @@ p1 <- ggplot(fig1_data, aes(x = Group, y = Rate, fill = Payer)) +
     axis.text = element_text(size = 9)
   )
 
-ggsave(file.path(output_dir, "figure1.png"), plot = p1, width = 6.5, height = 4.5, dpi = 300)
+ggsave(file.path(output_dir, "SIMULATED_figure1_obtainment.png"), plot = p1, width = 6.5, height = 4.5, dpi = 300)
 
 cat("=== Generating Figure 2: Wait Time Distribution ===\n")
 set.seed(123)
@@ -61,7 +83,8 @@ p2 <- ggplot(fig2_data, aes(x = Wait_Time, color = Payer, linetype = Group)) +
   scale_x_continuous(limits = c(0, 80), breaks = seq(0, 80, 10)) +
   scale_color_manual(values = c("BCBS PPO" = green_color, "Medicaid" = gray_color)) +
   labs(
-    title = "Distribution of Appointment Wait Times (Business Days)",
+    title = "SIMULATED - Distribution of Appointment Wait Times (Business Days)",
+    subtitle = "Illustrative values. No calls have been placed; no outcome data exists.",
     x = "Business Days to First Available Appointment",
     y = "Density",
     color = "Payer",
@@ -75,7 +98,7 @@ p2 <- ggplot(fig2_data, aes(x = Wait_Time, color = Payer, linetype = Group)) +
     axis.text = element_text(size = 9)
   )
 
-ggsave(file.path(output_dir, "figure2.png"), plot = p2, width = 6.5, height = 4.5, dpi = 300)
+ggsave(file.path(output_dir, "SIMULATED_figure2_wait_times.png"), plot = p2, width = 6.5, height = 4.5, dpi = 300)
 
 cat("=== Generating Figure 3: STROBE Flow Diagram ===\n")
 # Define self-explanatory, descriptive text for the nodes and exclusions
