@@ -1,5 +1,10 @@
 # R Script to Generate Interactive STROBE Flowchart using mysterycall package
 library(mysterycall)
+# Resolve the repository root from this script's own path, so it runs from any working
+# directory -- the blocking test invokes it from tests/testthat.
+.self <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1])
+.ROOT <- if (is.na(.self)) normalizePath(".") else normalizePath(file.path(dirname(.self), ".."))
+source(file.path(.ROOT, "R", "pe_helpers.R"))
 
 # Define counts at each stage of the matching pipeline
 counts <- c(
@@ -57,3 +62,11 @@ strobe_flowchart <- mysterycall_plot_inclexcl(
 
 # Print flowchart in RStudio viewer
 print(strobe_flowchart)
+
+# The flow diagram IS derived from cohort artifacts, so it records which ones and their digests.
+record_output_provenance(
+  "figure3.png",
+  c("pe_obgyn_providers_active.csv", "pe_obgyn_matched_calling_list.csv",
+    "pe_obgyn_final_calling_sheet_200_dedup.csv"),
+  "manuscript/strobe_diagram.R", "derived",
+  path = file.path(.ROOT, "manuscript", "PROVENANCE.csv"))

@@ -183,3 +183,44 @@ test_that("hard-coded quantities in the manuscript are external, design, or brac
                 info = "the published comparator's values appear without their citation")
   }
 })
+
+# ---------------------------------------------------------------- output provenance ledger
+
+test_that("every publication-facing output records what it was generated from", {
+  # A figure that names its source and that source's digest can be checked. A figure that
+  # names nothing has to be trusted, and the two outcome figures were trusted for weeks.
+  # NONE is a valid source. Silence is not.
+  led <- rd(p("manuscript", "PROVENANCE.csv"))
+  expect_setequal(names(led),
+                  c("output", "source", "source_sha256", "generated_by", "status"))
+  figs <- list.files(p("manuscript"), pattern = "[.]png$")
+  expect_setequal(led$output, figs)
+  expect_true(all(nzchar(T(led$generated_by))))
+  expect_true(all(led$status %in% c("simulated", "derived", "measured")))
+})
+
+test_that("a derived output's recorded source digests still match the artifacts", {
+  led <- rd(p("manuscript", "PROVENANCE.csv"))
+  der <- led[led$status == "derived", , drop = FALSE]
+  expect_gt(nrow(der), 0L)
+  for (i in seq_len(nrow(der))) {
+    srcs <- trimws(strsplit(der$source[i], ";")[[1]])
+    hs   <- trimws(strsplit(der$source_sha256[i], ";")[[1]])
+    expect_equal(length(srcs), length(hs))
+    for (j in seq_along(srcs)) {
+      expect_equal(artifact_sha256(p(srcs[j])), hs[j],
+                   info = sprintf("%s was generated from a different version of %s",
+                                  der$output[i], srcs[j]))
+    }
+  }
+})
+
+test_that("adversarial: a simulated output cannot claim a real source", {
+  led <- rd(p("manuscript", "PROVENANCE.csv"))
+  sim <- led[led$status == "simulated", , drop = FALSE]
+  expect_gt(nrow(sim), 0L)
+  expect_true(all(sim$source == "NONE"),
+              info = "a simulated figure that names a source artifact is asserting derivation it does not have")
+  expect_true(all(grepl("^SIMULATED_", sim$output)),
+              info = "an output recorded as simulated must be named as simulated")
+})

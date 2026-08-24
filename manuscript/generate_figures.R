@@ -25,6 +25,11 @@ library(mysterycall)
 library(DiagrammeRsvg)
 library(rsvg)
 
+# Resolve the repository root from this script's own path, so it runs from any working
+# directory -- the blocking test invokes it from tests/testthat.
+.self <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1])
+.ROOT <- if (is.na(.self)) normalizePath(".") else normalizePath(file.path(dirname(.self), ".."))
+source(file.path(.ROOT, "R", "pe_helpers.R"))
 output_dir <- "manuscript"
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
@@ -62,6 +67,11 @@ p1 <- ggplot(fig1_data, aes(x = Group, y = Rate, fill = Payer)) +
   )
 
 ggsave(file.path(output_dir, "SIMULATED_figure1_obtainment.png"), plot = p1, width = 6.5, height = 4.5, dpi = 300)
+# No source artifact exists for this figure, and saying so is the point. NONE is a record;
+# silence is not.
+record_output_provenance("SIMULATED_figure1_obtainment.png", NA_character_,
+                         "manuscript/generate_figures.R", "simulated",
+                         path = file.path(.ROOT, "manuscript", "PROVENANCE.csv"))
 
 cat("=== Generating Figure 2: Wait Time Distribution ===\n")
 set.seed(123)
@@ -99,6 +109,9 @@ p2 <- ggplot(fig2_data, aes(x = Wait_Time, color = Payer, linetype = Group)) +
   )
 
 ggsave(file.path(output_dir, "SIMULATED_figure2_wait_times.png"), plot = p2, width = 6.5, height = 4.5, dpi = 300)
+record_output_provenance("SIMULATED_figure2_wait_times.png", NA_character_,
+                         "manuscript/generate_figures.R", "simulated",
+                         path = file.path(.ROOT, "manuscript", "PROVENANCE.csv"))
 
 cat("=== Generating Figure 3: STROBE Flow Diagram ===\n")
 # Define self-explanatory, descriptive text for the nodes and exclusions

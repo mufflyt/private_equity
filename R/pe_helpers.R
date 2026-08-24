@@ -129,3 +129,36 @@ col_ci <- function(df, nm) {
   hit <- match(tolower(nm), tolower(names(df)))
   if (is.na(hit)) NULL else df[[hit]]
 }
+
+# Hash an artifact so a generated output can name what it was built from.
+#
+# A figure that records its source and that source's digest can be checked; a figure that
+# records nothing has to be trusted. The manuscript's two outcome figures were built from
+# numbers typed into a script, and there was no place where that fact had to be written down.
+artifact_sha256 <- function(path) {
+  if (!file.exists(path)) return(NA_character_)
+  if (!requireNamespace("digest", quietly = TRUE)) return(NA_character_)
+  digest::digest(file = path, algo = "sha256")
+}
+
+#' Record what a publication-facing output was generated from.
+#'
+#' `sources` is a character vector of paths, or NA to declare explicitly that an output has no
+#' source artifact -- which is the honest record for an illustrative figure, and the thing that
+#' makes it detectable rather than merely undocumented.
+record_output_provenance <- function(output, sources, generated_by, status,
+                                     path = file.path("manuscript", "PROVENANCE.csv")) {
+  rows <- data.frame(
+    output       = basename(output),
+    source       = if (all(is.na(sources))) "NONE" else paste(basename(sources), collapse = "; "),
+    source_sha256 = if (all(is.na(sources))) "NONE"
+                    else paste(vapply(sources, artifact_sha256, character(1)), collapse = "; "),
+    generated_by = basename(generated_by),
+    status       = status,
+    stringsAsFactors = FALSE
+  )
+  old <- if (file.exists(path)) utils::read.csv(path, colClasses = "character") else NULL
+  if (!is.null(old)) old <- old[old$output != rows$output, , drop = FALSE]
+  utils::write.csv(rbind(old, rows), path, row.names = FALSE)
+  invisible(rows)
+}
