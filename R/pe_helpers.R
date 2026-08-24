@@ -126,3 +126,18 @@ record_output_provenance <- function(output, sources, generated_by, status,
   utils::write.csv(rbind(old, rows), path, row.names = FALSE)
   invisible(rows)
 }
+
+# The REDCap `transfers` field is a dropdown, not a raw count: 1 = "No transfers", 2 = "One
+# transfer", 3 = "Two transfers", 4 = "More than two transfers". Treating the stored value as
+# the count itself is off by one for every row. A raw count of 3 and "more than two" are not
+# distinguishable from this field alone, so 4 is capped at 3 rather than guessed, with an
+# explicit censoring flag so a downstream analysis can tell the two apart if it needs to.
+#
+# @return a data.frame with `transfers` (0, 1, 2, or 3 = "3 or more") and `transfers_censored`
+#   (TRUE where the true count could be higher than the reported 3).
+decode_redcap_transfers <- function(x) {
+  v <- suppressWarnings(as.integer(x))
+  if (any(!is.na(v) & !(v %in% 1:4)))
+    stop("transfers has value(s) outside the documented 1-4 dropdown range.", call. = FALSE)
+  data.frame(transfers = pmin(v - 1L, 3L), transfers_censored = !is.na(v) & v == 4L)
+}
