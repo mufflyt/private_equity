@@ -152,7 +152,7 @@ wc_body     <- wc_between("^# Introduction", "^# References")
 RESULTS_PATH <- file.path(root, "primary_analysis_results.rds")
 if (!file.exists(RESULTS_PATH)) {
   stop(
-    "\n\n  manuscript.qmd cannot render: ", RESULTS_PATH, " does not exist yet.\n",
+    "\n\n  private_equity_manuscript.qmd cannot render: ", RESULTS_PATH, " does not exist yet.\n",
     "  Render primary_analysis.Rmd first (which itself requires pe_obgyn_study_database.csv,\n",
     "  built by build_study_database_from_redcap.R from a real REDCap export). This file only\n",
     "  narrates that object -- it does not fit models or derive outcomes itself.\n",
@@ -170,7 +170,7 @@ R <- readRDS(RESULTS_PATH)
 MATCH_PATH <- file.path(root, "pe_obgyn_matched_calling_list.csv")
 if (!file.exists(MATCH_PATH)) {
   stop(
-    "\n\n  manuscript.qmd cannot build Table 1: ", MATCH_PATH, " does not exist.\n",
+    "\n\n  private_equity_manuscript.qmd cannot build Table 1: ", MATCH_PATH, " does not exist.\n",
     "  Table 1 (credentials, gender, years in practice, Open Payments activity) needs the\n",
     "  matching pipeline's covariates -- run build_matched_control_group_psm.R locally first.\n",
     "  These columns are not currently carried through to the committed fielded sheet.\n",
