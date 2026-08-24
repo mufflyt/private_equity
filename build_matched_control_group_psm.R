@@ -542,6 +542,19 @@ for (office in pe_unique_offices) {
   matched_physician <- NULL
   matched_control <- NULL
   
+  # ROW-ORDER INDEPENDENCE (added 2026-08-24, applies to FUTURE runs only).
+  #
+  # This shuffled the office's rows in whatever order they arrived in. With set.seed(42) that
+  # is reproducible on the same file and NOT reproducible on a re-sorted one: the same cohort,
+  # re-exported with rows in a different order, would select different controls. Determinism
+  # given a seed is not the same property as invariance to input order, and only the second
+  # makes a cohort defensible when the upstream export changes.
+  #
+  # The office is now sorted by NPI before shuffling, so the permutation is a function of the
+  # seed and the office's membership rather than of the file. THE FROZEN 200 PAIRS ARE NOT
+  # REGENERATED: this changes what a re-run would produce, and re-running is a separate
+  # scientific decision. See docs/MATCHING_LINEAGE.md.
+  office_subset <- office_subset[order(npi_key(office_subset$NPI)), , drop = FALSE]
   # Safe-guarded sample loop for length 1 to avoid R sample(x) behavior
   if (nrow(office_subset) == 1) {
     shuffled_indices <- 1

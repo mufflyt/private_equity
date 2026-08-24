@@ -114,6 +114,8 @@ test_that("adversarial: the control pool cannot contain PE clinicians", {
 })
 
 test_that("adversarial: matching is seeded once so a rerun is reproducible", {
+  # Comments stripped first: a comment naming set.seed is not a call to it.
+  psm <- ifelse(grepl("^\\s*#", psm), "", psm)
   loop_i <- grep("^for \\(office in pe_unique_offices\\)", psm)
   expect_length(loop_i, 1L)
   expect_true(any(grepl("^set\\.seed\\(", psm[seq_len(loop_i - 1L)])),

@@ -244,14 +244,28 @@ test_that("tie-breaking is deterministic and its non-determinism is seeded and d
               info = "offices must be visited in a defined order")
 })
 
-test_that("KNOWN LIMITATION: the matcher is seed-deterministic but not row-order invariant", {
+test_that("the matcher sorts each office before shuffling, so input order cannot change it", {
+  # RESOLVED 2026-08-24 for future runs. The office is sorted by NPI before the seeded shuffle,
+  # so the permutation is a function of the seed and the office membership, not of the order
+  # the rows happened to arrive in. The frozen 200 pairs are NOT regenerated; this changes what
+  # a re-run would produce, which is a separate scientific decision.
+  i <- grep("office_subset[order(npi_key(office_subset$NPI))", psm_src, fixed = TRUE)
+  expect_true(length(i) == 1L,
+              info = "the pre-shuffle sort is gone; input row order can change the cohort again")
+  j <- grep("shuffled_indices <- sample(seq_len(nrow(office_subset)))", psm_src, fixed = TRUE)
+  expect_true(length(j) == 1L && i < j,
+              info = "the sort must precede the shuffle to have any effect")
+})
+
+test_that("HISTORICAL: the frozen cohort was matched before that sort existed", {
   # Pinned rather than asserted away. Within each office the matcher shuffles the candidate
   # rows it was handed, so the permutation depends on the order they arrive in. Re-running on
   # the same file gives the same answer; re-running on a re-sorted file need not. The caliper
   # inputs are gone, so this cannot be demonstrated by execution -- only read from the code.
-  i <- grep("shuffled_indices <- sample(seq_len(nrow(office_subset)))", psm_src, fixed = TRUE)
-  expect_true(length(i) == 1L,
-              info = "if the shuffle changed, re-examine whether row order still matters")
+  # The stored pairs cannot inherit the fix retroactively. Recorded so nobody reads the sort
+  # above as evidence that the frozen cohort is order-invariant. It is not; it is simply frozen.
+  expect_true(file.exists(p("docs", "MATCHING_LINEAGE.md")),
+              info = "the lineage record explains what the frozen cohort can and cannot claim")
 })
 
 test_that("excluded-platform information cannot leak into control eligibility", {
