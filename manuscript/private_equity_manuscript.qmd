@@ -235,7 +235,9 @@ COMIRB determination letter before submission, not guessed here.**
 - **Unresolved before submission:** second author's surname/credentials (YAML `author:`);
   COMIRB protocol number and exempt-vs.-waiver status (see IRB line above); Table 1's
   Gender/Years-in-Practice/Open-Payments columns depend on `pe_obgyn_matched_calling_list.csv`
-  existing locally.
+  existing locally; backup-physician counts in the Cohort-Compliant Backup Protocol paragraph
+  need re-verifying against the current 459-pair pool (an earlier draft's 101/243 were computed
+  against a superseded 511-pair pool and must not be reused as-is).
 :::
 :::
 
@@ -338,6 +340,18 @@ in practice, and Open Payments activity as a proxy for industry engagement; stat
 clustering, exactly one clinician was randomly selected per physical office location. From a
 matched pool of candidate pairs across 26 U.S. states, we fielded `r S$n_total / 2` pairs
 (`r S$n_total` clinicians).
+
+## Cohort-Compliant Backup Protocol
+
+To protect the matched-pair structure against call-time attrition (for example, a relocated or
+retired physician), backup physicians at the same office location as each primary clinician were
+pre-identified before calling began [exact backup counts (PE / control) not yet re-verified
+against the current 459-pair matched pool -- an earlier draft reported 101 and 243 against a
+now-superseded 511-pair pool; do not reuse those figures]. Callers substituted a pre-assigned
+backup only when the primary clinician was confirmed unreachable, and recorded the substitution
+as a deviation in REDCap so that it remains auditable rather than silent. This is distinct from
+the pair-level replacement pool described above: backups replace one clinician within an intact
+pair, rather than replacing an entire pair that cannot be fielded.
 
 ## Contextual Covariates and Geographic Linkage
 
