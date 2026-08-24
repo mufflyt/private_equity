@@ -76,7 +76,7 @@ minimum or maximum indicates a `pmax`/`pmin` clamp rather than an empirical rang
 | `County_OBGYN_Count` | 200/200 | 106/200 | KS vs Normal *P* = 0.568; 11 values at exactly 1 | Same script: `pmax(1, round(rnorm(n, 42.6, 22.4)))` | **Not analytic; flagged simulated** |
 | `County_Medicare_Enrollment` | 200/200 | 106/200 | KS vs Normal *P* = 0.212; 3 values at exactly 100 | Same script: `pmax(100, round(rnorm(n, 75400, 38500)))` | **Not analytic; flagged simulated** |
 | `County_Medicaid_Enrollment` | 200/200 | 106/200 | KS vs Normal *P* = 0.956; 11 values at exactly 100 | Same script: `pmax(100, round(rnorm(n, 89200, 45200)))` | **Not analytic; flagged simulated** |
-| `Medicaid_Fee_Index` | 200/200 | 106/200 | KS vs Normal *P* < 0.001; 19 distinct values, constant within state in 16 of 23 states | Consistent with a state-level fee-ratio lookup, though not constant within every state; source not independently traced | Retained |
+| `Medicaid_Fee_Index` | 200/200 | 106/200 | KS vs Normal *P* < 0.001; 19 distinct values, constant within state in 16 of 26 states | Consistent with a state-level fee-ratio lookup, though not constant within every state; source not independently traced | Retained |
 | `PE_Concentration_15mi` | 200/200 | 106/200 | KS vs Normal *P* < 0.001; 55 true zeros; integer-valued | Consistent with a count computed from the PE roster; source not independently traced | Retained |
 | `HQ_Distance_Miles` | 200/200 | 106/200 | KS vs Normal *P* = 0.018; continuous, right-skewed | Consistent with the geodesic function in `apply_hq_distance.R` | Retained |
 
@@ -337,11 +337,11 @@ using the reconstructed CDC SVI field in place of the original column, on the 19
 be repeated excluding `pair_321` and `pair_437`, leaving 198 pairs.
 
 **Sensitivity analysis 3: telephone-level dependence.** Inference will be recalculated treating
-the normalized practice line rather than the clinician as the clustering unit, 385 units rather
+the normalized practice line rather than the clinician as the clustering unit, 387 units rather
 than 400.
 
 **Sensitivity analysis 4: geographic precision.** The analysis will be repeated restricted to the
-154 pairs in which both members carry an address-level tract linkage, and separately with the
+195 pairs in which both members carry an address-level tract linkage, and separately with the
 linkage method entered as a precision indicator.
 
 **Sensitivity analysis 5: covariate omission.** The primary estimand will be reported without the

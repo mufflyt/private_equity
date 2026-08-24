@@ -19,10 +19,26 @@ counts <- c(
   # "De-clustered (1/Office)" = 544 is NOT verifiable against any committed artifact and is
   # left as found rather than invented. It needs the value the de-clustering step actually
   # produced. test-artifact-vintage.R asserts only the four stages that can be checked.
-  "De-clustered (1/Office)" = 544,
+  "De-clustered (1/Office)" = NA_integer_,   # UNRESOLVED -- see the guard below
   "Geographically Matched" = 918,
   "Fielded Cohort" = 400
 )
+
+# FAIL CLOSED. Two stages could not be reproduced from any committed artifact:
+# "OB-GYN Generalist Only" = 1021 and "De-clustered (1/Office)", which read 544. 544 matches
+# nothing in the current pipeline, and a plausible-but-unproven cohort count is the same class
+# of error as a simulated figure presented as a result -- it is simply harder to notice.
+#
+# Rather than deduce a replacement, the de-clustering stage is NA and this script stops. Fill
+# it with the number that step actually produced, from the script that produced it, and this
+# runs again. Do not fill it by subtraction from the stages around it.
+UNRESOLVED <- names(counts)[is.na(counts)]
+if (length(UNRESOLVED)) {
+  stop("STROBE stages are unresolved and this figure will not be generated: ",
+       paste(UNRESOLVED, collapse = ", "),
+       "\n  Supply the count the pipeline actually produced. Do not infer it.",
+       call. = FALSE)
+}
 
 # Define exclusions for each stage
 exclusions <- list(
