@@ -1,0 +1,401 @@
+Provider Name,City,State,Phone,PE_or_Not,pair,first_arm,second_arm,first_record_id,second_record_id,min_hours_between_calls
+Dr. Elizabeth Ferik,Lansing,MI,517-975-6000,Non-PE,pair_1,Blue Cross/Blue Shield,Medicaid,409,9,48
+Dr. Elise Simpson,East Lansing,MI,248-465-4340,PE,pair_1,Medicaid,Blue Cross/Blue Shield,222,622,48
+Dr. Emma Rodgers Biebuyck,Petoskey,MI,231-487-2340,Non-PE,pair_2,Medicaid,Blue Cross/Blue Shield,329,729,48
+Dr. Kendra Johnson,Petoskey,MI,248-563-3231,PE,pair_2,Medicaid,Blue Cross/Blue Shield,285,685,48
+Dr. Tavor Sondheimer,Washington,DC,202-877-7000,Non-PE,pair_4,Medicaid,Blue Cross/Blue Shield,147,547,48
+Dr. Millet Yang,Washington,DC,202-715-5154,PE,pair_4,Medicaid,Blue Cross/Blue Shield,41,441,48
+Dr. Robert Feldman,South Miami,FL,305-667-4511,Non-PE,pair_8,Medicaid,Blue Cross/Blue Shield,5,405,48
+Dr. Leonardo Blachar,Miami,FL,305-532-1989,PE,pair_8,Blue Cross/Blue Shield,Medicaid,618,218,48
+Dr. Adegboyega Adejana,Baltimore,MD,410-760-1118,Non-PE,pair_22,Medicaid,Blue Cross/Blue Shield,342,742,48
+Dr. Rachel Schleichert,Towson,MD,410-328-6110,PE,pair_22,Blue Cross/Blue Shield,Medicaid,683,283,48
+Dr. Soyoun Bark,Troy,MI,248-218-4073,Non-PE,pair_24,Blue Cross/Blue Shield,Medicaid,449,49,48
+Dr. Hamid Banooni,Royal Oak,MI,248-489-1070,PE,pair_24,Medicaid,Blue Cross/Blue Shield,43,443,48
+Dr. Carrie Speier Schafer,Farmington Hills,MI,248-476-7650,Non-PE,pair_35,Blue Cross/Blue Shield,Medicaid,763,363,48
+Dr. Lena Carr,Novi,MI,248-662-4386,PE,pair_35,Blue Cross/Blue Shield,Medicaid,530,130,48
+Dr. Diana Cohen,Lake Orion,MI,248-690-7771,Non-PE,pair_57,Medicaid,Blue Cross/Blue Shield,245,645,48
+Dr. Ariel Gruda,Rochester,MI,248-964-1043,PE,pair_57,Blue Cross/Blue Shield,Medicaid,424,24,48
+Dr. Daphne Tumaneng,Warren,MI,586-582-7150,Non-PE,pair_68,Medicaid,Blue Cross/Blue Shield,96,496,48
+Dr. Esther Zekman,Royal Oak,MI,248-855-6663,PE,pair_68,Medicaid,Blue Cross/Blue Shield,266,666,48
+Dr. Mitchell Bitran,Miami Beach,FL,305-673-6217,Non-PE,pair_78,Medicaid,Blue Cross/Blue Shield,56,456,48
+Dr. Janet Gersten,Miami,FL,305-274-6002,PE,pair_78,Medicaid,Blue Cross/Blue Shield,216,616,48
+Dr. Christina Caito,Orlando,FL,407-453-2072,Non-PE,pair_87,Medicaid,Blue Cross/Blue Shield,341,741,48
+Dr. Gene Krishingner,Orlando,FL,407-975-0406,PE,pair_87,Medicaid,Blue Cross/Blue Shield,185,585,48
+Dr. Rolando Gonzalez,Hialeah,FL,305-822-8229,Non-PE,pair_91,Medicaid,Blue Cross/Blue Shield,290,690,48
+Dr. Jeffrey Litt,Miami,FL,561-354-1515,PE,pair_91,Medicaid,Blue Cross/Blue Shield,159,559,48
+Dr. Samantha Bunting,Davie,FL,954-476-1050,Non-PE,pair_101,Medicaid,Blue Cross/Blue Shield,132,532,48
+Dr. Mark Grenitz,Plantation,FL,954-473-2011,PE,pair_101,Blue Cross/Blue Shield,Medicaid,628,228,48
+Dr. Richard Biggs,Bradenton,FL,941-792-4993,Non-PE,pair_106,Blue Cross/Blue Shield,Medicaid,554,154,48
+Dr. Richard Peterson,Bradenton,FL,941-744-2640,PE,pair_106,Medicaid,Blue Cross/Blue Shield,104,504,48
+Dr. Jonathan Zaidan,Birmingham,MI,248-693-1630,Non-PE,pair_115,Medicaid,Blue Cross/Blue Shield,136,536,48
+Dr. Frederick Bartholomew,Farmington Hills,MI,248-253-0656,PE,pair_115,Blue Cross/Blue Shield,Medicaid,613,213,48
+Dr. Lisamarie Colon Ramirez,Coral Springs,FL,954-755-1411,Non-PE,pair_116,Blue Cross/Blue Shield,Medicaid,464,64,48
+Dr. Anthony Martell,Coral Springs,FL,954-752-9220,PE,pair_116,Medicaid,Blue Cross/Blue Shield,155,555,48
+Dr. Jeffrey Schachar,Davie,FL,954-513-6641,Non-PE,pair_120,Blue Cross/Blue Shield,Medicaid,711,311,48
+Dr. Alvin Martinez,Pembroke Pines,FL,954-447-1446,PE,pair_120,Medicaid,Blue Cross/Blue Shield,255,655,48
+Dr. Cynthia Baldwin,Miami,FL,305-273-4641,Non-PE,pair_122,Blue Cross/Blue Shield,Medicaid,633,233,48
+Dr. Joseph Kerpsack,Miami,FL,321-841-5281,PE,pair_122,Medicaid,Blue Cross/Blue Shield,134,534,48
+Dr. Gabriel Valverde Tavarez,Miami,FL,305-595-4070,Non-PE,pair_124,Blue Cross/Blue Shield,Medicaid,712,312,48
+Dr. Nathan Hirsch,Miami,FL,305-665-1133,PE,pair_124,Medicaid,Blue Cross/Blue Shield,386,786,48
+Dr. Susanne Archer,Livonia,MI,734-213-3688,Non-PE,pair_126,Medicaid,Blue Cross/Blue Shield,293,693,48
+Dr. Leigh Durudogan,Novi,MI,248-849-3401,PE,pair_126,Blue Cross/Blue Shield,Medicaid,502,102,48
+Dr. Emilio Gomez-Madrazo,South Miami,FL,305-441-7999,Non-PE,pair_128,Medicaid,Blue Cross/Blue Shield,187,587,48
+Dr. Julia Cooper,South Miami,FL,305-665-1133,PE,pair_128,Medicaid,Blue Cross/Blue Shield,177,577,48
+Dr. Maria Pimentel,Clearwater,FL,727-725-5121,Non-PE,pair_130,Blue Cross/Blue Shield,Medicaid,553,153,48
+Dr. Robert Sherman,Palm Harbor,FL,727-947-4485,PE,pair_130,Medicaid,Blue Cross/Blue Shield,206,606,48
+Dr. Kelly Vangilder,Boynton Beach,FL,561-737-7733,Non-PE,pair_133,Blue Cross/Blue Shield,Medicaid,684,284,48
+Dr. Sharise Richardson,Boynton Beach,FL,561-742-3929,PE,pair_133,Medicaid,Blue Cross/Blue Shield,19,419,48
+Dr. Jorge Pimienta,Miami,FL,305-554-7575,Non-PE,pair_138,Blue Cross/Blue Shield,Medicaid,470,70,48
+Dr. Michael Hellinger,Miami,FL,305-858-1515,PE,pair_138,Blue Cross/Blue Shield,Medicaid,670,270,48
+Dr. Jose Berthe,Coral Springs,FL,954-255-5799,Non-PE,pair_141,Blue Cross/Blue Shield,Medicaid,621,221,48
+Dr. Mark Zakaria,Coral Springs,FL,954-644-0149,PE,pair_141,Medicaid,Blue Cross/Blue Shield,231,631,48
+Dr. Randy Fink,Miami,FL,305-274-3130,Non-PE,pair_143,Medicaid,Blue Cross/Blue Shield,391,791,48
+Dr. Karan Arora,Miami,FL,305-275-5525,PE,pair_143,Medicaid,Blue Cross/Blue Shield,384,784,48
+Dr. Estrella Chavez Benzaquen,Pompano Beach,FL,954-786-5418,Non-PE,pair_154,Medicaid,Blue Cross/Blue Shield,236,636,48
+Dr. Alexandra Levy,Boca Raton,FL,561-368-3775,PE,pair_154,Medicaid,Blue Cross/Blue Shield,196,596,48
+Dr. Joseph Prezzato,Farmington Hills,MI,248-855-2229,Non-PE,pair_158,Medicaid,Blue Cross/Blue Shield,114,514,48
+Dr. Jennifer Borson,Novi,MI,248-465-1200,PE,pair_158,Blue Cross/Blue Shield,Medicaid,793,393,48
+Dr. Jane Matos-Fraebel,Plantation,FL,954-998-7760,Non-PE,pair_159,Blue Cross/Blue Shield,Medicaid,713,313,48
+Dr. Jenny Valencia,Plantation,FL,954-581-3100,PE,pair_159,Medicaid,Blue Cross/Blue Shield,42,442,48
+Dr. Julio Arronte,Miami,FL,305-722-9656,Non-PE,pair_160,Medicaid,Blue Cross/Blue Shield,367,767,48
+Dr. Brianna Varas,Miami,FL,786-631-3222,PE,pair_160,Medicaid,Blue Cross/Blue Shield,377,777,48
+Dr. Rachel Urrutia,Chapel Hill,NC,984-974-1000,Non-PE,pair_167,Medicaid,Blue Cross/Blue Shield,79,479,48
+Dr. Aimee Ferrandino,Durham,NC,919-684-8111,PE,pair_167,Medicaid,Blue Cross/Blue Shield,291,691,48
+Dr. Christopher Bauer,Morristown,NJ,973-971-5596,Non-PE,pair_169,Medicaid,Blue Cross/Blue Shield,25,425,48
+Dr. Philip Cheng,Basking Ridge,NJ,908-495-1183,PE,pair_169,Blue Cross/Blue Shield,Medicaid,568,168,48
+Dr. Daniel Kaelberer,Murray,UT,801-507-1950,Non-PE,pair_171,Blue Cross/Blue Shield,Medicaid,798,398,48
+Dr. James Hotaling,Salt Lake City,UT,206-543-0065,PE,pair_171,Blue Cross/Blue Shield,Medicaid,545,145,48
+Dr. Jaime Santiago-Lopetegui,Miami,FL,305-585-5315,Non-PE,pair_172,Medicaid,Blue Cross/Blue Shield,91,491,48
+Dr. Puneet Masson,Miami,FL,305-243-6090,PE,pair_172,Medicaid,Blue Cross/Blue Shield,21,421,48
+Dr. Elizabeth Isak,Chicago,IL,312-695-8182,Non-PE,pair_174,Medicaid,Blue Cross/Blue Shield,165,565,48
+Dr. Jennifer Weiss,Maywood,IL,708-216-9000,PE,pair_174,Blue Cross/Blue Shield,Medicaid,595,195,48
+Dr. Katherine Garfield,Timonium,MD,301-816-2424,Non-PE,pair_175,Medicaid,Blue Cross/Blue Shield,286,686,48
+Dr. Jessica Marinaro,Towson,MD,410-512-8300,PE,pair_175,Blue Cross/Blue Shield,Medicaid,483,83,48
+Dr. Amy Gueye,Columbia,MD,240-747-7785,Non-PE,pair_176,Medicaid,Blue Cross/Blue Shield,395,795,48
+Dr. Shelley Dolitsky,Columbia,MD,410-997-6999,PE,pair_176,Medicaid,Blue Cross/Blue Shield,103,503,48
+Dr. Lethenia Baker,Kennesaw,GA,770-424-8222,Non-PE,pair_177,Blue Cross/Blue Shield,Medicaid,407,7,48
+Dr. Victoria Jiang,Marietta,GA,678-540-1098,PE,pair_177,Medicaid,Blue Cross/Blue Shield,250,650,48
+Dr. Alexander Shapiro,Denver,CO,303-338-4545,Non-PE,pair_178,Medicaid,Blue Cross/Blue Shield,249,649,48
+Dr. Ryan Martin,Denver,CO,303-436-6000,PE,pair_178,Blue Cross/Blue Shield,Medicaid,750,350,48
+Dr. Rafael Marquez,Allentown,PA,610-435-9575,Non-PE,pair_179,Blue Cross/Blue Shield,Medicaid,461,61,48
+Dr. Ha Nguyen,Bethlehem,PA,610-398-7700,PE,pair_179,Blue Cross/Blue Shield,Medicaid,439,39,48
+Dr. James Leonelli,Youngstown,OH,330-726-2496,Non-PE,pair_181,Blue Cross/Blue Shield,Medicaid,709,309,48
+Dr. Virginia Banks,Youngstown,OH,724-347-4654,PE,pair_181,Blue Cross/Blue Shield,Medicaid,580,180,48
+Dr. Shaunte Gray,Los Angeles,CA,800-954-8000,Non-PE,pair_182,Blue Cross/Blue Shield,Medicaid,508,108,48
+Dr. Abigail Armstrong,Santa Monica,CA,323-410-1291,PE,pair_182,Medicaid,Blue Cross/Blue Shield,156,556,48
+Dr. Meera Patel,Clayton,MO,314-916-8751,Non-PE,pair_183,Blue Cross/Blue Shield,Medicaid,549,149,48
+Dr. Kelsey Anderson,Creve Coeur,MO,314-266-2062,PE,pair_183,Medicaid,Blue Cross/Blue Shield,296,696,48
+Dr. Felix Cohen,New York,NY,347-545-2520,Non-PE,pair_184,Blue Cross/Blue Shield,Medicaid,641,241,48
+Dr. Fahimeh Sasan,New York,NY,347-778-2542,PE,pair_184,Blue Cross/Blue Shield,Medicaid,725,325,48
+Dr. Shayna Rubin,Chicago,IL,312-262-2976,Non-PE,pair_185,Blue Cross/Blue Shield,Medicaid,623,223,48
+Dr. Sara Rizk,Chicago,IL,773-296-3300,PE,pair_185,Blue Cross/Blue Shield,Medicaid,692,292,48
+Dr. Amber Jaeger,San Francisco,CA,415-476-1000,Non-PE,pair_186,Medicaid,Blue Cross/Blue Shield,306,706,48
+Dr. Emily Ager,San Francisco,CA,541-240-1236,PE,pair_186,Blue Cross/Blue Shield,Medicaid,485,85,48
+Dr. Marcela Lazo,West Palm Beach,FL,561-655-5511,Non-PE,pair_187,Blue Cross/Blue Shield,Medicaid,785,385,48
+Dr. Sylvia Siegfried,West Palm Beach,FL,561-434-0111,PE,pair_187,Blue Cross/Blue Shield,Medicaid,746,346,48
+Dr. Sierra Cuthpert,Flint,MI,810-262-6743,Non-PE,pair_195,Blue Cross/Blue Shield,Medicaid,626,226,48
+Dr. Alycia Cucka,Grand Blanc,MI,810-606-5000,PE,pair_195,Medicaid,Blue Cross/Blue Shield,219,619,48
+Dr. Darcy Bryan,Tampa,FL,813-872-8551,Non-PE,pair_201,Blue Cross/Blue Shield,Medicaid,714,314,48
+Dr. Beth Diner,Tampa,FL,727-954-7121,PE,pair_201,Medicaid,Blue Cross/Blue Shield,225,625,48
+Dr. Teri Forney,Mansfield,TX,682-341-7330,Non-PE,pair_205,Blue Cross/Blue Shield,Medicaid,765,365,48
+Dr. Jessica Barker,Arlington,TX,813-286-0033,PE,pair_205,Medicaid,Blue Cross/Blue Shield,349,749,48
+Dr. David Doyle,Mount Clemens,MI,810-493-8000,Non-PE,pair_207,Medicaid,Blue Cross/Blue Shield,144,544,48
+Dr. Alyse Victor,Roseville,MI,586-415-6200,PE,pair_207,Medicaid,Blue Cross/Blue Shield,387,787,48
+Dr. Ana Benitez Prieto,Orlando,FL,407-857-2502,Non-PE,pair_208,Blue Cross/Blue Shield,Medicaid,531,131,48
+Dr. Melissa Lee,Orlando,FL,407-316-8550,PE,pair_208,Medicaid,Blue Cross/Blue Shield,203,603,48
+Dr. Eva Crooke,Lutz,FL,813-428-7030,Non-PE,pair_212,Medicaid,Blue Cross/Blue Shield,388,788,48
+Dr. Jill Botelho,Lutz,FL,813-961-7440,PE,pair_212,Blue Cross/Blue Shield,Medicaid,537,137,48
+Dr. Nikkita Wilkes,Jacksonville,FL,904-262-5333,Non-PE,pair_214,Medicaid,Blue Cross/Blue Shield,11,411,48
+Dr. Kharian Youmans,Jacksonville,FL,904-296-2441,PE,pair_214,Blue Cross/Blue Shield,Medicaid,471,71,48
+Dr. Elina Burstyn,Latham,NY,518-783-7070,Non-PE,pair_216,Medicaid,Blue Cross/Blue Shield,163,563,48
+Dr. Simone Piraino,Schenectady,NY,904-264-9555,PE,pair_216,Blue Cross/Blue Shield,Medicaid,644,244,48
+Dr. Bruce Breit,Oviedo,FL,407-645-5565,Non-PE,pair_224,Medicaid,Blue Cross/Blue Shield,336,736,48
+Dr. Aimee Bethancourt,Oviedo,FL,352-241-6460,PE,pair_224,Medicaid,Blue Cross/Blue Shield,80,480,48
+Dr. Paul Kuder,Elk Grove Village,IL,847-357-1144,Non-PE,pair_227,Blue Cross/Blue Shield,Medicaid,433,33,48
+Dr. Michelle Luthringshausen,Arlington Heights,IL,847-221-4601,PE,pair_227,Medicaid,Blue Cross/Blue Shield,302,702,48
+Dr. Karolina Borodo,Tampa,FL,813-875-8032,Non-PE,pair_229,Medicaid,Blue Cross/Blue Shield,212,612,48
+Dr. Jinny Gunn,Tampa,FL,727-826-0795,PE,pair_229,Blue Cross/Blue Shield,Medicaid,790,390,48
+Dr. Elliot Cazes,Tampa,FL,813-977-2757,Non-PE,pair_230,Medicaid,Blue Cross/Blue Shield,210,610,48
+Dr. Allyson Jones,Tampa,FL,813-681-6625,PE,pair_230,Medicaid,Blue Cross/Blue Shield,372,772,48
+Dr. Marwan Shaykh,Jacksonville,FL,904-398-1473,Non-PE,pair_231,Blue Cross/Blue Shield,Medicaid,672,272,48
+Dr. Nicole Melanson,Jacksonville,FL,904-640-8249,PE,pair_231,Blue Cross/Blue Shield,Medicaid,769,369,48
+Dr. Joanna Dalton Ayoung,Oviedo,FL,407-635-3291,Non-PE,pair_233,Medicaid,Blue Cross/Blue Shield,2,402,48
+Dr. Margaret Capobianco,Oviedo,FL,407-898-9922,PE,pair_233,Medicaid,Blue Cross/Blue Shield,295,695,48
+Dr. Leslie Bender,Tampa,FL,813-971-6000,Non-PE,pair_234,Medicaid,Blue Cross/Blue Shield,78,478,48
+Dr. Nadia Pile,Tampa,FL,727-323-3838,PE,pair_234,Blue Cross/Blue Shield,Medicaid,513,113,48
+Dr. Meredith Martin Johnston,Hoffman Estates,IL,847-490-4222,Non-PE,pair_236,Blue Cross/Blue Shield,Medicaid,748,348,48
+Dr. Ashley Abraham,Arlington Heights,IL,847-221-4900,PE,pair_236,Medicaid,Blue Cross/Blue Shield,259,659,48
+Dr. Xochitl Garcia,Springfield,IL,217-522-4300,Non-PE,pair_242,Medicaid,Blue Cross/Blue Shield,148,548,48
+Dr. Nabeel Salka,Springfield,IL,217-545-8000,PE,pair_242,Medicaid,Blue Cross/Blue Shield,324,724,48
+Dr. Michelle Goldin,Schaumburg,IL,847-221-4300,Non-PE,pair_245,Medicaid,Blue Cross/Blue Shield,319,719,48
+Dr. Devoni Bruns,Arlington Heights,IL,847-392-9191,PE,pair_245,Blue Cross/Blue Shield,Medicaid,756,356,48
+Dr. Carmen Doty-Armstrong,Toledo,OH,419-475-1600,Non-PE,pair_248,Blue Cross/Blue Shield,Medicaid,476,76,48
+Dr. Robert Drenchko,Sylvania,OH,727-462-2229,PE,pair_248,Blue Cross/Blue Shield,Medicaid,436,36,48
+Dr. Sherri Graf,Southfield,MI,248-223-9202,Non-PE,pair_250,Blue Cross/Blue Shield,Medicaid,754,354,48
+Dr. Whitney Nieland,Bloomfield Hills,MI,727-456-0080,PE,pair_250,Medicaid,Blue Cross/Blue Shield,67,467,48
+Dr. Crista Crisler,Memphis,TN,901-767-8442,Non-PE,pair_251,Medicaid,Blue Cross/Blue Shield,370,770,48
+Dr. Andres Hernandez,Memphis,TN,901-516-5741,PE,pair_251,Blue Cross/Blue Shield,Medicaid,708,308,48
+Dr. Alexandria Reyes,Tampa,FL,813-773-6627,Non-PE,pair_252,Medicaid,Blue Cross/Blue Shield,229,629,48
+Dr. Carlos Reyes,Tampa,FL,727-895-1300,PE,pair_252,Blue Cross/Blue Shield,Medicaid,634,234,48
+Dr. Shivali Raav,Morristown,NJ,973-683-1400,Non-PE,pair_254,Blue Cross/Blue Shield,Medicaid,600,200,48
+Dr. Sarah Bechay,New Providence,NJ,908-277-8799,PE,pair_254,Medicaid,Blue Cross/Blue Shield,310,710,48
+Dr. David Szentes,Greenwood,IN,317-535-4073,Non-PE,pair_258,Blue Cross/Blue Shield,Medicaid,647,247,48
+Dr. Scott Bowers,Greenwood,IN,317-859-2535,PE,pair_258,Blue Cross/Blue Shield,Medicaid,486,86,48
+Dr. Gretchen Makai,Chadds Ford,PA,610-361-1085,Non-PE,pair_261,Blue Cross/Blue Shield,Medicaid,542,142,48
+Dr. Alice Cai,West Chester,PA,610-692-3434,PE,pair_261,Blue Cross/Blue Shield,Medicaid,721,321,48
+Dr. Scott Kagan,Bloomingdale,IL,630-893-2210,Non-PE,pair_262,Medicaid,Blue Cross/Blue Shield,55,455,48
+Dr. Margaret Nettleton,Schaumburg,IL,847-618-8400,PE,pair_262,Blue Cross/Blue Shield,Medicaid,571,171,48
+Dr. Jon Hoversland,Muncie,IN,765-288-1928,Non-PE,pair_263,Medicaid,Blue Cross/Blue Shield,278,678,48
+Dr. Cody Campbell,Muncie,IN,616-252-7200,PE,pair_263,Medicaid,Blue Cross/Blue Shield,161,561,48
+Dr. Jennifer Gilbert,Paoli,PA,610-889-9550,Non-PE,pair_267,Medicaid,Blue Cross/Blue Shield,275,675,48
+Dr. Melissa Delaney,Bryn Mawr,PA,610-429-9101,PE,pair_267,Blue Cross/Blue Shield,Medicaid,601,201,48
+Dr. Dhruv Rathod,Paulsboro,NJ,856-583-2400,Non-PE,pair_268,Blue Cross/Blue Shield,Medicaid,797,397,48
+Dr. Tyler Desmond,Mullica Hill,NJ,856-223-8930,PE,pair_268,Blue Cross/Blue Shield,Medicaid,552,152,48
+Dr. Paula Edelson,West Chester,PA,610-829-9700,Non-PE,pair_269,Blue Cross/Blue Shield,Medicaid,538,138,48
+Dr. Alan Donnenfeld,West Chester,PA,484-831-0200,PE,pair_269,Blue Cross/Blue Shield,Medicaid,500,100,48
+Dr. Suzanne Nogami,Malvern,PA,610-251-9433,Non-PE,pair_270,Blue Cross/Blue Shield,Medicaid,734,334,48
+Dr. Kim Einhorn,Malvern,PA,610-402-4870,PE,pair_270,Blue Cross/Blue Shield,Medicaid,426,26,48
+Dr. Sandra Krizmanich,Fort Wayne,IN,260-432-4400,Non-PE,pair_271,Medicaid,Blue Cross/Blue Shield,68,468,48
+Dr. Francis Esguerra,Fort Wayne,IN,260-458-3050,PE,pair_271,Medicaid,Blue Cross/Blue Shield,232,632,48
+Dr. Daniel Cibulsky,Jersey City,NJ,201-309-2380,Non-PE,pair_273,Medicaid,Blue Cross/Blue Shield,190,590,48
+Dr. Nashali Ferrara,Newark,NJ,732-455-4636,PE,pair_273,Medicaid,Blue Cross/Blue Shield,45,445,48
+Dr. Sofia Mccotter,Harrison,OH,513-481-5100,Non-PE,pair_275,Medicaid,Blue Cross/Blue Shield,112,512,48
+Dr. Michael Fesenmeier,Harrison,OH,251-415-1496,PE,pair_275,Blue Cross/Blue Shield,Medicaid,444,44,48
+Dr. Steven Troy,Drexel Hill,PA,610-626-7070,Non-PE,pair_276,Medicaid,Blue Cross/Blue Shield,338,738,48
+Dr. Nicole Haslett,Bryn Mawr,PA,267-607-5950,PE,pair_276,Medicaid,Blue Cross/Blue Shield,127,527,48
+Dr. Joseph Castelli,Bryn Mawr,PA,610-265-4088,Non-PE,pair_277,Blue Cross/Blue Shield,Medicaid,635,235,48
+Dr. Hilary Hinton,Media,PA,484-443-2880,PE,pair_277,Medicaid,Blue Cross/Blue Shield,257,657,48
+Dr. David Hadley,Media,PA,610-891-9277,Non-PE,pair_278,Medicaid,Blue Cross/Blue Shield,15,415,48
+Dr. Philip Hirshman,Bryn Mawr,PA,610-265-0184,PE,pair_278,Medicaid,Blue Cross/Blue Shield,191,591,48
+Dr. Amy Cadieux,Phoenixville,PA,610-933-2440,Non-PE,pair_280,Medicaid,Blue Cross/Blue Shield,150,550,48
+Dr. Melodie Icasiano,Paoli,PA,253-968-1740,PE,pair_280,Blue Cross/Blue Shield,Medicaid,605,205,48
+Dr. Rohini Sarin Oneil,Paoli,PA,610-647-1106,Non-PE,pair_281,Medicaid,Blue Cross/Blue Shield,184,584,48
+Dr. Lea Isaac,Paoli,PA,610-627-4400,PE,pair_281,Medicaid,Blue Cross/Blue Shield,107,507,48
+Dr. Catherine Bailey,North Syracuse,NY,315-701-0500,Non-PE,pair_285,Medicaid,Blue Cross/Blue Shield,335,735,48
+Dr. Connell Kling,Syracuse,NY,315-464-5162,PE,pair_285,Blue Cross/Blue Shield,Medicaid,516,116,48
+Dr. Kristin Kean,Willow Grove,PA,215-914-4400,Non-PE,pair_287,Blue Cross/Blue Shield,Medicaid,682,282,48
+Dr. Ravy Lu,Blue Bell,PA,610-525-3225,PE,pair_287,Blue Cross/Blue Shield,Medicaid,551,151,48
+Dr. George Talbot,Mooresville,IN,317-584-3454,Non-PE,pair_288,Blue Cross/Blue Shield,Medicaid,569,169,48
+Dr. Jonathan Lupton,Mooresville,IN,317-865-3600,PE,pair_288,Blue Cross/Blue Shield,Medicaid,525,125,48
+Dr. Rakhi Shah,Warrenville,IL,630-653-4240,Non-PE,pair_290,Blue Cross/Blue Shield,Medicaid,403,3,48
+Dr. Natasha Harvey,Bartlett,IL,312-567-2000,PE,pair_290,Medicaid,Blue Cross/Blue Shield,126,526,48
+Dr. Helene Koch,Bala Cynwyd,PA,610-667-6363,Non-PE,pair_291,Medicaid,Blue Cross/Blue Shield,248,648,48
+Dr. Dana Mahlab,Abington,PA,215-657-8430,PE,pair_291,Blue Cross/Blue Shield,Medicaid,432,32,48
+Dr. Katherine Bohnert,Little Silver,NJ,732-747-9310,Non-PE,pair_292,Medicaid,Blue Cross/Blue Shield,189,589,48
+Dr. Cynthia Mckinney,Little Silver,NJ,732-842-0673,PE,pair_292,Medicaid,Blue Cross/Blue Shield,246,646,48
+Dr. Jacqueline Kohl,Philadelphia,PA,267-335-3152,Non-PE,pair_293,Medicaid,Blue Cross/Blue Shield,74,474,48
+Dr. Stephanie Mcknight,Bryn Mawr,PA,610-668-7992,PE,pair_293,Blue Cross/Blue Shield,Medicaid,656,256,48
+Dr. Christian Dawes,Zionsville,IN,317-415-1000,Non-PE,pair_294,Blue Cross/Blue Shield,Medicaid,477,77,48
+Dr. Caroline Mecker,Carmel,IN,317-573-7050,PE,pair_294,Medicaid,Blue Cross/Blue Shield,400,800,48
+Dr. Valerie Gathers,Fishers,IN,317-415-9010,Non-PE,pair_297,Medicaid,Blue Cross/Blue Shield,374,774,48
+Dr. Michelle Neff,Carmel,IN,317-582-7000,PE,pair_297,Medicaid,Blue Cross/Blue Shield,262,662,48
+Dr. Lauren Mason-Cederberg,Long Branch,NJ,732-923-6890,Non-PE,pair_299,Medicaid,Blue Cross/Blue Shield,208,608,48
+Dr. Savannah Nightingale,Long Branch,NJ,732-923-9795,PE,pair_299,Medicaid,Blue Cross/Blue Shield,48,448,48
+Dr. Sandra Neal,Livonia,MI,734-422-9300,Non-PE,pair_300,Blue Cross/Blue Shield,Medicaid,463,63,48
+Dr. Soheyla Pezeshki,Novi,MI,248-662-4388,PE,pair_300,Medicaid,Blue Cross/Blue Shield,333,733,48
+Dr. Akemi Nakanishi,Libertyville,IL,847-680-3400,Non-PE,pair_301,Blue Cross/Blue Shield,Medicaid,592,192,48
+Dr. Anita Iyer,Buffalo Grove,IL,708-425-1907,PE,pair_301,Medicaid,Blue Cross/Blue Shield,316,716,48
+Dr. Justen Sumner,Philadelphia,PA,215-612-4143,Non-PE,pair_304,Blue Cross/Blue Shield,Medicaid,446,46,48
+Dr. Suzanne Pugh,Bryn Mawr,PA,610-688-3744,PE,pair_304,Medicaid,Blue Cross/Blue Shield,174,574,48
+Dr. Scott Dinesen,Doylestown,PA,215-489-2066,Non-PE,pair_305,Medicaid,Blue Cross/Blue Shield,237,637,48
+Dr. Gabriella Pugliese,Lansdale,PA,484-925-0500,PE,pair_305,Medicaid,Blue Cross/Blue Shield,339,739,48
+Dr. Mary Lynch,Philadelphia,PA,215-456-6850,Non-PE,pair_307,Blue Cross/Blue Shield,Medicaid,495,95,48
+Dr. Samantha So,Fort Washington,PA,215-707-3008,PE,pair_307,Medicaid,Blue Cross/Blue Shield,396,796,48
+Dr. Daniel Roshan,Norristown,PA,212-249-3949,Non-PE,pair_311,Medicaid,Blue Cross/Blue Shield,54,454,48
+Dr. Charles Touey,Paoli,PA,610-326-6732,PE,pair_311,Medicaid,Blue Cross/Blue Shield,299,699,48
+Dr. Sara Rinala,Cincinnati,OH,513-563-2202,Non-PE,pair_312,Blue Cross/Blue Shield,Medicaid,671,271,48
+Dr. Elizabeth Venard,Cincinnati,OH,513-481-4777,PE,pair_312,Medicaid,Blue Cross/Blue Shield,375,775,48
+Dr. Diana Huang,Bernardsville,NJ,908-766-0034,Non-PE,pair_313,Blue Cross/Blue Shield,Medicaid,489,89,48
+Dr. Tery Vinh,Bridgewater,NJ,908-722-2900,PE,pair_313,Medicaid,Blue Cross/Blue Shield,101,501,48
+Dr. Ruchira Sharma,New Brunswick,NJ,732-235-8006,Non-PE,pair_314,Medicaid,Blue Cross/Blue Shield,4,404,48
+Dr. Catherine Yu,New Brunswick,NJ,732-828-3000,PE,pair_314,Blue Cross/Blue Shield,Medicaid,705,305,48
+Dr. Virginia Smith,Wilkes Barre,PA,570-808-5135,Non-PE,pair_315,Blue Cross/Blue Shield,Medicaid,624,224,48
+Dr. Akram Zalatimo,Wilkes Barre,PA,570-270-7600,PE,pair_315,Medicaid,Blue Cross/Blue Shield,84,484,48
+Dr. Karen Wolowick,Downers Grove,IL,630-320-6703,Non-PE,pair_317,Medicaid,Blue Cross/Blue Shield,143,543,48
+Dr. Robin Whatley,Bolingbrook,IL,630-312-4350,PE,pair_317,Blue Cross/Blue Shield,Medicaid,757,357,48
+Dr. Bridget Frangella,Plainfield,IL,630-893-8585,Non-PE,pair_319,Medicaid,Blue Cross/Blue Shield,69,469,48
+Dr. Donna Sweetland,Joliet,IL,815-220-3111,PE,pair_319,Medicaid,Blue Cross/Blue Shield,115,515,48
+Dr. Alka Bennion,Sun City,AZ,623-832-4000,Non-PE,pair_322,Blue Cross/Blue Shield,Medicaid,640,240,48
+Dr. Judy Tom,Glendale,AZ,(602) 678-1500,PE,pair_322,Medicaid,Blue Cross/Blue Shield,315,715,48
+Dr. Lauren Maher,Philadelphia,PA,215-938-2748,Non-PE,pair_323,Medicaid,Blue Cross/Blue Shield,18,418,48
+Dr. James Miller,Willow Grove,PA,(215) 366-1160,PE,pair_323,Blue Cross/Blue Shield,Medicaid,458,58,48
+Dr. Antonia Williams,Birmingham,AL,205-926-2992,Non-PE,pair_324,Medicaid,Blue Cross/Blue Shield,267,667,48
+Dr. Lance Radbill,Birmingham,AL,(205) 397-9000,PE,pair_324,Blue Cross/Blue Shield,Medicaid,519,119,48
+Dr. Shruti Bala,Tucson,AZ,520-670-3909,Non-PE,pair_331,Medicaid,Blue Cross/Blue Shield,359,759,48
+Dr. Stephanie Chin,Tucson,AZ,(520) 795-8080,PE,pair_331,Blue Cross/Blue Shield,Medicaid,668,268,48
+Dr. Shahla Ighani,Tucson,AZ,520-881-1977,Non-PE,pair_332,Medicaid,Blue Cross/Blue Shield,17,417,48
+Dr. Anna Nelson-Moseke,Tucson,AZ,(520) 258-0585,PE,pair_332,Blue Cross/Blue Shield,Medicaid,604,204,48
+Dr. Stephanie Mayes,Phoenix,AZ,480-785-2100,Non-PE,pair_334,Medicaid,Blue Cross/Blue Shield,176,576,48
+Dr. Emily Cyr,Phoenix,AZ,(602) 265-9161,PE,pair_334,Medicaid,Blue Cross/Blue Shield,106,506,48
+Dr. Carlos Flores,Burbank,CA,818-566-9947,Non-PE,pair_336,Blue Cross/Blue Shield,Medicaid,546,146,48
+Dr. Lia Labrant,Beverly Hills,CA,(310) 652-9347,PE,pair_336,Blue Cross/Blue Shield,Medicaid,653,253,48
+Dr. Jose Picazo,Newark,DE,302-738-6535,Non-PE,pair_338,Medicaid,Blue Cross/Blue Shield,389,789,48
+Dr. Diane Mccracken,Newark,DE,(302) 224-8400,PE,pair_338,Medicaid,Blue Cross/Blue Shield,260,660,48
+Dr. Anthony Sciscione,Newark,DE,302-319-5680,Non-PE,pair_340,Medicaid,Blue Cross/Blue Shield,362,762,48
+Dr. Jessica Apel,Newark,DE,(302) 635-9800,PE,pair_340,Blue Cross/Blue Shield,Medicaid,412,12,48
+Dr. Abby Otto,Alpharetta,GA,770-751-3600,Non-PE,pair_341,Blue Cross/Blue Shield,Medicaid,453,53,48
+Dr. Lina Millan,Roswell,GA,(678) 344-8900,PE,pair_341,Blue Cross/Blue Shield,Medicaid,799,399,48
+Dr. Karanvir Virk,Jonesboro,GA,770-603-3685,Non-PE,pair_342,Blue Cross/Blue Shield,Medicaid,408,8,48
+Dr. Kimberly Mcintosh,Stockbridge,GA,(770) 474-0064,PE,pair_342,Blue Cross/Blue Shield,Medicaid,766,366,48
+Dr. Clyde Jacob,Columbus,GA,706-494-2100,Non-PE,pair_344,Blue Cross/Blue Shield,Medicaid,492,92,48
+Dr. Maria Bendana,Columbus,GA,(706) 507-5320,PE,pair_344,Medicaid,Blue Cross/Blue Shield,62,462,48
+Dr. Ruthann Rees,Columbus,GA,706-324-0471,Non-PE,pair_345,Blue Cross/Blue Shield,Medicaid,566,166,48
+Dr. Michael Dempsey,Columbus,GA,(706) 320-2547,PE,pair_345,Medicaid,Blue Cross/Blue Shield,123,523,48
+Dr. Michael Noone,Park Ridge,IL,847-825-1590,Non-PE,pair_346,Blue Cross/Blue Shield,Medicaid,676,276,48
+Dr. Kathryn Ray,Arlington Heights,IL,(847) 884-9700,PE,pair_346,Blue Cross/Blue Shield,Medicaid,465,65,48
+Dr. Steven Valfer,Northbrook,IL,847-272-7777,Non-PE,pair_347,Blue Cross/Blue Shield,Medicaid,614,214,48
+Dr. Natalia J,Des Plaines,IL,(847) 318-9350,PE,pair_347,Blue Cross/Blue Shield,Medicaid,728,328,48
+Dr. Petra Voigt,Chicago,IL,312-694-6447,Non-PE,pair_348,Blue Cross/Blue Shield,Medicaid,652,252,48
+Dr. Nancy Singh,Chicago,IL,718-963-7331,PE,pair_348,Blue Cross/Blue Shield,Medicaid,518,118,48
+Dr. Andrew Ewbank,Evanston,IL,312-666-3494,Non-PE,pair_349,Blue Cross/Blue Shield,Medicaid,755,355,48
+Dr. Ronald Miller,Glenview,IL,(847) 729-2108,PE,pair_349,Medicaid,Blue Cross/Blue Shield,298,698,48
+Dr. Scott Multack,Bloomingdale,IL,630-545-8300,Non-PE,pair_351,Medicaid,Blue Cross/Blue Shield,175,575,48
+Dr. Bishara Facs,Hoffman Estates,IL,(847) 884-9800,PE,pair_351,Medicaid,Blue Cross/Blue Shield,343,743,48
+Dr. Kathleen Slugocki,Mokena,IL,708-572-7606,Non-PE,pair_353,Medicaid,Blue Cross/Blue Shield,88,488,48
+Dr. John Bush,Frankfort,IL,(815) 469-6646,PE,pair_353,Medicaid,Blue Cross/Blue Shield,279,679,48
+Dr. Kristin Mcday,Washington,DC,202-483-8196,Non-PE,pair_354,Medicaid,Blue Cross/Blue Shield,40,440,48
+Dr. Ahmad Kerr,Washington,DC,(973) 580-5557,PE,pair_354,Medicaid,Blue Cross/Blue Shield,162,562,48
+Dr. Jennifer Santiago,Lanham,MD,202-832-1800,Non-PE,pair_355,Blue Cross/Blue Shield,Medicaid,578,178,48
+Dr. Kirsten Ely,Beltsville,MD,(301) 681-6772,PE,pair_355,Blue Cross/Blue Shield,Medicaid,694,294,48
+Dr. Michelle Spector,Rockville,MD,301-762-5501,Non-PE,pair_357,Medicaid,Blue Cross/Blue Shield,124,524,48
+Dr. Arifa Khokar,Silver Spring,MD,(304) 263-4999,PE,pair_357,Medicaid,Blue Cross/Blue Shield,198,598,48
+Dr. Steven Lacher,Bel Air,MD,410-825-6778,Non-PE,pair_358,Blue Cross/Blue Shield,Medicaid,520,120,48
+Dr. Ibrahim Tsolakian,Bel Air,MD,(443) 643-4300,PE,pair_358,Medicaid,Blue Cross/Blue Shield,181,581,48
+Dr. Sami Mufarrij,North Bethesda,MD,301-881-3260,Non-PE,pair_359,Blue Cross/Blue Shield,Medicaid,630,230,48
+Dr. Andre Hall,Gaithersburg,MD,(301) 414-2300,PE,pair_359,Blue Cross/Blue Shield,Medicaid,689,289,48
+Dr. Latasha Murphy,Towson,MD,410-321-8452,Non-PE,pair_361,Blue Cross/Blue Shield,Medicaid,651,251,48
+Dr. Mary Ahern,Baltimore,MD,(410) 823-1120,PE,pair_361,Blue Cross/Blue Shield,Medicaid,573,173,48
+Dr. Daniel Greene,Rochester,MI,248-656-2022,Non-PE,pair_362,Medicaid,Blue Cross/Blue Shield,135,535,48
+Dr. Carole Condevaux,Rochester Hills,MI,(248) 650-1534,PE,pair_362,Blue Cross/Blue Shield,Medicaid,720,320,48
+Dr. Lisa Gilbertahee,Warren,MI,586-558-4848,Non-PE,pair_363,Blue Cross/Blue Shield,Medicaid,487,87,48
+Dr. Steven Lefkowitz,Troy,MI,(248) 551-0845,PE,pair_363,Blue Cross/Blue Shield,Medicaid,737,337,48
+Dr. Michele Thomas,Southfield,MI,248-354-2201,Non-PE,pair_364,Blue Cross/Blue Shield,Medicaid,473,73,48
+Dr. Andrea Schiller,Royal Oak,MI,(248) 584-7600,PE,pair_364,Blue Cross/Blue Shield,Medicaid,599,199,48
+Dr. Lauren Callahan,Woodbury,MN,651-686-6400,Non-PE,pair_365,Blue Cross/Blue Shield,Medicaid,776,376,48
+Dr. Cassandra Mscp,Maplewood,MN,(612) 626-6628,PE,pair_365,Medicaid,Blue Cross/Blue Shield,182,582,48
+Dr. Matthew Palmer,Plymouth,MN,763-587-7000,Non-PE,pair_367,Blue Cross/Blue Shield,Medicaid,620,220,48
+Dr. Megan Bina,Maple Grove,MN,(763) 581-7000,PE,pair_367,Medicaid,Blue Cross/Blue Shield,263,663,48
+Dr. Vanessa Knoedler,Bloomington,MN,952-993-2400,Non-PE,pair_368,Blue Cross/Blue Shield,Medicaid,732,332,48
+Dr. Georgina Greil,Eagan,MN,(763) 241-0373,PE,pair_368,Medicaid,Blue Cross/Blue Shield,197,597,48
+Dr. Lindsay Lewis,Edina,MN,952-920-7001,Non-PE,pair_370,Blue Cross/Blue Shield,Medicaid,758,358,48
+Dr. Annalise Almdale,Burnsville,MN,(952) 345-7070,PE,pair_370,Blue Cross/Blue Shield,Medicaid,482,82,48
+Dr. Erin Stevens,Edina,MN,952-922-7600,Non-PE,pair_371,Medicaid,Blue Cross/Blue Shield,16,416,48
+Dr. Brianna Dickson,Minneapolis,MN,(612) 301-3417,PE,pair_371,Medicaid,Blue Cross/Blue Shield,111,511,48
+Dr. Golnaz Alemi,North Las Vegas,NV,702-818-1919,Non-PE,pair_376,Blue Cross/Blue Shield,Medicaid,747,347,48
+Dr. Sheldon Paul,North Las Vegas,NV,(702) 438-4692,PE,pair_376,Blue Cross/Blue Shield,Medicaid,564,164,48
+Dr. Philip Mclemore,Las Vegas,NV,702-382-3200,Non-PE,pair_377,Blue Cross/Blue Shield,Medicaid,782,382,48
+Dr. Brian Vu,Las Vegas,NV,(702) 877-5199,PE,pair_377,Medicaid,Blue Cross/Blue Shield,274,674,48
+Dr. Robi Burns,Henderson,NV,702-853-1400,Non-PE,pair_378,Medicaid,Blue Cross/Blue Shield,392,792,48
+Dr. Keith Brill,Henderson,NV,(702) 862-8862,PE,pair_378,Medicaid,Blue Cross/Blue Shield,110,510,48
+Dr. Elena Zenkin,Las Vegas,NV,702-671-5150,Non-PE,pair_379,Medicaid,Blue Cross/Blue Shield,172,572,48
+Dr. Haleigh Edgar,Las Vegas,NV,(702) 870-2229,PE,pair_379,Blue Cross/Blue Shield,Medicaid,661,261,48
+Dr. Linh Nguyen,Fountain Valley,CA,714-378-5606,Non-PE,pair_380,Blue Cross/Blue Shield,Medicaid,697,297,48
+Dr. Navpreet Chattha,Newport Beach,CA,(949) 644-2722,PE,pair_380,Blue Cross/Blue Shield,Medicaid,669,269,48
+Dr. Paul Neumann,Blue Bell,PA,215-707-2098,Non-PE,pair_381,Blue Cross/Blue Shield,Medicaid,505,105,48
+Dr. Masuma Bahora,King Of Prussia,PA,(484) 622-7940,PE,pair_381,Blue Cross/Blue Shield,Medicaid,677,277,48
+Dr. Lisa Eng,New York,NY,212-219-2723,Non-PE,pair_382,Medicaid,Blue Cross/Blue Shield,378,778,48
+Dr. Audrey Buxbaum,New York,NY,(212) 966-7600,PE,pair_382,Medicaid,Blue Cross/Blue Shield,81,481,48
+Dr. Peter Sticco,Rockville Centre,NY,631-376-3880,Non-PE,pair_383,Medicaid,Blue Cross/Blue Shield,340,740,48
+Dr. Matthew Dilena,Garden City,NY,(516) 683-6800,PE,pair_383,Medicaid,Blue Cross/Blue Shield,28,428,48
+Dr. Evan Shapiro,New Hyde Park,NY,718-253-8114,Non-PE,pair_384,Blue Cross/Blue Shield,Medicaid,528,128,48
+Dr. Gary Levine,Mineola,NY,(516) 741-4321,PE,pair_384,Medicaid,Blue Cross/Blue Shield,304,704,48
+Dr. Renata Scott-Ram,New Hyde Park,NY,516-437-4300,Non-PE,pair_385,Medicaid,Blue Cross/Blue Shield,353,753,48
+Dr. Yulia Aronovich,Manhasset,NY,(516) 496-3900,PE,pair_385,Medicaid,Blue Cross/Blue Shield,194,594,48
+Dr. James Miller,Hickory,NC,828-328-2901,Non-PE,pair_387,Blue Cross/Blue Shield,Medicaid,611,211,48
+Dr. Claire Harraghy,Hickory,NC,(828) 345-0800,PE,pair_387,Blue Cross/Blue Shield,Medicaid,459,59,48
+Dr. Li Xu,Raleigh,NC,919-350-7856,Non-PE,pair_388,Medicaid,Blue Cross/Blue Shield,141,541,48
+Dr. Zoe Beatty,Raleigh,NC,(919) 781-9555,PE,pair_388,Medicaid,Blue Cross/Blue Shield,6,406,48
+Dr. Diana Mccarthy,Morrisville,NC,919-235-6480,Non-PE,pair_389,Medicaid,Blue Cross/Blue Shield,179,579,48
+Dr. Katherine Barrett,Cary,NC,(919) 781-7450,PE,pair_389,Medicaid,Blue Cross/Blue Shield,243,643,48
+Dr. Elizabeth England,Asheville,NC,828-398-3601,Non-PE,pair_390,Medicaid,Blue Cross/Blue Shield,273,673,48
+Dr. Ladson Gaddy-Dubac,Asheville,NC,(828) 258-9191,PE,pair_390,Medicaid,Blue Cross/Blue Shield,239,639,48
+Dr. Anna Tatarchuk,Raleigh,NC,919-696-4130,Non-PE,pair_391,Medicaid,Blue Cross/Blue Shield,265,665,48
+Dr. Kirsten Beeson,Raleigh,NC,(919) 876-9797,PE,pair_391,Medicaid,Blue Cross/Blue Shield,215,615,48
+Dr. Joel Kramer,Philadelphia,PA,215-676-2200,Non-PE,pair_392,Blue Cross/Blue Shield,Medicaid,437,37,48
+Dr. Jocelyn Craparo,Bryn Mawr,PA,(610) 525-6400,PE,pair_392,Medicaid,Blue Cross/Blue Shield,281,681,48
+Dr. Lauren Roberts,Farmington Hills,MI,248-539-0742,Non-PE,pair_393,Blue Cross/Blue Shield,Medicaid,517,117,48
+Dr. Mais Arwani,Commerce Twp,MI,248-360-9090,PE,pair_393,Medicaid,Blue Cross/Blue Shield,381,781,48
+Dr. Carmen Selman,Pembroke Pines,FL,954-607-3811,Non-PE,pair_394,Blue Cross/Blue Shield,Medicaid,429,29,48
+Dr. Kompal Gadh,Pembroke Pines,FL,954-499-4570,PE,pair_394,Medicaid,Blue Cross/Blue Shield,238,638,48
+Dr. Kylee Clyatt,Fort Washington,PA,215-707-5864,Non-PE,pair_395,Blue Cross/Blue Shield,Medicaid,726,326,48
+Dr. Dipti Shah-Parikh,Blue Bell,PA,(215) 368-1950,PE,pair_395,Blue Cross/Blue Shield,Medicaid,434,34,48
+Dr. Caton Simoni,New Braunfels,TX,803-730-5953,Non-PE,pair_396,Blue Cross/Blue Shield,Medicaid,521,121,48
+Dr. Brittney Schumann,New Braunfels,TX,(214) 947-2331,PE,pair_396,Medicaid,Blue Cross/Blue Shield,323,723,48
+Dr. Beth Thai,Georgetown,TX,877-800-5722,Non-PE,pair_397,Medicaid,Blue Cross/Blue Shield,75,475,48
+Dr. Kelly Montiville,Georgetown,TX,(512) 863-8600,PE,pair_397,Blue Cross/Blue Shield,Medicaid,494,94,48
+Dr. Arminda Callejas Weintz,Frisco,TX,972-377-6553,Non-PE,pair_398,Blue Cross/Blue Shield,Medicaid,539,139,48
+Dr. Christi Kidd,Mckinney,TX,(972) 542-8884,PE,pair_398,Medicaid,Blue Cross/Blue Shield,361,761,48
+Dr. Marianne Peck,Shenandoah,TX,936-270-3662,Non-PE,pair_399,Medicaid,Blue Cross/Blue Shield,99,499,48
+Dr. Jennifer Huebner,Shenandoah,TX,(832) 602-7380,PE,pair_399,Blue Cross/Blue Shield,Medicaid,460,60,48
+Dr. John Visintine,Corpus Christi,TX,361-694-1684,Non-PE,pair_400,Blue Cross/Blue Shield,Medicaid,497,97,48
+Dr. Benjamin Supnet,Corpus Christi,TX,(362) 851-5000,PE,pair_400,Blue Cross/Blue Shield,Medicaid,422,22,48
+Dr. Andrew Engel,Falls Church,VA,703-533-9211,Non-PE,pair_403,Blue Cross/Blue Shield,Medicaid,751,351,48
+Dr. Sharon Kim,Fairfax,VA,(703) 971-7633,PE,pair_403,Blue Cross/Blue Shield,Medicaid,533,133,48
+Dr. Maria Munoz,Boca Raton,FL,561-300-0220,Non-PE,pair_405,Blue Cross/Blue Shield,Medicaid,703,303,48
+Dr. Josie Stone,Boca Raton,FL,561-391-6210,PE,pair_405,Medicaid,Blue Cross/Blue Shield,57,457,48
+Dr. Prafulla Koneru,South Barrington,IL,847-382-8200,Non-PE,pair_408,Medicaid,Blue Cross/Blue Shield,167,567,48
+Dr. Nicole Lomotan,Arlington Heights,IL,847-618-0730,PE,pair_408,Medicaid,Blue Cross/Blue Shield,345,745,48
+Dr. Freddy Montero,Miami,FL,305-595-1833,Non-PE,pair_413,Blue Cross/Blue Shield,Medicaid,794,394,48
+Dr. Amy Sonnenblick,Miami,FL,954-635-6243,PE,pair_413,Blue Cross/Blue Shield,Medicaid,466,66,48
+Dr. Marie Carmelle Liburd,Miami,FL,305-696-9400,Non-PE,pair_414,Medicaid,Blue Cross/Blue Shield,368,768,48
+Dr. Alexandria Angelides,Miami,FL,561-488-3128,PE,pair_414,Blue Cross/Blue Shield,Medicaid,529,129,48
+Dr. James Mcbride,Rochester Hills,MI,248-997-5805,Non-PE,pair_423,Medicaid,Blue Cross/Blue Shield,383,783,48
+Dr. Myah Bell,Lake Orion,MI,248-693-0543,PE,pair_423,Blue Cross/Blue Shield,Medicaid,664,264,48
+Dr. Leroy Charles,Greenacres,FL,561-784-7014,Non-PE,pair_425,Medicaid,Blue Cross/Blue Shield,122,522,48
+Dr. Lawrence Bergman,Wellington,FL,561-798-5565,PE,pair_425,Medicaid,Blue Cross/Blue Shield,217,617,48
+Dr. Stephanie Roy,Katy,TX,281-347-2600,Non-PE,pair_426,Blue Cross/Blue Shield,Medicaid,717,317,48
+Dr. Huiwen Liu,Katy,TX,847-808-8884,PE,pair_426,Medicaid,Blue Cross/Blue Shield,301,701,48
+Dr. Katia Apollon,Miami,FL,305-630-4100,Non-PE,pair_428,Blue Cross/Blue Shield,Medicaid,450,50,48
+Dr. Andrew Shapiro,Miami,FL,561-333-1335,PE,pair_428,Medicaid,Blue Cross/Blue Shield,364,764,48
+Dr. Jorge Gomez,South Miami,FL,305-669-9521,Non-PE,pair_433,Blue Cross/Blue Shield,Medicaid,718,318,48
+Dr. Jaime Mercado,Miami,FL,954-370-7036,PE,pair_433,Medicaid,Blue Cross/Blue Shield,379,779,48
+Dr. Frances Perez-Suarez,Miami,FL,305-226-5651,Non-PE,pair_442,Medicaid,Blue Cross/Blue Shield,352,752,48
+Dr. Cecilia Grande,Miami,FL,305-856-1461,PE,pair_442,Blue Cross/Blue Shield,Medicaid,509,109,48
+Dr. Leigh Behring,East Lansing,MI,517-484-3000,Non-PE,pair_444,Blue Cross/Blue Shield,Medicaid,540,140,48
+Dr. Jessica Frost,East Lansing,MI,517-364-5610,PE,pair_444,Medicaid,Blue Cross/Blue Shield,23,423,48
+Dr. Bruce Zafran,Coral Springs,FL,954-341-8288,Non-PE,pair_450,Medicaid,Blue Cross/Blue Shield,322,722,48
+Dr. Carlos Barrionuevo,Coral Springs,FL,954-753-2411,PE,pair_450,Medicaid,Blue Cross/Blue Shield,288,688,48
+Dr. Priyanga Jeyasri,Hoboken,NJ,201-659-7700,Non-PE,pair_456,Medicaid,Blue Cross/Blue Shield,344,744,48
+Dr. Samantha Seidor,Bayonne,NJ,973-978-5137,PE,pair_456,Blue Cross/Blue Shield,Medicaid,438,38,48
+Dr. Anne Petit,Somers Point,NJ,609-653-1016,Non-PE,pair_457,Blue Cross/Blue Shield,Medicaid,654,254,48
+Dr. Marc Siegel,Somers Point,NJ,609-926-8353,PE,pair_457,Medicaid,Blue Cross/Blue Shield,327,727,48
+Dr. Jacqueline Roman,Ocean,NJ,732-517-0555,Non-PE,pair_458,Medicaid,Blue Cross/Blue Shield,98,498,48
+Dr. John Vaclavik,Eatontown,NJ,732-695-2040,PE,pair_458,Medicaid,Blue Cross/Blue Shield,27,427,48
+Dr. Eric Liberman,Newark,NJ,732-923-7455,Non-PE,pair_459,Medicaid,Blue Cross/Blue Shield,371,771,48
+Dr. Grace Wey,Bayonne,NJ,973-736-1100,PE,pair_459,Medicaid,Blue Cross/Blue Shield,209,609,48
+Dr. Amy Harvey O'Keeffe,Browns Mills,NJ,609-303-4470,Non-PE,pair_460,Medicaid,Blue Cross/Blue Shield,47,447,48
+Dr. Jessica Williams,Browns Mills,NJ,609-303-4010,PE,pair_460,Medicaid,Blue Cross/Blue Shield,20,420,48
+Dr. Timothy Hale,Worcester,MA,508-363-5000,Non-PE,pair_472,Medicaid,Blue Cross/Blue Shield,51,451,48
+Dr. Cindy Joslyn,Worcester,MA,(508) 363-6032,PE,pair_472,Medicaid,Blue Cross/Blue Shield,380,780,48
+Dr. Mark Simonelli,Worcester,MA,508-334-1000,Non-PE,pair_477,Medicaid,Blue Cross/Blue Shield,52,452,48
+Dr. Kerri Osterhaus-Houle,Worcester,MA,(508) 755-4861,PE,pair_477,Blue Cross/Blue Shield,Medicaid,493,93,48
+Dr. Daniel Gottschall,Bridgeport,CT,203-576-6201,Non-PE,pair_482,Blue Cross/Blue Shield,Medicaid,490,90,48
+Dr. Amalia Kotlyar,Bridgeport,CT,(203) 227-5125,PE,pair_482,Blue Cross/Blue Shield,Medicaid,700,300,48
+Dr. Linda Matonis,New Britain,CT,860-224-6200,Non-PE,pair_485,Blue Cross/Blue Shield,Medicaid,607,207,48
+Dr. Thomas Helm,Meriden,CT,(203) 284-1060,PE,pair_485,Medicaid,Blue Cross/Blue Shield,72,472,48
+Dr. Magdalena Szutowska,Danbury,CT,203-730-8789,Non-PE,pair_487,Blue Cross/Blue Shield,Medicaid,583,183,48
+Dr. Gene Freylikhman,Danbury,CT,(860) 236-5431,PE,pair_487,Medicaid,Blue Cross/Blue Shield,30,430,48
+Dr. Wendy Cervi,Newark,NJ,973-926-7300,Non-PE,pair_490,Blue Cross/Blue Shield,Medicaid,401,1,48
+Dr. Kristin Kinsler,Kearny,NJ,(732) 745-8600,PE,pair_490,Medicaid,Blue Cross/Blue Shield,186,586,48
+Dr. Katrina Marcinkowski,Hammonton,NJ,609-561-6660,Non-PE,pair_491,Blue Cross/Blue Shield,Medicaid,680,280,48
+Dr. Molly Amero,Hammonton,NJ,215-955-6776,PE,pair_491,Blue Cross/Blue Shield,Medicaid,760,360,48
+Dr. Eddy Joseph,Elizabeth,NJ,908-353-1171,Non-PE,pair_492,Blue Cross/Blue Shield,Medicaid,593,193,48
+Dr. Dilip Bharucha,Kearny,NJ,732-246-7744,PE,pair_492,Medicaid,Blue Cross/Blue Shield,330,730,48
+Dr. Elizabeth Ramirez,Jersey City,NJ,201-217-5600,Non-PE,pair_494,Blue Cross/Blue Shield,Medicaid,414,14,48
+Dr. Abigail Gleason,Kearny,NJ,732-254-1500,PE,pair_494,Medicaid,Blue Cross/Blue Shield,258,658,48
+Dr. Paul Vetter,Hackensack,NJ,551-996-3881,Non-PE,pair_497,Medicaid,Blue Cross/Blue Shield,227,627,48
+Dr. Arthur Gross,Englewood,NJ,201-894-0003,PE,pair_497,Blue Cross/Blue Shield,Medicaid,558,158,48
+Dr. Norma Milanes Roberts,Newark,NJ,973-733-7558,Non-PE,pair_499,Blue Cross/Blue Shield,Medicaid,773,373,48
+Dr. Marianne Herrighty,Kearny,NJ,201-991-3838,PE,pair_499,Medicaid,Blue Cross/Blue Shield,160,560,48
+Dr. Rebecca Metz,Mountainside,NJ,908-317-9922,Non-PE,pair_500,Medicaid,Blue Cross/Blue Shield,35,435,48
+Dr. Alissa Kaye,Cranford,NJ,908-272-8676,PE,pair_500,Blue Cross/Blue Shield,Medicaid,413,13,48
+Dr. Adebola Nnewihe,Northfield,NJ,609-383-4042,Non-PE,pair_501,Blue Cross/Blue Shield,Medicaid,557,157,48
+Dr. Philip Korzeniowski,Somers Point,NJ,609-926-8353,PE,pair_501,Blue Cross/Blue Shield,Medicaid,707,307,48
+Dr. Sardana Belkin,Howell,NJ,732-905-8111,Non-PE,pair_502,Blue Cross/Blue Shield,Medicaid,588,188,48
+Dr. Peter Mandel,Freehold,NJ,732-431-2999,PE,pair_502,Medicaid,Blue Cross/Blue Shield,242,642,48
+Dr. Daniel Martingano,Elizabeth,NJ,908-994-5500,Non-PE,pair_505,Medicaid,Blue Cross/Blue Shield,31,431,48
+Dr. Bharti Mavani,Kearny,NJ,732-549-3229,PE,pair_505,Medicaid,Blue Cross/Blue Shield,170,570,48
+Dr. Natalia Rezvina,Somers Point,NJ,609-788-8158,Non-PE,pair_507,Blue Cross/Blue Shield,Medicaid,602,202,48
+Dr. Daniel Morgan,Somers Point,NJ,609-927-3070,PE,pair_507,Blue Cross/Blue Shield,Medicaid,687,287,48
+Dr. Robin Wilson-Smith,Hammonton,NJ,609-441-2199,Non-PE,pair_511,Blue Cross/Blue Shield,Medicaid,410,10,48
+Dr. Sabrina Rabau,Hammonton,NJ,856-778-4700,PE,pair_511,Medicaid,Blue Cross/Blue Shield,331,731,48

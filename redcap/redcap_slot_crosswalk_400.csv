@@ -1,0 +1,401 @@
+medicaid_record_id,bcbs_record_id,NPI,Provider Name,City,State,Phone,pair_id,ownership
+1,401,1336174416,Dr. Wendy Cervi,Newark,NJ,973-926-7300,pair_490,Non-PE
+2,402,1639468531,Dr. Joanna Dalton Ayoung,Oviedo,FL,407-635-3291,pair_233,Non-PE
+3,403,1952450652,Dr. Rakhi Shah,Warrenville,IL,630-653-4240,pair_290,Non-PE
+4,404,1679838296,Dr. Ruchira Sharma,New Brunswick,NJ,732-235-8006,pair_314,Non-PE
+5,405,1053394205,Dr. Robert Feldman,South Miami,FL,305-667-4511,pair_8,Non-PE
+6,406,1437264389,Dr. Zoe Beatty,Raleigh,NC,(919) 781-9555,pair_388,PE
+7,407,1306073127,Dr. Lethenia Baker,Kennesaw,GA,770-424-8222,pair_177,Non-PE
+8,408,1316234081,Dr. Karanvir Virk,Jonesboro,GA,770-603-3685,pair_342,Non-PE
+9,409,1912969700,Dr. Elizabeth Ferik,Lansing,MI,517-975-6000,pair_1,Non-PE
+10,410,1487747283,Dr. Robin Wilson-Smith,Hammonton,NJ,609-441-2199,pair_511,Non-PE
+11,411,1225296940,Dr. Nikkita Wilkes,Jacksonville,FL,904-262-5333,pair_214,Non-PE
+12,412,1699941989,Dr. Jessica Apel,Newark,DE,(302) 635-9800,pair_340,PE
+13,413,1700951589,Dr. Alissa Kaye,Cranford,NJ,908-272-8676,pair_500,PE
+14,414,1285716829,Dr. Elizabeth Ramirez,Jersey City,NJ,201-217-5600,pair_494,Non-PE
+15,415,1700948395,Dr. David Hadley,Media,PA,610-891-9277,pair_278,Non-PE
+16,416,1174966808,Dr. Erin Stevens,Edina,MN,952-922-7600,pair_371,Non-PE
+17,417,1750481610,Dr. Shahla Ighani,Tucson,AZ,520-881-1977,pair_332,Non-PE
+18,418,1942643895,Dr. Lauren Maher,Philadelphia,PA,215-938-2748,pair_323,Non-PE
+19,419,1114347655,Dr. Sharise Richardson,Boynton Beach,FL,561-742-3929,pair_133,PE
+20,420,1013438308,Dr. Jessica Williams,Browns Mills,NJ,609-303-4010,pair_460,PE
+21,421,1023277704,Dr. Puneet Masson,Miami,FL,305-243-6090,pair_172,PE
+22,422,1508862723,Dr. Benjamin Supnet,Corpus Christi,TX,(362) 851-5000,pair_400,PE
+23,423,1003308057,Dr. Jessica Frost,East Lansing,MI,517-364-5610,pair_444,PE
+24,424,1790346948,Dr. Ariel Gruda,Rochester,MI,248-964-1043,pair_57,PE
+25,425,1154614576,Dr. Christopher Bauer,Morristown,NJ,973-971-5596,pair_169,Non-PE
+26,426,1629284955,Dr. Kim Einhorn,Malvern,PA,610-402-4870,pair_270,PE
+27,427,1548467137,Dr. John Vaclavik,Eatontown,NJ,732-695-2040,pair_458,PE
+28,428,1710927363,Dr. Matthew Dilena,Garden City,NY,(516) 683-6800,pair_383,PE
+29,429,1295938090,Dr. Carmen Selman,Pembroke Pines,FL,954-607-3811,pair_394,Non-PE
+30,430,1184727265,Dr. Gene Freylikhman,Danbury,CT,(860) 236-5431,pair_487,PE
+31,431,1376920165,Dr. Daniel Martingano,Elizabeth,NJ,908-994-5500,pair_505,Non-PE
+32,432,1538320783,Dr. Dana Mahlab,Abington,PA,215-657-8430,pair_291,PE
+33,433,1114347283,Dr. Paul Kuder,Elk Grove Village,IL,847-357-1144,pair_227,Non-PE
+34,434,1174514061,Dr. Dipti Shah-Parikh,Blue Bell,PA,(215) 368-1950,pair_395,PE
+35,435,1295018133,Dr. Rebecca Metz,Mountainside,NJ,908-317-9922,pair_500,Non-PE
+36,436,1396179073,Dr. Robert Drenchko,Sylvania,OH,727-462-2229,pair_248,PE
+37,437,1568464568,Dr. Joel Kramer,Philadelphia,PA,215-676-2200,pair_392,Non-PE
+38,438,1306336706,Dr. Samantha Seidor,Bayonne,NJ,973-978-5137,pair_456,PE
+39,439,1376770370,Dr. Ha Nguyen,Bethlehem,PA,610-398-7700,pair_179,PE
+40,440,1699760108,Dr. Kristin Mcday,Washington,DC,202-483-8196,pair_354,Non-PE
+41,441,1346789690,Dr. Millet Yang,Washington,DC,202-715-5154,pair_4,PE
+42,442,1689802670,Dr. Jenny Valencia,Plantation,FL,954-581-3100,pair_159,PE
+43,443,1922082437,Dr. Hamid Banooni,Royal Oak,MI,248-489-1070,pair_24,PE
+44,444,1316938277,Dr. Michael Fesenmeier,Harrison,OH,251-415-1496,pair_275,PE
+45,445,1538742028,Dr. Nashali Ferrara,Newark,NJ,732-455-4636,pair_273,PE
+46,446,1629496294,Dr. Justen Sumner,Philadelphia,PA,215-612-4143,pair_304,Non-PE
+47,447,1952411696,Dr. Amy Harvey O'Keeffe,Browns Mills,NJ,609-303-4470,pair_460,Non-PE
+48,448,1386214641,Dr. Savannah Nightingale,Long Branch,NJ,732-923-9795,pair_299,PE
+49,449,1902149743,Dr. Soyoun Bark,Troy,MI,248-218-4073,pair_24,Non-PE
+50,450,1457335499,Dr. Katia Apollon,Miami,FL,305-630-4100,pair_428,Non-PE
+51,451,1811955628,Dr. Timothy Hale,Worcester,MA,508-363-5000,pair_472,Non-PE
+52,452,1598759334,Dr. Mark Simonelli,Worcester,MA,508-334-1000,pair_477,Non-PE
+53,453,1700043460,Dr. Abby Otto,Alpharetta,GA,770-751-3600,pair_341,Non-PE
+54,454,1225025547,Dr. Daniel Roshan,Norristown,PA,212-249-3949,pair_311,Non-PE
+55,455,1346216595,Dr. Scott Kagan,Bloomingdale,IL,630-893-2210,pair_262,Non-PE
+56,456,1356845903,Dr. Mitchell Bitran,Miami Beach,FL,305-673-6217,pair_78,Non-PE
+57,457,1831280452,Dr. Josie Stone,Boca Raton,FL,561-391-6210,pair_405,PE
+58,458,1831415231,Dr. James Miller,Willow Grove,PA,(215) 366-1160,pair_323,PE
+59,459,1932194743,Dr. Claire Harraghy,Hickory,NC,(828) 345-0800,pair_387,PE
+60,460,1346486743,Dr. Jennifer Huebner,Shenandoah,TX,(832) 602-7380,pair_399,PE
+61,461,1790177574,Dr. Rafael Marquez,Allentown,PA,610-435-9575,pair_179,Non-PE
+62,462,1881859825,Dr. Maria Bendana,Columbus,GA,(706) 507-5320,pair_344,PE
+63,463,1275543720,Dr. Sandra Neal,Livonia,MI,734-422-9300,pair_300,Non-PE
+64,464,1932510393,Dr. Lisamarie Colon Ramirez,Coral Springs,FL,954-755-1411,pair_116,Non-PE
+65,465,1275620700,Dr. Kathryn Ray,Arlington Heights,IL,(847) 884-9700,pair_346,PE
+66,466,1902987977,Dr. Amy Sonnenblick,Miami,FL,954-635-6243,pair_413,PE
+67,467,1487149779,Dr. Whitney Nieland,Bloomfield Hills,MI,727-456-0080,pair_250,PE
+68,468,1609047026,Dr. Sandra Krizmanich,Fort Wayne,IN,260-432-4400,pair_271,Non-PE
+69,469,1972578375,Dr. Bridget Frangella,Plainfield,IL,630-893-8585,pair_319,Non-PE
+70,470,1336200351,Dr. Jorge Pimienta,Miami,FL,305-554-7575,pair_138,Non-PE
+71,471,1437788312,Dr. Kharian Youmans,Jacksonville,FL,904-296-2441,pair_214,PE
+72,472,1588678270,Dr. Thomas Helm,Meriden,CT,(203) 284-1060,pair_485,PE
+73,473,1902862436,Dr. Michele Thomas,Southfield,MI,248-354-2201,pair_364,Non-PE
+74,474,1447546338,Dr. Jacqueline Kohl,Philadelphia,PA,267-335-3152,pair_293,Non-PE
+75,475,1730360439,Dr. Beth Thai,Georgetown,TX,877-800-5722,pair_397,Non-PE
+76,476,1053391649,Dr. Carmen Doty-Armstrong,Toledo,OH,419-475-1600,pair_248,Non-PE
+77,477,1548619596,Dr. Christian Dawes,Zionsville,IN,317-415-1000,pair_294,Non-PE
+78,478,1457660664,Dr. Leslie Bender,Tampa,FL,813-971-6000,pair_234,Non-PE
+79,479,1023284494,Dr. Rachel Urrutia,Chapel Hill,NC,984-974-1000,pair_167,Non-PE
+80,480,1952807273,Dr. Aimee Bethancourt,Oviedo,FL,352-241-6460,pair_224,PE
+81,481,1265530679,Dr. Audrey Buxbaum,New York,NY,(212) 966-7600,pair_382,PE
+82,482,1477933513,Dr. Annalise Almdale,Burnsville,MN,(952) 345-7070,pair_370,PE
+83,483,1154785632,Dr. Jessica Marinaro,Towson,MD,410-512-8300,pair_175,PE
+84,484,1437144839,Dr. Akram Zalatimo,Wilkes Barre,PA,570-270-7600,pair_315,PE
+85,485,1770105405,Dr. Emily Ager,San Francisco,CA,541-240-1236,pair_186,PE
+86,486,1609866763,Dr. Scott Bowers,Greenwood,IN,317-859-2535,pair_258,PE
+87,487,1295705168,Dr. Lisa Gilbertahee,Warren,MI,586-558-4848,pair_363,Non-PE
+88,488,1619157526,Dr. Kathleen Slugocki,Mokena,IL,708-572-7606,pair_353,Non-PE
+89,489,1467686162,Dr. Diana Huang,Bernardsville,NJ,908-766-0034,pair_313,Non-PE
+90,490,1619076403,Dr. Daniel Gottschall,Bridgeport,CT,203-576-6201,pair_482,Non-PE
+91,491,1669496949,Dr. Jaime Santiago-Lopetegui,Miami,FL,305-585-5315,pair_172,Non-PE
+92,492,1972504488,Dr. Clyde Jacob,Columbus,GA,706-494-2100,pair_344,Non-PE
+93,493,1174574008,Dr. Kerri Osterhaus-Houle,Worcester,MA,(508) 755-4861,pair_477,PE
+94,494,1821288465,Dr. Kelly Montiville,Georgetown,TX,(512) 863-8600,pair_397,PE
+95,495,1265963615,Dr. Mary Lynch,Philadelphia,PA,215-456-6850,pair_307,Non-PE
+96,496,1417901174,Dr. Daphne Tumaneng,Warren,MI,586-582-7150,pair_68,Non-PE
+97,497,1295868883,Dr. John Visintine,Corpus Christi,TX,361-694-1684,pair_400,Non-PE
+98,498,1376785881,Dr. Jacqueline Roman,Ocean,NJ,732-517-0555,pair_458,Non-PE
+99,499,1851647887,Dr. Marianne Peck,Shenandoah,TX,936-270-3662,pair_399,Non-PE
+100,500,1205894219,Dr. Alan Donnenfeld,West Chester,PA,484-831-0200,pair_269,PE
+101,501,1932786480,Dr. Tery Vinh,Bridgewater,NJ,908-722-2900,pair_313,PE
+102,502,1336762681,Dr. Leigh Durudogan,Novi,MI,248-849-3401,pair_126,PE
+103,503,1851880652,Dr. Shelley Dolitsky,Columbia,MD,410-997-6999,pair_176,PE
+104,504,1659383008,Dr. Richard Peterson,Bradenton,FL,941-744-2640,pair_106,PE
+105,505,1114908480,Dr. Paul Neumann,Blue Bell,PA,215-707-2098,pair_381,Non-PE
+106,506,1972777134,Dr. Emily Cyr,Phoenix,AZ,(602) 265-9161,pair_334,PE
+107,507,1770795106,Dr. Lea Isaac,Paoli,PA,610-627-4400,pair_281,PE
+108,508,1871860510,Dr. Shaunte Gray,Los Angeles,CA,800-954-8000,pair_182,Non-PE
+109,509,1114949559,Dr. Cecilia Grande,Miami,FL,305-856-1461,pair_442,PE
+110,510,1598764771,Dr. Keith Brill,Henderson,NV,(702) 862-8862,pair_378,PE
+111,511,1255913141,Dr. Brianna Dickson,Minneapolis,MN,(612) 301-3417,pair_371,PE
+112,512,1093079410,Dr. Sofia Mccotter,Harrison,OH,513-481-5100,pair_275,Non-PE
+113,513,1992019822,Dr. Nadia Pile,Tampa,FL,727-323-3838,pair_234,PE
+114,514,1205056645,Dr. Joseph Prezzato,Farmington Hills,MI,248-855-2229,pair_158,Non-PE
+115,515,1740374909,Dr. Donna Sweetland,Joliet,IL,815-220-3111,pair_319,PE
+116,516,1619555968,Dr. Connell Kling,Syracuse,NY,315-464-5162,pair_285,PE
+117,517,1144885997,Dr. Lauren Roberts,Farmington Hills,MI,248-539-0742,pair_393,Non-PE
+118,518,1851956353,Dr. Nancy Singh,Chicago,IL,718-963-7331,pair_348,PE
+119,519,1740244383,Dr. Lance Radbill,Birmingham,AL,(205) 397-9000,pair_324,PE
+120,520,1053308411,Dr. Steven Lacher,Bel Air,MD,410-825-6778,pair_358,Non-PE
+121,521,1689837015,Dr. Caton Simoni,New Braunfels,TX,803-730-5953,pair_396,Non-PE
+122,522,1043284425,Dr. Leroy Charles,Greenacres,FL,561-784-7014,pair_425,Non-PE
+123,523,1962575597,Dr. Michael Dempsey,Columbus,GA,(706) 320-2547,pair_345,PE
+124,524,1376528265,Dr. Michelle Spector,Rockville,MD,301-762-5501,pair_357,Non-PE
+125,525,1013903541,Dr. Jonathan Lupton,Mooresville,IN,317-865-3600,pair_288,PE
+126,526,1902187867,Dr. Natasha Harvey,Bartlett,IL,312-567-2000,pair_290,PE
+127,527,1326435645,Dr. Nicole Haslett,Bryn Mawr,PA,267-607-5950,pair_276,PE
+128,528,1164420493,Dr. Evan Shapiro,New Hyde Park,NY,718-253-8114,pair_384,Non-PE
+129,529,1023041688,Dr. Alexandria Angelides,Miami,FL,561-488-3128,pair_414,PE
+130,530,1699034215,Dr. Lena Carr,Novi,MI,248-662-4386,pair_35,PE
+131,531,1588834329,Dr. Ana Benitez Prieto,Orlando,FL,407-857-2502,pair_208,Non-PE
+132,532,1053707034,Dr. Samantha Bunting,Davie,FL,954-476-1050,pair_101,Non-PE
+133,533,1356795595,Dr. Sharon Kim,Fairfax,VA,(703) 971-7633,pair_403,PE
+134,534,1588663363,Dr. Joseph Kerpsack,Miami,FL,321-841-5281,pair_122,PE
+135,535,1750474813,Dr. Daniel Greene,Rochester,MI,248-656-2022,pair_362,Non-PE
+136,536,1619905387,Dr. Jonathan Zaidan,Birmingham,MI,248-693-1630,pair_115,Non-PE
+137,537,1982894879,Dr. Jill Botelho,Lutz,FL,813-961-7440,pair_212,PE
+138,538,1194087270,Dr. Paula Edelson,West Chester,PA,610-829-9700,pair_269,Non-PE
+139,539,1588898415,Dr. Arminda Callejas Weintz,Frisco,TX,972-377-6553,pair_398,Non-PE
+140,540,1144532805,Dr. Leigh Behring,East Lansing,MI,517-484-3000,pair_444,Non-PE
+141,541,1871759258,Dr. Li Xu,Raleigh,NC,919-350-7856,pair_388,Non-PE
+142,542,1083772461,Dr. Gretchen Makai,Chadds Ford,PA,610-361-1085,pair_261,Non-PE
+143,543,1760644090,Dr. Karen Wolowick,Downers Grove,IL,630-320-6703,pair_317,Non-PE
+144,544,1326499849,Dr. David Doyle,Mount Clemens,MI,810-493-8000,pair_207,Non-PE
+145,545,1235249509,Dr. James Hotaling,Salt Lake City,UT,206-543-0065,pair_171,PE
+146,546,1619271947,Dr. Carlos Flores,Burbank,CA,818-566-9947,pair_336,Non-PE
+147,547,1609119890,Dr. Tavor Sondheimer,Washington,DC,202-877-7000,pair_4,Non-PE
+148,548,1881893212,Dr. Xochitl Garcia,Springfield,IL,217-522-4300,pair_242,Non-PE
+149,549,1427120948,Dr. Meera Patel,Clayton,MO,314-916-8751,pair_183,Non-PE
+150,550,1821067539,Dr. Amy Cadieux,Phoenixville,PA,610-933-2440,pair_280,Non-PE
+151,551,1770539314,Dr. Ravy Lu,Blue Bell,PA,610-525-3225,pair_287,PE
+152,552,1043892326,Dr. Tyler Desmond,Mullica Hill,NJ,856-223-8930,pair_268,PE
+153,553,1508050162,Dr. Maria Pimentel,Clearwater,FL,727-725-5121,pair_130,Non-PE
+154,554,1376611202,Dr. Richard Biggs,Bradenton,FL,941-792-4993,pair_106,Non-PE
+155,555,1982686275,Dr. Anthony Martell,Coral Springs,FL,954-752-9220,pair_116,PE
+156,556,1316309172,Dr. Abigail Armstrong,Santa Monica,CA,323-410-1291,pair_182,PE
+157,557,1154530301,Dr. Adebola Nnewihe,Northfield,NJ,609-383-4042,pair_501,Non-PE
+158,558,1134217292,Dr. Arthur Gross,Englewood,NJ,201-894-0003,pair_497,PE
+159,559,1417986381,Dr. Jeffrey Litt,Miami,FL,561-354-1515,pair_91,PE
+160,560,1992740385,Dr. Marianne Herrighty,Kearny,NJ,201-991-3838,pair_499,PE
+161,561,1801359690,Dr. Cody Campbell,Muncie,IN,616-252-7200,pair_263,PE
+162,562,1952835829,Dr. Ahmad Kerr,Washington,DC,(973) 580-5557,pair_354,PE
+163,563,1437177334,Dr. Elina Burstyn,Latham,NY,518-783-7070,pair_216,Non-PE
+164,564,1629031117,Dr. Sheldon Paul,North Las Vegas,NV,(702) 438-4692,pair_376,PE
+165,565,1003347055,Dr. Elizabeth Isak,Chicago,IL,312-695-8182,pair_174,Non-PE
+166,566,1194820753,Dr. Ruthann Rees,Columbus,GA,706-324-0471,pair_345,Non-PE
+167,567,1093700072,Dr. Prafulla Koneru,South Barrington,IL,847-382-8200,pair_408,Non-PE
+168,568,1417290719,Dr. Philip Cheng,Basking Ridge,NJ,908-495-1183,pair_169,PE
+169,569,1669470126,Dr. George Talbot,Mooresville,IN,317-584-3454,pair_288,Non-PE
+170,570,1124069018,Dr. Bharti Mavani,Kearny,NJ,732-549-3229,pair_505,PE
+171,571,1710953617,Dr. Margaret Nettleton,Schaumburg,IL,847-618-8400,pair_262,PE
+172,572,1063602597,Dr. Elena Zenkin,Las Vegas,NV,702-671-5150,pair_379,Non-PE
+173,573,1700413499,Dr. Mary Ahern,Baltimore,MD,(410) 823-1120,pair_361,PE
+174,574,1952381196,Dr. Suzanne Pugh,Bryn Mawr,PA,610-688-3744,pair_304,PE
+175,575,1275618985,Dr. Scott Multack,Bloomingdale,IL,630-545-8300,pair_351,Non-PE
+176,576,1366633620,Dr. Stephanie Mayes,Phoenix,AZ,480-785-2100,pair_334,Non-PE
+177,577,1891172201,Dr. Julia Cooper,South Miami,FL,305-665-1133,pair_128,PE
+178,578,1457437162,Dr. Jennifer Santiago,Lanham,MD,202-832-1800,pair_355,Non-PE
+179,579,1104182385,Dr. Diana Mccarthy,Morrisville,NC,919-235-6480,pair_389,Non-PE
+180,580,1659348563,Dr. Virginia Banks,Youngstown,OH,724-347-4654,pair_181,PE
+181,581,1194380428,Dr. Ibrahim Tsolakian,Bel Air,MD,(443) 643-4300,pair_358,PE
+182,582,1457693293,Dr. Cassandra Mscp,Maplewood,MN,(612) 626-6628,pair_365,PE
+183,583,1730408535,Dr. Magdalena Szutowska,Danbury,CT,203-730-8789,pair_487,Non-PE
+184,584,1104260686,Dr. Rohini Sarin Oneil,Paoli,PA,610-647-1106,pair_281,Non-PE
+185,585,1578662276,Dr. Gene Krishingner,Orlando,FL,407-975-0406,pair_87,PE
+186,586,1538570833,Dr. Kristin Kinsler,Kearny,NJ,(732) 745-8600,pair_490,PE
+187,587,1033174644,Dr. Emilio Gomez-Madrazo,South Miami,FL,305-441-7999,pair_128,Non-PE
+188,588,1932139631,Dr. Sardana Belkin,Howell,NJ,732-905-8111,pair_502,Non-PE
+189,589,1235440140,Dr. Katherine Bohnert,Little Silver,NJ,732-747-9310,pair_292,Non-PE
+190,590,1427311729,Dr. Daniel Cibulsky,Jersey City,NJ,201-309-2380,pair_273,Non-PE
+191,591,1043232382,Dr. Philip Hirshman,Bryn Mawr,PA,610-265-0184,pair_278,PE
+192,592,1366436388,Dr. Akemi Nakanishi,Libertyville,IL,847-680-3400,pair_301,Non-PE
+193,593,1952465163,Dr. Eddy Joseph,Elizabeth,NJ,908-353-1171,pair_492,Non-PE
+194,594,1619053535,Dr. Yulia Aronovich,Manhasset,NY,(516) 496-3900,pair_385,PE
+195,595,1346771698,Dr. Jennifer Weiss,Maywood,IL,708-216-9000,pair_174,PE
+196,596,1902301112,Dr. Alexandra Levy,Boca Raton,FL,561-368-3775,pair_154,PE
+197,597,1699949776,Dr. Georgina Greil,Eagan,MN,(763) 241-0373,pair_368,PE
+198,598,1942645874,Dr. Arifa Khokar,Silver Spring,MD,(304) 263-4999,pair_357,PE
+199,599,1588678932,Dr. Andrea Schiller,Royal Oak,MI,(248) 584-7600,pair_364,PE
+200,600,1093120800,Dr. Shivali Raav,Morristown,NJ,973-683-1400,pair_254,Non-PE
+201,601,1316948748,Dr. Melissa Delaney,Bryn Mawr,PA,610-429-9101,pair_267,PE
+202,602,1023041100,Dr. Natalia Rezvina,Somers Point,NJ,609-788-8158,pair_507,Non-PE
+203,603,1336390970,Dr. Melissa Lee,Orlando,FL,407-316-8550,pair_208,PE
+204,604,1518196443,Dr. Anna Nelson-Moseke,Tucson,AZ,(520) 258-0585,pair_332,PE
+205,605,1003882978,Dr. Melodie Icasiano,Paoli,PA,253-968-1740,pair_280,PE
+206,606,1851612477,Dr. Robert Sherman,Palm Harbor,FL,727-947-4485,pair_130,PE
+207,607,1851354534,Dr. Linda Matonis,New Britain,CT,860-224-6200,pair_485,Non-PE
+208,608,1457768178,Dr. Lauren Mason-Cederberg,Long Branch,NJ,732-923-6890,pair_299,Non-PE
+209,609,1568952877,Dr. Grace Wey,Bayonne,NJ,973-736-1100,pair_459,PE
+210,610,1629042460,Dr. Elliot Cazes,Tampa,FL,813-977-2757,pair_230,Non-PE
+211,611,1114373784,Dr. James Miller,Hickory,NC,828-328-2901,pair_387,Non-PE
+212,612,1851586770,Dr. Karolina Borodo,Tampa,FL,813-875-8032,pair_229,Non-PE
+213,613,1932188760,Dr. Frederick Bartholomew,Farmington Hills,MI,248-253-0656,pair_115,PE
+214,614,1669562880,Dr. Steven Valfer,Northbrook,IL,847-272-7777,pair_347,Non-PE
+215,615,1083076236,Dr. Kirsten Beeson,Raleigh,NC,(919) 876-9797,pair_391,PE
+216,616,1174506323,Dr. Janet Gersten,Miami,FL,305-274-6002,pair_78,PE
+217,617,1073518130,Dr. Lawrence Bergman,Wellington,FL,561-798-5565,pair_425,PE
+218,618,1831129584,Dr. Leonardo Blachar,Miami,FL,305-532-1989,pair_8,PE
+219,619,1639801947,Dr. Alycia Cucka,Grand Blanc,MI,810-606-5000,pair_195,PE
+220,620,1437354099,Dr. Matthew Palmer,Plymouth,MN,763-587-7000,pair_367,Non-PE
+221,621,1447250964,Dr. Jose Berthe,Coral Springs,FL,954-255-5799,pair_141,Non-PE
+222,622,1972949220,Dr. Elise Simpson,East Lansing,MI,248-465-4340,pair_1,PE
+223,623,1962433250,Dr. Shayna Rubin,Chicago,IL,312-262-2976,pair_185,Non-PE
+224,624,1952530628,Dr. Virginia Smith,Wilkes Barre,PA,570-808-5135,pair_315,Non-PE
+225,625,1790765857,Dr. Beth Diner,Tampa,FL,727-954-7121,pair_201,PE
+226,626,1104171297,Dr. Sierra Cuthpert,Flint,MI,810-262-6743,pair_195,Non-PE
+227,627,1457328064,Dr. Paul Vetter,Hackensack,NJ,551-996-3881,pair_497,Non-PE
+228,628,1790746279,Dr. Mark Grenitz,Plantation,FL,954-473-2011,pair_101,PE
+229,629,1861659708,Dr. Alexandria Reyes,Tampa,FL,813-773-6627,pair_252,Non-PE
+230,630,1083868764,Dr. Sami Mufarrij,North Bethesda,MD,301-881-3260,pair_359,Non-PE
+231,631,1518145473,Dr. Mark Zakaria,Coral Springs,FL,954-644-0149,pair_141,PE
+232,632,1790949477,Dr. Francis Esguerra,Fort Wayne,IN,260-458-3050,pair_271,PE
+233,633,1639147911,Dr. Cynthia Baldwin,Miami,FL,305-273-4641,pair_122,Non-PE
+234,634,1629247515,Dr. Carlos Reyes,Tampa,FL,727-895-1300,pair_252,PE
+235,635,1811991276,Dr. Joseph Castelli,Bryn Mawr,PA,610-265-4088,pair_277,Non-PE
+236,636,1396187449,Dr. Estrella Chavez Benzaquen,Pompano Beach,FL,954-786-5418,pair_154,Non-PE
+237,637,1508858614,Dr. Scott Dinesen,Doylestown,PA,215-489-2066,pair_305,Non-PE
+238,638,1235118399,Dr. Kompal Gadh,Pembroke Pines,FL,954-499-4570,pair_394,PE
+239,639,1982936860,Dr. Ladson Gaddy-Dubac,Asheville,NC,(828) 258-9191,pair_390,PE
+240,640,1700084779,Dr. Alka Bennion,Sun City,AZ,623-832-4000,pair_322,Non-PE
+241,641,1053717306,Dr. Felix Cohen,New York,NY,347-545-2520,pair_184,Non-PE
+242,642,1730259094,Dr. Peter Mandel,Freehold,NJ,732-431-2999,pair_502,PE
+243,643,1275500779,Dr. Katherine Barrett,Cary,NC,(919) 781-7450,pair_389,PE
+244,644,1336366699,Dr. Simone Piraino,Schenectady,NY,904-264-9555,pair_216,PE
+245,645,1811071764,Dr. Diana Cohen,Lake Orion,MI,248-690-7771,pair_57,Non-PE
+246,646,1982164695,Dr. Cynthia Mckinney,Little Silver,NJ,732-842-0673,pair_292,PE
+247,647,1801903372,Dr. David Szentes,Greenwood,IN,317-535-4073,pair_258,Non-PE
+248,648,1598723819,Dr. Helene Koch,Bala Cynwyd,PA,610-667-6363,pair_291,Non-PE
+249,649,1790997443,Dr. Alexander Shapiro,Denver,CO,303-338-4545,pair_178,Non-PE
+250,650,1922530120,Dr. Victoria Jiang,Marietta,GA,678-540-1098,pair_177,PE
+251,651,1245505684,Dr. Latasha Murphy,Towson,MD,410-321-8452,pair_361,Non-PE
+252,652,1801355243,Dr. Petra Voigt,Chicago,IL,312-694-6447,pair_348,Non-PE
+253,653,1053653105,Dr. Lia Labrant,Beverly Hills,CA,(310) 652-9347,pair_336,PE
+254,654,1578615084,Dr. Anne Petit,Somers Point,NJ,609-653-1016,pair_457,Non-PE
+255,655,1245478916,Dr. Alvin Martinez,Pembroke Pines,FL,954-447-1446,pair_120,PE
+256,656,1144386582,Dr. Stephanie Mcknight,Bryn Mawr,PA,610-668-7992,pair_293,PE
+257,657,1316560451,Dr. Hilary Hinton,Media,PA,484-443-2880,pair_277,PE
+258,658,1720045750,Dr. Abigail Gleason,Kearny,NJ,732-254-1500,pair_494,PE
+259,659,1457615742,Dr. Ashley Abraham,Arlington Heights,IL,847-221-4900,pair_236,PE
+260,660,1831124270,Dr. Diane Mccracken,Newark,DE,(302) 224-8400,pair_338,PE
+261,661,1720582737,Dr. Haleigh Edgar,Las Vegas,NV,(702) 870-2229,pair_379,PE
+262,662,1386692028,Dr. Michelle Neff,Carmel,IN,317-582-7000,pair_297,PE
+263,663,1114216355,Dr. Megan Bina,Maple Grove,MN,(763) 581-7000,pair_367,PE
+264,664,1467984831,Dr. Myah Bell,Lake Orion,MI,248-693-0543,pair_423,PE
+265,665,1205869096,Dr. Anna Tatarchuk,Raleigh,NC,919-696-4130,pair_391,Non-PE
+266,666,1598855678,Dr. Esther Zekman,Royal Oak,MI,248-855-6663,pair_68,PE
+267,667,1376574673,Dr. Antonia Williams,Birmingham,AL,205-926-2992,pair_324,Non-PE
+268,668,1417026188,Dr. Stephanie Chin,Tucson,AZ,(520) 795-8080,pair_331,PE
+269,669,1831501055,Dr. Navpreet Chattha,Newport Beach,CA,(949) 644-2722,pair_380,PE
+270,670,1124084413,Dr. Michael Hellinger,Miami,FL,305-858-1515,pair_138,PE
+271,671,1861651176,Dr. Sara Rinala,Cincinnati,OH,513-563-2202,pair_312,Non-PE
+272,672,1174514020,Dr. Marwan Shaykh,Jacksonville,FL,904-398-1473,pair_231,Non-PE
+273,673,1265745327,Dr. Elizabeth England,Asheville,NC,828-398-3601,pair_390,Non-PE
+274,674,1457808651,Dr. Brian Vu,Las Vegas,NV,(702) 877-5199,pair_377,PE
+275,675,1083636831,Dr. Jennifer Gilbert,Paoli,PA,610-889-9550,pair_267,Non-PE
+276,676,1700998366,Dr. Michael Noone,Park Ridge,IL,847-825-1590,pair_346,Non-PE
+277,677,1912303033,Dr. Masuma Bahora,King Of Prussia,PA,(484) 622-7940,pair_381,PE
+278,678,1699822320,Dr. Jon Hoversland,Muncie,IN,765-288-1928,pair_263,Non-PE
+279,679,1952332165,Dr. John Bush,Frankfort,IL,(815) 469-6646,pair_353,PE
+280,680,1891358891,Dr. Katrina Marcinkowski,Hammonton,NJ,609-561-6660,pair_491,Non-PE
+281,681,1407903495,Dr. Jocelyn Craparo,Bryn Mawr,PA,(610) 525-6400,pair_392,PE
+282,682,1295116309,Dr. Kristin Kean,Willow Grove,PA,215-914-4400,pair_287,Non-PE
+283,683,1679708416,Dr. Rachel Schleichert,Towson,MD,410-328-6110,pair_22,PE
+284,684,1003815895,Dr. Kelly Vangilder,Boynton Beach,FL,561-737-7733,pair_133,Non-PE
+285,685,1205060761,Dr. Kendra Johnson,Petoskey,MI,248-563-3231,pair_2,PE
+286,686,1447612973,Dr. Katherine Garfield,Timonium,MD,301-816-2424,pair_175,Non-PE
+287,687,1154310811,Dr. Daniel Morgan,Somers Point,NJ,609-927-3070,pair_507,PE
+288,688,1508063041,Dr. Carlos Barrionuevo,Coral Springs,FL,954-753-2411,pair_450,PE
+289,689,1144858689,Dr. Andre Hall,Gaithersburg,MD,(301) 414-2300,pair_359,PE
+290,690,1205872314,Dr. Rolando Gonzalez,Hialeah,FL,305-822-8229,pair_91,Non-PE
+291,691,1407829815,Dr. Aimee Ferrandino,Durham,NC,919-684-8111,pair_167,PE
+292,692,1689803199,Dr. Sara Rizk,Chicago,IL,773-296-3300,pair_185,PE
+293,693,1851360945,Dr. Susanne Archer,Livonia,MI,734-213-3688,pair_126,Non-PE
+294,694,1609286848,Dr. Kirsten Ely,Beltsville,MD,(301) 681-6772,pair_355,PE
+295,695,1104354208,Dr. Margaret Capobianco,Oviedo,FL,407-898-9922,pair_233,PE
+296,696,1598118218,Dr. Kelsey Anderson,Creve Coeur,MO,314-266-2062,pair_183,PE
+297,697,1619932506,Dr. Linh Nguyen,Fountain Valley,CA,714-378-5606,pair_380,Non-PE
+298,698,1639129455,Dr. Ronald Miller,Glenview,IL,(847) 729-2108,pair_349,PE
+299,699,1295735934,Dr. Charles Touey,Paoli,PA,610-326-6732,pair_311,PE
+300,700,1801459706,Dr. Amalia Kotlyar,Bridgeport,CT,(203) 227-5125,pair_482,PE
+301,701,1629572847,Dr. Huiwen Liu,Katy,TX,847-808-8884,pair_426,PE
+302,702,1174552038,Dr. Michelle Luthringshausen,Arlington Heights,IL,847-221-4601,pair_227,PE
+303,703,1407266901,Dr. Maria Munoz,Boca Raton,FL,561-300-0220,pair_405,Non-PE
+304,704,1902977796,Dr. Gary Levine,Mineola,NY,(516) 741-4321,pair_384,PE
+305,705,1578067187,Dr. Catherine Yu,New Brunswick,NJ,732-828-3000,pair_314,PE
+306,706,1326281023,Dr. Amber Jaeger,San Francisco,CA,415-476-1000,pair_186,Non-PE
+307,707,1720050776,Dr. Philip Korzeniowski,Somers Point,NJ,609-926-8353,pair_501,PE
+308,708,1467016196,Dr. Andres Hernandez,Memphis,TN,901-516-5741,pair_251,PE
+309,709,1790834190,Dr. James Leonelli,Youngstown,OH,330-726-2496,pair_181,Non-PE
+310,710,1740817071,Dr. Sarah Bechay,New Providence,NJ,908-277-8799,pair_254,PE
+311,711,1760758411,Dr. Jeffrey Schachar,Davie,FL,954-513-6641,pair_120,Non-PE
+312,712,1124381108,Dr. Gabriel Valverde Tavarez,Miami,FL,305-595-4070,pair_124,Non-PE
+313,713,1003896507,Dr. Jane Matos-Fraebel,Plantation,FL,954-998-7760,pair_159,Non-PE
+314,714,1164467338,Dr. Darcy Bryan,Tampa,FL,813-872-8551,pair_201,Non-PE
+315,715,1437140589,Dr. Judy Tom,Glendale,AZ,(602) 678-1500,pair_322,PE
+316,716,1174515035,Dr. Anita Iyer,Buffalo Grove,IL,708-425-1907,pair_301,PE
+317,717,1356735542,Dr. Stephanie Roy,Katy,TX,281-347-2600,pair_426,Non-PE
+318,718,1457374068,Dr. Jorge Gomez,South Miami,FL,305-669-9521,pair_433,Non-PE
+319,719,1942299045,Dr. Michelle Goldin,Schaumburg,IL,847-221-4300,pair_245,Non-PE
+320,720,1508902370,Dr. Carole Condevaux,Rochester Hills,MI,(248) 650-1534,pair_362,PE
+321,721,1265011761,Dr. Alice Cai,West Chester,PA,610-692-3434,pair_261,PE
+322,722,1265432785,Dr. Bruce Zafran,Coral Springs,FL,954-341-8288,pair_450,Non-PE
+323,723,1841635851,Dr. Brittney Schumann,New Braunfels,TX,(214) 947-2331,pair_396,PE
+324,724,1386212280,Dr. Nabeel Salka,Springfield,IL,217-545-8000,pair_242,PE
+325,725,1306005145,Dr. Fahimeh Sasan,New York,NY,347-778-2542,pair_184,PE
+326,726,1215466818,Dr. Kylee Clyatt,Fort Washington,PA,215-707-5864,pair_395,Non-PE
+327,727,1972513935,Dr. Marc Siegel,Somers Point,NJ,609-926-8353,pair_457,PE
+328,728,1104454545,Dr. Natalia J,Des Plaines,IL,(847) 318-9350,pair_347,PE
+329,729,1437443835,Dr. Emma Rodgers Biebuyck,Petoskey,MI,231-487-2340,pair_2,Non-PE
+330,730,1427081736,Dr. Dilip Bharucha,Kearny,NJ,732-246-7744,pair_492,PE
+331,731,1033520838,Dr. Sabrina Rabau,Hammonton,NJ,856-778-4700,pair_511,PE
+332,732,1659678753,Dr. Vanessa Knoedler,Bloomington,MN,952-993-2400,pair_368,Non-PE
+333,733,1265432397,Dr. Soheyla Pezeshki,Novi,MI,248-662-4388,pair_300,PE
+334,734,1720304595,Dr. Suzanne Nogami,Malvern,PA,610-251-9433,pair_270,Non-PE
+335,735,1730470402,Dr. Catherine Bailey,North Syracuse,NY,315-701-0500,pair_285,Non-PE
+336,736,1639261738,Dr. Bruce Breit,Oviedo,FL,407-645-5565,pair_224,Non-PE
+337,737,1801235148,Dr. Steven Lefkowitz,Troy,MI,(248) 551-0845,pair_363,PE
+338,738,1720125586,Dr. Steven Troy,Drexel Hill,PA,610-626-7070,pair_276,Non-PE
+339,739,1356871917,Dr. Gabriella Pugliese,Lansdale,PA,484-925-0500,pair_305,PE
+340,740,1205276193,Dr. Peter Sticco,Rockville Centre,NY,631-376-3880,pair_383,Non-PE
+341,741,1821228008,Dr. Christina Caito,Orlando,FL,407-453-2072,pair_87,Non-PE
+342,742,1316149909,Dr. Adegboyega Adejana,Baltimore,MD,410-760-1118,pair_22,Non-PE
+343,743,1093078388,Dr. Bishara Facs,Hoffman Estates,IL,(847) 884-9800,pair_351,PE
+344,744,1669979795,Dr. Priyanga Jeyasri,Hoboken,NJ,201-659-7700,pair_456,Non-PE
+345,745,1093203036,Dr. Nicole Lomotan,Arlington Heights,IL,847-618-0730,pair_408,PE
+346,746,1447363478,Dr. Sylvia Siegfried,West Palm Beach,FL,561-434-0111,pair_187,PE
+347,747,1164746772,Dr. Golnaz Alemi,North Las Vegas,NV,702-818-1919,pair_376,Non-PE
+348,748,1275783300,Dr. Meredith Martin Johnston,Hoffman Estates,IL,847-490-4222,pair_236,Non-PE
+349,749,1881902823,Dr. Jessica Barker,Arlington,TX,813-286-0033,pair_205,PE
+350,750,1700103868,Dr. Ryan Martin,Denver,CO,303-436-6000,pair_178,PE
+351,751,1194879445,Dr. Andrew Engel,Falls Church,VA,703-533-9211,pair_403,Non-PE
+352,752,1457731994,Dr. Frances Perez-Suarez,Miami,FL,305-226-5651,pair_442,Non-PE
+353,753,1225290455,Dr. Renata Scott-Ram,New Hyde Park,NY,516-437-4300,pair_385,Non-PE
+354,754,1063417137,Dr. Sherri Graf,Southfield,MI,248-223-9202,pair_250,Non-PE
+355,755,1073904256,Dr. Andrew Ewbank,Evanston,IL,312-666-3494,pair_349,Non-PE
+356,756,1154859973,Dr. Devoni Bruns,Arlington Heights,IL,847-392-9191,pair_245,PE
+357,757,1275641003,Dr. Robin Whatley,Bolingbrook,IL,630-312-4350,pair_317,PE
+358,758,1225415789,Dr. Lindsay Lewis,Edina,MN,952-920-7001,pair_370,Non-PE
+359,759,1629464003,Dr. Shruti Bala,Tucson,AZ,520-670-3909,pair_331,Non-PE
+360,760,1831696277,Dr. Molly Amero,Hammonton,NJ,215-955-6776,pair_491,PE
+361,761,1275736092,Dr. Christi Kidd,Mckinney,TX,(972) 542-8884,pair_398,PE
+362,762,1447341920,Dr. Anthony Sciscione,Newark,DE,302-319-5680,pair_340,Non-PE
+363,763,1144222985,Dr. Carrie Speier Schafer,Farmington Hills,MI,248-476-7650,pair_35,Non-PE
+364,764,1437117793,Dr. Andrew Shapiro,Miami,FL,561-333-1335,pair_428,PE
+365,765,1659682664,Dr. Teri Forney,Mansfield,TX,682-341-7330,pair_205,Non-PE
+366,766,1083633101,Dr. Kimberly Mcintosh,Stockbridge,GA,(770) 474-0064,pair_342,PE
+367,767,1699793042,Dr. Julio Arronte,Miami,FL,305-722-9656,pair_160,Non-PE
+368,768,1013012541,Dr. Marie Carmelle Liburd,Miami,FL,305-696-9400,pair_414,Non-PE
+369,769,1710340591,Dr. Nicole Melanson,Jacksonville,FL,904-640-8249,pair_231,PE
+370,770,1588609101,Dr. Crista Crisler,Memphis,TN,901-767-8442,pair_251,Non-PE
+371,771,1780818146,Dr. Eric Liberman,Newark,NJ,732-923-7455,pair_459,Non-PE
+372,772,1508852567,Dr. Allyson Jones,Tampa,FL,813-681-6625,pair_230,PE
+373,773,1952488280,Dr. Norma Milanes Roberts,Newark,NJ,973-733-7558,pair_499,Non-PE
+374,774,1417190125,Dr. Valerie Gathers,Fishers,IN,317-415-9010,pair_297,Non-PE
+375,775,1881669356,Dr. Elizabeth Venard,Cincinnati,OH,513-481-4777,pair_312,PE
+376,776,1477711158,Dr. Lauren Callahan,Woodbury,MN,651-686-6400,pair_365,Non-PE
+377,777,1902149511,Dr. Brianna Varas,Miami,FL,786-631-3222,pair_160,PE
+378,778,1952373912,Dr. Lisa Eng,New York,NY,212-219-2723,pair_382,Non-PE
+379,779,1225142938,Dr. Jaime Mercado,Miami,FL,954-370-7036,pair_433,PE
+380,780,1144280553,Dr. Cindy Joslyn,Worcester,MA,(508) 363-6032,pair_472,PE
+381,781,1265842090,Dr. Mais Arwani,Commerce Twp,MI,248-360-9090,pair_393,PE
+382,782,1477896702,Dr. Philip Mclemore,Las Vegas,NV,702-382-3200,pair_377,Non-PE
+383,783,1649251729,Dr. James Mcbride,Rochester Hills,MI,248-997-5805,pair_423,Non-PE
+384,784,1871084970,Dr. Karan Arora,Miami,FL,305-275-5525,pair_143,PE
+385,785,1629262126,Dr. Marcela Lazo,West Palm Beach,FL,561-655-5511,pair_187,Non-PE
+386,786,1720196454,Dr. Nathan Hirsch,Miami,FL,305-665-1133,pair_124,PE
+387,787,1548840630,Dr. Alyse Victor,Roseville,MI,586-415-6200,pair_207,PE
+388,788,1457519738,Dr. Eva Crooke,Lutz,FL,813-428-7030,pair_212,Non-PE
+389,789,1689661928,Dr. Jose Picazo,Newark,DE,302-738-6535,pair_338,Non-PE
+390,790,1821408287,Dr. Jinny Gunn,Tampa,FL,727-826-0795,pair_229,PE
+391,791,1669430328,Dr. Randy Fink,Miami,FL,305-274-3130,pair_143,Non-PE
+392,792,1366550188,Dr. Robi Burns,Henderson,NV,702-853-1400,pair_378,Non-PE
+393,793,1740542141,Dr. Jennifer Borson,Novi,MI,248-465-1200,pair_158,PE
+394,794,1841324514,Dr. Freddy Montero,Miami,FL,305-595-1833,pair_413,Non-PE
+395,795,1932490711,Dr. Amy Gueye,Columbia,MD,240-747-7785,pair_176,Non-PE
+396,796,1497307052,Dr. Samantha So,Fort Washington,PA,215-707-3008,pair_307,PE
+397,797,1891122818,Dr. Dhruv Rathod,Paulsboro,NJ,856-583-2400,pair_268,Non-PE
+398,798,1376656264,Dr. Daniel Kaelberer,Murray,UT,801-507-1950,pair_171,Non-PE
+399,799,1578721155,Dr. Lina Millan,Roswell,GA,(678) 344-8900,pair_341,PE
+400,800,1073073565,Dr. Caroline Mecker,Carmel,IN,317-573-7050,pair_294,PE
