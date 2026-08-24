@@ -29,8 +29,25 @@ suppressMessages({
 })
 
 ROOT       <- "."
-SHEET      <- file.path(ROOT, "pe_obgyn_final_calling_sheet_200.csv")
-STUDY_DB   <- file.path(ROOT, "pe_obgyn_study_database.csv")
+
+# The sheet and the address source are arguments, not constants. They were hardcoded to
+# pe_obgyn_final_calling_sheet_200.csv, which is NOT the fielded cohort -- it shares only 153 of
+# the 400 clinicians in the live REDCap dropdown. Running this against the wrong sheet produced
+# a real SVI column for the wrong people, which is why the fielded 400 still had none.
+# Addresses come from the study database, which must contain every fielded NPI: the plain
+# pe_obgyn_study_database.csv covers 263 of 400 and fails the stopifnot below; the _with_churn
+# build covers all 400.
+#
+# Usage:
+#   Rscript build_svi_covariate.R                                    # legacy defaults
+#   Rscript build_svi_covariate.R --sheet=FILE.csv --db=FILE.csv     # explicit
+argval <- function(flag, default) {
+  a <- commandArgs(trailingOnly = TRUE)
+  v <- sub(paste0("^", flag, "="), "", grep(paste0("^", flag, "="), a, value = TRUE))
+  if (length(v)) v[1] else default
+}
+SHEET      <- file.path(ROOT, argval("--sheet", "pe_obgyn_final_calling_sheet_200.csv"))
+STUDY_DB   <- file.path(ROOT, argval("--db",    "pe_obgyn_study_database.csv"))
 WORK       <- file.path(ROOT, "scratch", "svi")
 SVI_YEAR   <- "2022"
 
@@ -148,14 +165,34 @@ pull_geoid <- function(url) {
   sub('"GEOID":"([0-9]{11})"', "\\1", m)
 }
 
+# Coordinate columns are looked up case-insensitively. pe_obgyn_study_database.csv spells them
+# "latitude"/"longitude"; the _with_churn build spells them "Latitude"/"Longitude". Indexing a
+# data frame with a name it does not have returns NULL, and `nzchar(trimws(NULL)) && ...` is a
+# zero-length condition, which is an error in R >= 4.2 rather than a skipped branch. So the
+# fallback did not merely fail to fire on the churn build -- it halted the whole run.
+col_ci <- function(df, nm) {
+  hit <- match(tolower(nm), tolower(names(df)))
+  if (is.na(hit)) NULL else df[[hit]]
+}
+LAT <- col_ci(db, "latitude"); LON <- col_ci(db, "longitude")
+if (is.null(LAT) || is.null(LON))
+  message("  note: no coordinate columns in the address source; stored-coordinate fallback is off")
+
+usable_num <- function(x) {
+  if (is.null(x) || length(x) != 1L || is.na(x)) return(FALSE)
+  v <- suppressWarnings(as.numeric(trimws(x)))
+  !is.na(v) && is.finite(v) && v != 0
+}
+
 todo <- which(is.na(geo$tract_fips))
 if (length(todo)) {
   message(sprintf("  second pass on %d unplaced addresses...", length(todo)))
   for (i in todo) {
     g <- pull_geoid(geo_url(strip_suite(addr$street[i]), addr$city[i], addr$state[i], addr$zip[i]))
     if (!is.na(g)) { geo$tract_fips[i] <- g; geo$method[i] <- "address (retry, suite stripped)"; next }
-    lat <- db[["latitude"]][idx[i]]; lon <- db[["longitude"]][idx[i]]
-    if (nzchar(trimws(lat)) && nzchar(trimws(lon))) {
+    lat <- if (is.null(LAT)) NA else LAT[idx[i]]
+    lon <- if (is.null(LON)) NA else LON[idx[i]]
+    if (usable_num(lat) && usable_num(lon)) {
       g <- pull_geoid(coord_url(trimws(lon), trimws(lat)))
       if (!is.na(g)) { geo$tract_fips[i] <- g; geo$method[i] <- "stored coordinate" }
     }

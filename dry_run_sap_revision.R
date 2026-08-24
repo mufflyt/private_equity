@@ -44,7 +44,9 @@ sheet <- read_csv(SHEET, show_col_types = FALSE)
 design <- sheet %>%
   transmute(npi = as.character(NPI), pair = `Matched Pair ID`,
             pe = as.integer(PE_or_Not == "PE"),
-            svi = suppressWarnings(as.numeric(CDC_SVI))) %>%
+            # SAP.lock names CDC_SVI_real. This read as.numeric(CDC_SVI), the simulated
+            # column, so every svi_z in this script was computed from rnorm() draws.
+            svi = suppressWarnings(as.numeric(CDC_SVI_real))) %>%
   mutate(svi_z = as.numeric(scale(ifelse(is.na(svi), median(svi, na.rm = TRUE), svi)))) %>%
   tidyr::crossing(payer = c("BCBS", "Medicaid")) %>%
   mutate(medicaid = as.integer(payer == "Medicaid"),

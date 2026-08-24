@@ -54,6 +54,18 @@ ENRICH_DB <- c("CDC_SVI", "Medicaid_Fee_Index", "PE_Concentration_15mi", "HQ_Dis
                "Tract_Pct_Female_Uninsured", "County_OBGYN_Count", "County_Medicare_Enrollment",
                "County_Medicaid_Enrollment", "Mean_Annual_Churn", "Total_Exits", "Total_Entries",
                "Max_Staff_Count")
+
+# Eight of those fifteen are rnorm() draws, not measurements (Appendix S2). They carry a
+# SIMULATED_ prefix in every fielded artifact so that no column name asserts a measurement that
+# was not made -- the contract test-svi-provenance.R enforces. The churn database still stores
+# them unprefixed, so the prefix is applied on write here; without this, re-running enrichment
+# would quietly reintroduce a column called CDC_SVI sitting next to the real CDC_SVI_real.
+ENRICH_SIMULATED <- c("CDC_SVI", "Tract_Pct_Female_Private", "Tract_Pct_Female_Medicaid",
+                      "Tract_Pct_Female_Medicare", "Tract_Pct_Female_Uninsured",
+                      "County_OBGYN_Count", "County_Medicare_Enrollment",
+                      "County_Medicaid_Enrollment")
+sheet_name_for <- function(db_col)
+  ifelse(db_col %in% ENRICH_SIMULATED, paste0("SIMULATED_", db_col), db_col)
 ENRICH_PHONE <- c("Phone_Database_Matches", "Phone_Verification_Status")
 
 # ---------------------------------------------------------------- helpers
