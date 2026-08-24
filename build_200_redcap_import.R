@@ -24,6 +24,8 @@
 # this insurance type"), not the other arm.
 
 suppressMessages({library(readr); library(dplyr); library(stringr)})
+source(file.path(dirname(sub("^--file=", "", grep("^--file=", commandArgs(FALSE),
+                                                  value = TRUE)[1])), "R", "pe_helpers.R"))
 
 SHEET300 <- "pe_obgyn_final_calling_sheet_300.csv"
 SHEET    <- "pe_obgyn_final_calling_sheet_200.csv"
@@ -44,6 +46,12 @@ SUFFIX <- argval("--suffix", "")
 OUT_IMPORT   <- sprintf("redcap_import_ready_200%s.csv", SUFFIX)
 OUT_CHOICES  <- sprintf("redcap_physician_name_choices%s.txt", SUFFIX)
 OUT_SCHEDULE <- sprintf("redcap_call_schedule_800%s.csv", SUFFIX)
+OUT_CROSSWALK <- sprintf("redcap_slot_crosswalk_400%s.csv", SUFFIX)
+
+# The slot permutation is seeded so a build is reproducible, but unlike the old sorted
+# contract it cannot be re-derived from the sheet. OUT_CROSSWALK is therefore the only
+# record of which code is which clinician, and must be kept.
+SLOT_SEED <- 20260824L
 
 set.seed(SEED)
 
@@ -99,10 +107,13 @@ if (!has_backup)
 # physician_name choices belong to the earlier urogyn study). Codes 1..400 are the
 # Medicaid calls and 401..800 the BCBS calls, same physicians in the same order, so
 # code i and code i+400 are the two calls to one physician.
+# Slots are assigned by assign_blinded_slots(), NOT by sorting. Sorting on
+# (pair, PE_or_Not) put "Non-PE" before "PE" in every pair, which made record parity a
+# perfect predictor of ownership and sat pair members next to each other in the caller's
+# dropdown. See R/pe_helpers.R and tests/testthat/test-blinded-slot-assignment.R.
 phys <- sheet %>%
-  arrange(as.numeric(str_remove(`Matched Pair ID`, "pair_")), PE_or_Not) %>%
   mutate(
-    slot  = row_number(),
+    slot  = assign_blinded_slots(`Matched Pair ID`, PE_or_Not, seed = SLOT_SEED),
     label = if (has_backup)
       sprintf("%s (Backup: %s), %s, %s, Phone: %s, NPI: %s",
               `Provider Name`, `Backup Provider Name`, City, State, Phone, NPI)
@@ -157,6 +168,29 @@ sched <- phys %>%
   )
 write_csv(sched, OUT_SCHEDULE)
 
+# ---------------------------------------------------------------- slot crosswalk
+
+# The permutation is seeded but not derivable from the sheet, so this file is the mapping.
+# It is also the only artifact here that pairs a record id with an ownership label, which is
+# exactly why it must not travel with the caller's materials.
+crosswalk <- phys %>%
+  transmute(
+    medicaid_record_id = slot,
+    bcbs_record_id     = slot + n,
+    NPI, `Provider Name`, City, State, Phone,
+    pair_id   = `Matched Pair ID`,
+    ownership = PE_or_Not
+  ) %>% arrange(medicaid_record_id)
+write_csv(crosswalk, OUT_CROSSWALK)
+
+# The leak this replaced: assert it is gone rather than trusting the allocator.
+odd_pe <- sum(crosswalk$ownership == "PE" & crosswalk$medicaid_record_id %% 2L == 1L)
+stopifnot(
+  "record parity still predicts ownership" = odd_pe == sum(crosswalk$ownership == "PE") / 2L,
+  "a matched pair still sits on consecutive record ids" =
+    !any(crosswalk$pair_id[-1L] == crosswalk$pair_id[-nrow(crosswalk)])
+)
+
 # ---------------------------------------------------------------- report
 
 cat(sprintf("\nFielded: %d pairs / %d clinicians across %d states\n",
@@ -168,7 +202,10 @@ cat(sprintf("  codes %d-%d = %s | codes %d-%d = %s\n",
 cat(sprintf("Arm order randomised: %d %s-first, %d %s-first\n",
             sum(sched$first_arm == ARMS[1]), ARMS[1],
             sum(sched$first_arm == ARMS[2]), ARMS[2]))
-cat(sprintf("\nWrote %s (%d records)\n      %s (%d choice lines)\n      %s (%d clinicians)\n",
-            OUT_IMPORT, nrow(imp), OUT_CHOICES, length(choice_lines), OUT_SCHEDULE, nrow(sched)))
+cat(sprintf("Blinding: parity carries no ownership signal (%d of %d PE on odd record ids)\n",
+            odd_pe, sum(crosswalk$ownership == "PE")))
+cat(sprintf("\nWrote %s (%d records)\n      %s (%d choice lines)\n      %s (%d clinicians)\n      %s (%d clinicians)\n",
+            OUT_IMPORT, nrow(imp), OUT_CHOICES, length(choice_lines), OUT_SCHEDULE, nrow(sched),
+            OUT_CROSSWALK, nrow(crosswalk)))
 cat("\nPaste the choices file into the physician_name field in the REDCap Online Designer\n")
 cat("before importing the records, or every physician_name code will be rejected.\n")

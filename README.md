@@ -29,7 +29,7 @@ flowchart LR
 | Provider directories → NPI | 1,537 clinicians matched to CMS NPPES, MD/DO enforced, mid-levels excluded |
 | Study database | 1,397 clinicians (938 PE-eligible, 459 controls), 62 columns |
 | Propensity-score matched pool | 459 pairs (918 clinicians), 1:1, same state, 10-mile caliper |
-| **Fielded sample** | **200 pairs · 400 clinicians · 26 states · 400 distinct practice lines** |
+| **Fielded sample** | **200 pairs · 400 clinicians · 26 states · 398 distinct practice lines** |
 | **Planned calls** | **800** (each clinician called once as Medicaid, once as Blue Cross/Blue Shield) |
 | Expected analytic n | ~622 completed calls; the identifying interaction cell falls to ~82 |
 
@@ -81,7 +81,7 @@ COMIRB exempt. PI: Tyler Muffly, MD. Co-investigator: Taylor Gatson, MD. The pro
 | Subspecialty | 400 generalist OB/GYN (subspecialty sites excluded by design) |
 | Time zone | 304 Eastern · 64 Central · 18 Pacific · 10 Mountain · 4 unrecorded |
 | Phone line verification | 276 confirmed in 2+ databases · 124 in NPPES only |
-| Distinct practice lines | 400 — no two clinicians share a number |
+| Distinct practice lines | 398 — two lines are each shared by two clinicians |
 
 Matching is 1:1 within state on a 10-mile caliper, over gender, MD/DO, years in practice, and
 Open Payments. Because pairs are matched within state, the PE and control arms carry identical
@@ -262,10 +262,24 @@ churn columns fail on a second pattern (146 / 69). Missingness that tracks the e
 ignorable: a complete-case fit silently deletes 47% of the control arm on a basis related to
 the thing being estimated. `gate_missingness()` blocks on this, which is what it is for.
 
-**Record numbering leaks the exposure.** In the fielded REDCap roster every odd record id is a
-control and every even record id is PE, across all 200 pairs without exception, and paired
-clinicians sit adjacent in the dropdown. Any caller who notices the pattern is unblinded.
-Re-randomize record order before fielding.
+**Record numbering leaked the exposure — fixed.** Every odd record id was a control and every
+even one PE, across all 200 pairs without exception, with pair members adjacent in the
+dropdown. The cause was in `build_200_redcap_import.R`, which numbered rows after
+`arrange(pair, PE_or_Not)`; "Non-PE" sorts before "PE", so the ordering itself encoded the
+arm. Record ids are now assigned by `assign_blinded_slots()`, which guarantees each arm holds
+exactly half the odd and half the even ids and no pair lands on consecutive ids.
+`tests/testthat/test-blinded-slot-assignment.R` reconstructs the old ordering, proves it
+leaks, and holds the new one to both invariants across 40 seeds; it needs no cohort CSV, so
+CI enforces it. The permutation is seeded but no longer derivable from the sheet, so the
+build now writes `redcap_slot_crosswalk_400*.csv` — the only record of which id is which
+clinician, and the one file that must never travel with the caller's materials.
+
+**Two offices are reached by two clinicians each.** `(305) 665-1133` serves pairs 124 and 128;
+`(609) 926-8353` serves pairs 457 and 501. All four are PE-arm, so those offices receive four
+calls rather than two. This was masked until the corrupt NPPES digits for two of them were
+corrected — the sample never had 400 distinct lines, it only looked that way. Both duplicates
+cross pairs rather than sitting within one, so the plan's `same_phone_within_pair` sensitivity
+does not catch them; clustering on `phone_id` does.
 
 **42 of the 400 fail the stated inclusion rule.** The protocol admits MD and DO only, and
 `match_all_providers.py` enforces it upstream. The fielded sheet nonetheless carries 41
