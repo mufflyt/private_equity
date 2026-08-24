@@ -1,5 +1,18 @@
 # The blocking subset.
 #
+# THREE LEVELS, added 2026-08-24. They mean different things and must not be conflated:
+#
+#   blocking execution      Must hold for the current pipeline to run. Listed below; the
+#                           pre-commit hook and CI enforce them.
+#   advisory historical     Cannot be made green because a historical input is genuinely gone.
+#                           test-matching-provenance.R is the case: the gazetteer build the
+#                           cohort was matched against was overwritten and cannot be recovered,
+#                           and control_candidates_raw.csv carries no coordinates.
+#   publication readiness   Does not stop data collection, but must block any claim that the
+#                           cohort is fully reproducible, and must block final manuscript
+#                           release unless resolved or disclosed. See docs/MATCHING_LINEAGE.md
+#                           findings B and C.
+#
 # These test files must pass before a commit lands. The rest of the suite is advisory until it
 # is clean; a gate you routinely bypass is not a gate, so this list starts with the files that
 # are green and grows as others are fixed. Promotion is a one-line edit here.

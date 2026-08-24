@@ -386,13 +386,24 @@ eligible.** That imbalance is the danger: an office that does not provide the se
 refuse or redirect, and concentrated 10-to-1 in the PE arm it will read as reduced access at
 private-equity practices. It biases the primary outcome in the direction the study is looking.
 
-**Root cause: 173 of the 400 never went through the matched pool.** The study database and the
-matched pool are both clean of excluded platforms — the exclusion works exactly where it is
-applied. Every one of the 18 excluded-platform clinicians is among the 173 fielded clinicians
-absent from the pool. They did not defeat the exclusion; they bypassed the stage that applies
-it. The same 173 explain the frozen coordinate reference covering 227 of 400: the caliper it
-documents was never applied to them. The taxonomy problem is different and older — 17 of the
-24 non-OB/GYN clinicians *are* in the pool, so that filter was never applied at any stage.
+**Root cause, corrected 2026-08-24: the cohort came from a different matching run.** An earlier
+version of this section said 173 clinicians "bypassed the stage that applies the exclusion".
+That was wrong, and the lineage pass in [`docs/MATCHING_LINEAGE.md`](docs/MATCHING_LINEAGE.md)
+establishes what actually happened. Two matching runs exist. The fielded cohort comes from a
+511-pair run preserved in `pe_obgyn_study_database_with_churn.csv`, which matches all 200
+fielded pairs by label *and membership*. `pe_obgyn_matched_calling_list.csv` is a **different**
+459-pair run that reuses the same `pair_N` labels for different clinicians — only 6 of 182
+shared labels agree, so that column is not a join key between artifacts.
+
+The 511-pair run **did not apply the platform exclusion**: 23 excluded-platform clinicians
+carry a pair group in it, 18 of whom reached the fielded frame. The 459-pair run applied it
+completely (0). The caliper was enforced in the 459-pair run — 0 of 459 pairs at or beyond 10
+miles, maximum 9.976 — but in the fielded run 2 of the 88 testable pairs exceed it and 112
+pairs cannot be tested at all.
+
+That is a documented protocol rule demonstrably not applied, which is the one condition that
+constitutes grounds to reconsider the pair assignments. **Nothing has been changed**; the
+frame, pairs, numbering, caller materials and REDCap are untouched pending that decision.
 
 **Resolved by pre-specification, before any call.** `SAP.lock` was amended 2026-08-24 to add
 `analytic_population`: the primary analyses run on the 157 pairs whose members are both

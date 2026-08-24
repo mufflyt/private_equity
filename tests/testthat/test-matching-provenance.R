@@ -175,3 +175,90 @@ test_that("adversarial: manuscript Table 4 stays consistent with its own Tables 
     expect_true(grepl(sprintf("[%.2f]", v), txt, fixed = TRUE),
                 info = sprintf("Table 4 must state [%.2f], implied by the cell values", v))
 })
+
+# ---------------------------------------------------------------- recovered lineage (2026-08-24)
+#
+# MUTATION EVIDENCE for the four contracts below. Each was shown to fail on the defect it
+# names, then reverted:
+#
+#   lineage identity    plant: one fielded clinician given an NPI with no lineage
+#                       result: 200/200 -> 199/200, failed
+#   caliper enforcement plant: one matched clinician moved ~69 miles
+#                       result: 1 pair beyond the caliper, max exceeded by 65.8 miles, failed
+#   platform exclusion  plant: one roster clinician reassigned to an excluded platform
+#                       result: 23 -> 24, failed
+#
+# The pair-label-instability contract is not mutation-tested: making it fail requires
+# converging the two matching runs, which is not a defect anyone can introduce by accident.
+#
+# See docs/MATCHING_LINEAGE.md. Contracts here pin what the lineage pass established, so that a
+# future artifact change fails rather than quietly re-opening a settled question.
+
+churn <- rd(p("pe_obgyn_study_database_with_churn.csv"))
+pool  <- rd(p("pe_obgyn_matched_calling_list.csv"))
+
+pairs_of <- function(d, id_col, npi_col = "NPI") {
+  g <- trimws(ifelse(is.na(d[[id_col]]), "", d[[id_col]]))
+  keep <- nzchar(g)
+  split(npi_key(d[[npi_col]][keep]), g[keep])
+}
+sheet_pairs <- pairs_of(sheet, "Matched Pair ID")
+
+test_that("the fielded cohort's matching run is the _with_churn artifact, not the 459-pair pool", {
+  # Finding A. The 137 clinicians with "no provenance" were being sought in the wrong file.
+  cp <- pairs_of(churn, "Matched_Pair_Group")
+  same <- vapply(names(sheet_pairs), function(k)
+    !is.null(cp[[k]]) && setequal(cp[[k]], sheet_pairs[[k]]), logical(1))
+  expect_equal(sum(same), 200L,
+               info = sprintf("%d of 200 fielded pairs match _with_churn by label and membership",
+                              sum(same)))
+})
+
+test_that("adversarial: Matched Pair ID is not a stable key across artifacts", {
+  # The two runs share a label vocabulary and mean different things by it. Asserting this
+  # prevents anyone joining the artifacts on the label, which looks obviously correct and is not.
+  pp <- pairs_of(pool, "Matched Pair ID")
+  shared <- intersect(names(sheet_pairs), names(pp))
+  same <- vapply(shared, function(k) setequal(pp[[k]], sheet_pairs[[k]]), logical(1))
+  expect_gt(length(shared), 100L)
+  expect_true(sum(same) < 20L,
+              info = sprintf("%d of %d shared labels agree; if this rises the runs have converged",
+                             sum(same), length(shared)))
+})
+
+test_that("the 10-mile caliper was enforced in the 459-pair run", {
+  # Finding B. Uses the coordinates that run's caliper actually used, per inst/frozen/PROVENANCE.md.
+  frz <- rd(p("inst", "frozen", "geo_reference_fielded_cohort.csv"))
+  xy  <- stats::setNames(Map(c, as.numeric(frz$lat), as.numeric(frz$long)), npi_key(frz$npi))
+  hav <- function(a, b) {
+    r <- 3959; p1 <- a[1] * pi / 180; p2 <- b[1] * pi / 180
+    dp <- (b[1] - a[1]) * pi / 180; dl <- (b[2] - a[2]) * pi / 180
+    2 * r * asin(sqrt(sin(dp / 2)^2 + cos(p1) * cos(p2) * sin(dl / 2)^2))
+  }
+  pp <- pairs_of(pool, "Matched Pair ID")
+  pp <- pp[vapply(pp, function(n) length(n) == 2L && all(n %in% names(xy)), logical(1))]
+  d  <- vapply(pp, function(n) hav(xy[[n[1]]], xy[[n[2]]]), numeric(1))
+  expect_equal(length(d), 459L)
+  expect_equal(sum(d >= 10), 0L,
+               info = sprintf("%d pairs at or beyond the caliper", sum(d >= 10)))
+  expect_lt(max(d), 10)
+  expect_gt(max(d), 9.5)   # a maximum pressed against the threshold IS the evidence of a caliper
+})
+
+test_that("STATE 3: the fielded cohort's run did not apply the platform exclusion", {
+  # Finding C. Recorded as a contract so it cannot be lost, and pinned so any change is visible.
+  # This is the one finding that constitutes grounds to reconsider the pair assignments.
+  EXCLUDED <- c("CCRM Fertility", "IVI RMA Global", "US Fertility", "Kindbody",
+                "OB Hospitalist Group")
+  roster <- rd(p("pe_obgyn_providers_active.csv"))
+  plat <- stats::setNames(trimws(roster[["Platform/Practice"]]), npi_key(roster$NPI))
+  grouped <- churn[nzchar(trimws(ifelse(is.na(churn$Matched_Pair_Group), "",
+                                        churn$Matched_Pair_Group))), , drop = FALSE]
+  n_exc <- sum(plat[npi_key(grouped$NPI)] %in% EXCLUDED, na.rm = TRUE)
+  expect_equal(n_exc, 23L,
+               info = sprintf("%d excluded-platform clinicians carry a pair group in the cohort's run",
+                              n_exc))
+  # The other run did apply it, which is what makes this a difference between runs rather than
+  # an absent exclusion everywhere.
+  expect_equal(sum(plat[npi_key(pool$NPI)] %in% EXCLUDED, na.rm = TRUE), 0L)
+})
