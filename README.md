@@ -232,6 +232,50 @@ others are neighbours.**
 
 ## Known issues
 
+**The comparator is not what the protocol prespecified.** COMIRB protocol v2 (2026-07-05)
+names the comparator as **independent private practices** — in its title, design, objectives,
+inclusion criteria, and explicitly: "control candidates were drawn from the CMS Doctors and
+Clinicians registry, restricted to independent private practices". `SAP.lock` says "PE vs
+independent". That criterion was never enforced: the matcher never reads `num_org_mem`, and
+`get_practice_setting()` admits on both its empty branch and its fall-through while the next
+line filters *to* the admitting category.
+
+Under the resolved classification, of the 200 fielded controls:
+
+| Independence ceiling | Controls qualifying | Pairs lost if excluded pairwise |
+|---|---:|---:|
+| Solo (≤ 1 clinician) | **0** | 200 |
+| ≤ 5 | 16 | 184 |
+| ≤ 10 | **23** | 177 |
+| ≤ 25 | 33 | 167 |
+| ≤ 50 | 47 | 153 |
+| ≤ 100 | 58 | 142 |
+
+Median organisation size is 252 and the maximum is 7,694. 27 controls have no organisation
+size recorded at all.
+
+This is a **potential protocol deviation, not a plumbing defect**, and nothing has been
+rematched. The defensible label for the current arm is *non-PE*, not *independent*, until
+either a different prespecified definition is recovered or the cohort decision is taken.
+`test-comparator-definition.R` pins the counts at each threshold so any decision starts from
+numbers, and forces a recount if organisation size ever becomes enforced.
+
+**Organisation classification is now deterministic.** `control_candidates_raw.csv` holds
+31,011 rows for 20,111 NPIs — a clinician appears once per group affiliation, which is the
+registry's real structure — and 110 of the 200 fielded controls have several, with conflicting
+sizes and facility names. Whether such a control was "independent" depended on which row was
+read; two independent implementations of the same count differed by two records for exactly
+that reason. `build_control_org_classification.R` resolves one classification per NPI by the
+**maximum** organisation size across its rows, on the principle that affiliation with a
+566-member system is not undone by also appearing under a 12-member group. Every conflicting
+source row is preserved, 174 NPIs whose rows straddle the threshold are flagged `ambiguous`,
+and the rule is written into the artifact. This is a measurement artifact: it changes no pair.
+
+**The matcher is now row-order invariant, for future runs only.** Each office is sorted by NPI
+before the seeded shuffle, so the permutation depends on the seed and the office membership
+rather than on the order rows arrived in. The frozen 200 pairs are **not** regenerated.
+
+
 **Two manuscript figures depicted outcomes that have not been measured.**
 `manuscript/generate_figures.R` built the study's two primary-outcome figures from numbers
 typed into the script. Figure 1's appointment-obtainment rates were literals with confidence

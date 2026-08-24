@@ -19,6 +19,9 @@ test_that("adversarial: PSM seeds its office sampling once, not per iteration", 
   loop_start <- grep("^for \\(office in pe_unique_offices\\)", src)
   expect_length(loop_start, 1L)
   loop_end <- length(src)
+  # Comments are prose about the code, not the code. A comment explaining why the stream is
+  # seeded once mentions set.seed by name and must not be read as a re-seed.
+  src[grepl("^\\s*#", src)] <- ""
   inside <- src[loop_start:loop_end]
   brace <- cumsum(lengths(regmatches(inside, gregexpr("\\{", inside)))) -
            cumsum(lengths(regmatches(inside, gregexpr("\\}", inside))))

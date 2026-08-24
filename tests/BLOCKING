@@ -80,3 +80,4 @@ data    test-enrichment-covariates.R
 data    test-artifact-vintage.R
 data    test-manuscript-provenance.R
 data    test-control-independence.R
+data    test-comparator-definition.R
