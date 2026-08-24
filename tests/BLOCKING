@@ -57,3 +57,4 @@ data    test-activity-recency.R
 data    test-taxonomy-eligibility.R
 data    test-enrichment-covariates.R
 data    test-artifact-vintage.R
+data    test-manuscript-provenance.R
