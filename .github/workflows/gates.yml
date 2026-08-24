@@ -21,6 +21,12 @@ jobs:
           use-public-rspm: true
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          # Deriv is pinned, and the pin is load-bearing. Deriv 4.3.0 (2026-07-23) added a C++
+          # backend that calls R_ClosureFormals(), which is R's C API from 4.5.0 onward. This job
+          # pins R to 4.4.2, so 4.3.0 cannot compile here and every run since 2026-08-23 died in
+          # dependency installation before a single gate executed. 4.2.0 is pure R
+          # (NeedsCompilation: no), so it cannot hit this at all. Deriv arrives transitively via
+          # mysterycall's modelling stack. Remove the pin only when this job moves to R >= 4.5.
           packages: |
             any::testthat
             any::digest
@@ -28,6 +34,7 @@ jobs:
             any::readr
             any::DBI
             any::duckdb
+            Deriv@4.2.0
             github::mufflyt/mysterycall
             github::mufflyt/researchpaths
       - name: blocking gates (data-independent subset)
