@@ -10,7 +10,7 @@ rd <- function(f) utils::read.csv(f, colClasses = "character", check.names = FAL
 filt  <- readLines(p("filter_pe_obgyn.py"))
 comp  <- rd(p("pe_obgyn_companies_clean.csv"))
 deals <- rd(p("pe_obgyn_deals_clean.csv"))
-sheet <- rd(p("pe_obgyn_final_calling_sheet_200.csv"))
+sheet <- rd(p("pe_obgyn_final_calling_sheet_200_dedup.csv"))
 db    <- rd(p("pe_obgyn_study_database.csv"))
 ms    <- paste(readLines(p("manuscript", "manuscript_cite.md")), collapse = "\n")
 

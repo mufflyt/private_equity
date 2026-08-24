@@ -13,7 +13,7 @@ suppressMessages({
 })
 
 # Load the data
-calling_sheet_path <- "pe_obgyn_final_calling_sheet_200.csv"
+calling_sheet_path <- "pe_obgyn_final_calling_sheet_200_dedup.csv"
 study_db_path <- "pe_obgyn_study_database.csv"
 
 if (!file.exists(calling_sheet_path) || !file.exists(study_db_path)) {

@@ -7,7 +7,7 @@ root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
 p <- function(...) file.path(root, ...)
 rd <- function(f, ...) utils::read.csv(f, colClasses = "character", check.names = FALSE, ...)
 
-sheet <- rd(p("pe_obgyn_final_calling_sheet_200.csv"))
+sheet <- rd(p("pe_obgyn_final_calling_sheet_200_dedup.csv"))
 db    <- rd(p("pe_obgyn_study_database.csv"))
 churn <- readLines(p("calculate_cohort_churn.R"))
 

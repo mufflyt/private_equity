@@ -9,7 +9,7 @@
 root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
 p <- function(...) file.path(root, ...)
 
-sheet <- utils::read.csv(p("pe_obgyn_final_calling_sheet_200.csv"),
+sheet <- utils::read.csv(p("pe_obgyn_final_calling_sheet_200_dedup.csv"),
                          colClasses = "character", check.names = FALSE)
 n_clin <- as.integer(sheet$clinicians_per_phone)
 n_call <- as.integer(sheet$calls_per_phone)
@@ -25,12 +25,26 @@ test_that("BVA: every clustering column is present and populated", {
   }
 })
 
-test_that("BVA: no clinician is dialed on a number another clinician is also dialed on", {
-  # The operational guarantee. phone_dialed is what the caller enters; a duplicate would mean
-  # one office fielding four calls under two clinician identities without anyone noticing.
+test_that("BVA: the dialed-number duplicates are exactly the two known ones", {
+  # CONTRACT CHANGED, deliberately. This asserted that all 400 dialed numbers are distinct.
+  # They are not, and the change is a correction rather than a regression: two NPPES telephone
+  # numbers were served with their digits rotated one place, and correcting them revealed that
+  # those clinicians share a line with someone already in the sample. The corrupt digits had
+  # been manufacturing the distinctness this test was asserting.
+  #
+  # Both duplicates cross pairs rather than sitting within one, so same_phone_within_pair does
+  # not flag them; phone_id does, which is what the clustering sensitivity is for. Operationally
+  # these two offices receive four calls, not two, and the caller must know that.
   d <- sheet$phone_dialed
-  expect_equal(length(unique(d)), nrow(sheet),
-               info = sprintf("%d duplicate dialed numbers", nrow(sheet) - length(unique(d))))
+  dup <- sort(unique(d[duplicated(d)]))
+  expect_equal(length(dup), 2L, info = sprintf("dialed duplicates: %s", paste(dup, collapse = ", ")))
+  expect_setequal(dup, c("3056651133", "6099268353"))
+  for (x in dup) {
+    who <- sheet[d == x, , drop = FALSE]
+    expect_equal(nrow(who), 2L, info = sprintf("%s is now shared by %d clinicians", x, nrow(who)))
+    expect_equal(length(unique(who[["Matched Pair ID"]])), 2L,
+                 info = sprintf("%s has become a within-pair collision", x))
+  }
   expect_true(all(nchar(d) == 10L), info = "a dialed number must be ten digits")
 })
 
@@ -40,8 +54,11 @@ test_that("BVA: cluster sizes agree with the groups they claim to count", {
                info = "clinicians_per_phone disagrees with the phone_id grouping")
   expect_equal(n_call, 2L * n_clin,
                info = "each clinician receives exactly two calls, one per insurance arm")
-  expect_equal(sum(n_clin > 1L), 27L)
-  expect_equal(length(unique(sheet$phone_id)), 385L)
+  # Fielded cohort: 387 practice lines for 400 clinicians -- 376 carry one, 9 carry two,
+  # 2 carry three, so 24 clinicians sit on a shared line. The 27 / 385 figures this asserted
+  # belong to pe_obgyn_final_calling_sheet_200.csv, which is not the roster being called.
+  expect_equal(sum(n_clin > 1L), 24L)
+  expect_equal(length(unique(sheet$phone_id)), 387L)
 })
 
 test_that("semantic: an unresolvable practice number never collides with another", {
@@ -63,13 +80,15 @@ test_that("semantic: same_phone_within_pair is a property of the pair, not of th
 })
 
 test_that("adversarial: exactly the known contaminated pairs are flagged", {
-  # pair_321 (P:9529207001, Edina/Minneapolis) and pair_437 (P:2037308789, Hartford/Danbury)
-  # place both arms on one line. If a redraw changes this set the flag must move with it, so
-  # this asserts the count and the identity together rather than hard-coding only the ids.
+  # On the fielded cohort three pairs place both arms on one practice line: pair_367
+  # (P:7635877000), pair_370 (P:9529207001) and pair_487 (P:2037308789). These are what
+  # SAP.lock sensitivity_1 excludes. The pair_321 / pair_437 set this asserted was the
+  # unfielded roster's. If a redraw changes the set the flag must move with it, so this
+  # asserts the count and the identity together rather than hard-coding only the ids.
   flagged <- sort(unique(pair[same]))
-  expect_equal(length(flagged), 2L,
+  expect_equal(length(flagged), 3L,
                info = sprintf("flagged pairs: %s", paste(flagged, collapse = ", ")))
-  expect_setequal(flagged, c("pair_321", "pair_437"))
+  expect_setequal(flagged, c("pair_367", "pair_370", "pair_487"))
   for (b in flagged) {
     ids <- unique(sheet$phone_id[pair == b])
     expect_equal(length(ids), 1L, info = sprintf("%s is flagged but spans %d lines", b, length(ids)))
@@ -90,7 +109,7 @@ test_that("adversarial: no line carries more calls than the protocol contemplate
   worst <- max(n_call)
   expect_true(worst <= 8L,
               info = sprintf("one line receives %d calls", worst))
-  expect_true(sum(n_call > 2L) == 27L,
+  expect_true(sum(n_call > 2L) == 24L,
               info = sprintf("%d clinicians sit on a line receiving more than two calls",
                              sum(n_call > 2L)))
 })

@@ -19,10 +19,19 @@
 ROOT <- "."
 source(file.path(ROOT, "R", "pe_helpers.R"))
 
-SHEET <- file.path(ROOT, "pe_obgyn_final_calling_sheet_200.csv")
+# Sheet and address source are arguments. Hardcoding them to the pair below is how the
+# clustering columns came to exist on a roster that is not the one being called: SAP.lock names
+# phone_id and same_phone_within_pair for two of its five sensitivities, and the fielded sheet
+# had neither, so neither sensitivity was computable.
+argval <- function(flag, default) {
+  a <- commandArgs(trailingOnly = TRUE)
+  v <- sub(paste0("^", flag, "="), "", grep(paste0("^", flag, "="), a, value = TRUE))
+  if (length(v)) v[1] else default
+}
+SHEET <- file.path(ROOT, argval("--sheet", "pe_obgyn_final_calling_sheet_200_dedup.csv"))
+DB    <- file.path(ROOT, argval("--db",    "pe_obgyn_study_database.csv"))
 sheet <- read.csv(SHEET, colClasses = "character", check.names = FALSE)
-db    <- read.csv(file.path(ROOT, "pe_obgyn_study_database.csv"),
-                  colClasses = "character", check.names = FALSE)
+db    <- read.csv(DB, colClasses = "character", check.names = FALSE)
 
 idx <- match(npi_key(sheet$NPI), npi_key(db$NPI))
 stopifnot(!anyNA(idx))

@@ -8,7 +8,7 @@ p <- function(...) file.path(root, ...)
 rd <- function(f) utils::read.csv(f, colClasses = "character", check.names = FALSE)
 
 ms    <- readLines(p("manuscript", "manuscript_cite.md"))
-sheet <- rd(p("pe_obgyn_final_calling_sheet_200.csv"))
+sheet <- rd(p("pe_obgyn_final_calling_sheet_200_dedup.csv"))
 db    <- rd(p("pe_obgyn_study_database.csv"))
 
 db$k <- npi_key(db$NPI)

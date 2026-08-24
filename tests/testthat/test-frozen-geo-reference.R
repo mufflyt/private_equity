@@ -72,7 +72,7 @@ test_that("semantic: provenance is recorded, including that the artifact is unre
 
 test_that("adversarial: the fielded cohort is fully covered by the frozen reference", {
   fr    <- utils::read.csv(FROZEN, colClasses = "character", check.names = FALSE)
-  sheet <- utils::read.csv(p("pe_obgyn_final_calling_sheet_200.csv"), colClasses = "character",
+  sheet <- utils::read.csv(p("pe_obgyn_final_calling_sheet_200_dedup.csv"), colClasses = "character",
                            check.names = FALSE)
   # expect_length does not accept `info`; keep the diagnosis with expect_true.
   missing <- setdiff(npi_key(sheet$NPI), fr$npi)

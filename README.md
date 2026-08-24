@@ -234,7 +234,25 @@ others are neighbours.**
 
 Open problems, recorded rather than quietly carried.
 
-**Which artifact is the fielded cohort was, until recently, unsettled.** The live REDCap
+**The roster divergence is resolved.** Every test and script now reads
+`pe_obgyn_final_calling_sheet_200_dedup.csv`, the cohort in the live REDCap dropdown. 34 files
+were repointed. They had been reading `pe_obgyn_final_calling_sheet_200.csv`, which shares only
+153 of the 400 fielded clinicians — so the gates were asserting properties of a cohort nobody
+is calling, and several of their constants turned out to describe that other roster. Those
+contracts were updated to the fielded cohort's real values rather than deleted, and the tests
+that reproduce a historical defect now construct it in code instead of reading it from
+whichever sheet happens to be on disk.
+
+**The frozen coordinate reference does not cover the cohort it is named for.**
+`inst/frozen/geo_reference_fielded_cohort.csv` holds 918 NPIs — the 459-pair matched pool — and
+is treated as immutable because it is the coordinate set the 10-mile caliper actually used. It
+covers 227 of the fielded 400. The same 227 are the fielded clinicians present in
+`pe_obgyn_matched_calling_list.csv`. So 173 of the cohort being called are not in the matched
+pool the frozen reference documents, and their caliper provenance is not established by it.
+`tests/testthat/test-frozen-geo-reference.R` is left failing for this reason; like the platform
+gate, its contract is right and the data is what disagrees.
+
+**How that ambiguity arose.** The live REDCap
 dropdown is the ground truth for who is fielded, and
 [`recover_fielded_400_from_redcap.py`](recover_fielded_400_from_redcap.py) reconstructs the
 cohort from it — recovering all 400 physicians, all 200 pairs, and the full PE/Non-PE split
@@ -285,18 +303,51 @@ CI enforces it. The permutation is seeded but no longer derivable from the sheet
 build now writes `redcap_slot_crosswalk_400*.csv` — the only record of which id is which
 clinician, and the one file that must never travel with the caller's materials.
 
-**Two offices are reached by two clinicians each.** `(305) 665-1133` serves pairs 124 and 128;
-`(609) 926-8353` serves pairs 457 and 501. All four are PE-arm, so those offices receive four
-calls rather than two. This was masked until the corrupt NPPES digits for two of them were
-corrected — the sample never had 400 distinct lines, it only looked that way. Both duplicates
-cross pairs rather than sitting within one, so the plan's `same_phone_within_pair` sensitivity
-does not catch them; clustering on `phone_id` does.
+**Shared practice lines are now measured, not guessed — resolved.** `SAP.lock` names
+`phone_id` and `same_phone_within_pair` for two of its five sensitivities, and neither column
+existed on the fielded sheet, so neither sensitivity was computable. `build_phone_cluster_vars.R`
+was hardcoded to the unfielded roster; it now takes `--sheet` and `--db`, and the fielded sheet
+carries all nine clustering columns.
 
-**42 of the 400 fail the stated inclusion rule.** The protocol admits MD and DO only, and
-`match_all_providers.py` enforces it upstream. The fielded sheet nonetheless carries 41
-clinicians with no recorded credential and 1 CNM. Either the credential field was lost after
-the filter ran, or the filter was bypassed for these rows. Both need resolving before analysis,
-since a mid-level in the frame changes what an "appointment with the physician" means.
+What they show: **387 practice lines for 400 clinicians** — 376 carry one clinician, 9 carry
+two, 2 carry three — so 387 effective independent units rather than 400. Three pairs place
+both arms on one line (`pair_367`, `pair_370`, `pair_487`), which is exactly what
+sensitivity_1 excludes. Separately, two *dialed* numbers are shared, so two offices receive
+four calls rather than two: `(305) 665-1133` across pairs 124 and 128, `(609) 926-8353` across
+pairs 457 and 501. Those were masked until the corrupt NPPES digits were corrected — the
+sample never had 400 distinct lines. Both cross pairs, so `same_phone_within_pair` does not
+flag them and clustering on `phone_id` is the sensitivity that does.
+
+**43 of the 400 cannot supply the appointment the study asks for — 40 of them PE-arm.**
+What began as 41 blank credentials and one CNM turned out to be three overlapping problems,
+found by checking all 400 NPIs against the NPI Registry rather than only the 42 that looked
+wrong. Credentials are now backfilled from NPPES (350 MD, 45 DO), and the sheet carries
+`NPPES_Taxonomy`, `Taxonomy_Is_OBGYN`, `Platform`, `Platform_Excluded` and a combined
+`Eligible` flag so the problem is in the data rather than in a memo.
+
+| Reason | n | Arm |
+|---|---|---|
+| Primary taxonomy is not obstetrics or gynecology | 24 | mostly PE |
+| Platform is one of the five the protocol excludes | 18 | PE only |
+| Credential is still not MD or DO | 2 | PE |
+
+The taxonomy cases are urologists, pediatricians, emergency physicians, a radiologist, a
+dermatologist, a thoracic surgeon, a neurologist, a colorectal surgeon and a midwife. The
+platform cases are US Fertility (6), IVI RMA Global (5), Kindbody (5) and OB Hospitalist
+Group (2) — fertility clinics and an inpatient hospitalist group, none of which schedules a
+routine new-patient OB/GYN visit.
+
+Eligible clinicians: **160 of 200 PE, 196 of 200 control. 157 of 200 pairs have both members
+eligible.** That imbalance is the danger: an office that does not provide the service will
+refuse or redirect, and concentrated 10-to-1 in the PE arm it will read as reduced access at
+private-equity practices. It biases the primary outcome in the direction the study is looking.
+
+`tests/testthat/test-platform-exclusion.R` is **deliberately left failing**. Its contract —
+that no excluded-platform NPI reaches the fielded PE sample — is correct, and the data
+violates it. Making it pass means changing the sample, which invalidates a REDCap project
+that has already been uploaded, so it is a study-design decision rather than a code fix. The
+options are to exclude the ineligible pairwise and accept 157 pairs, to redraw replacements
+and rebuild REDCap, or to keep them and pre-specify the exclusion as a sensitivity.
 
 **Two phone numbers were corrupt upstream — now fixed.** Records 42 (Dr. Julia Cooper, South
 Miami FL) and 360 (Dr. Marc Siegel, Somers Point NJ) carried area codes beginning with 0. The

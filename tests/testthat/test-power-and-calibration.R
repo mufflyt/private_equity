@@ -109,7 +109,7 @@ test_that("semantic: the dry-run truth constants equal the values implied by the
 test_that("adversarial: no shipped artifact stores NPI in a lossy float form", {
   # Third sweep for the float-vs-int hazard. The calling sheets and REDCap files are the
   # artifacts other people consume; a float NPI there would break every downstream join.
-  for (f in c("pe_obgyn_final_calling_sheet_200.csv", "redcap_import_ready_200.csv",
+  for (f in c("pe_obgyn_final_calling_sheet_200_dedup.csv", "redcap_import_ready_200.csv",
               "pe_obgyn_matched_calling_list.csv")) {
     d <- utils::read.csv(p(f), colClasses = "character", check.names = FALSE, nrows = 50)
     if (!"NPI" %in% names(d)) next

@@ -5,7 +5,7 @@
 
 root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
 p <- function(...) file.path(root, ...)
-sheet <- utils::read.csv(p("pe_obgyn_final_calling_sheet_200.csv"),
+sheet <- utils::read.csv(p("pe_obgyn_final_calling_sheet_200_dedup.csv"),
                          colClasses = "character", check.names = FALSE)
 num <- function(col) suppressWarnings(as.numeric(sheet[[col]]))
 

@@ -1,6 +1,6 @@
 # Reconstruct the CDC Social Vulnerability Index for every fielded clinician from real data.
 #
-# WHY THIS EXISTS. The CDC_SVI column currently in pe_obgyn_final_calling_sheet_200.csv is not
+# WHY THIS EXISTS. The CDC_SVI column currently in pe_obgyn_final_calling_sheet_200_dedup.csv is not
 # a measurement. It is Normal(0.434, 0.193) truncated to [0.01, 0.99]: a Kolmogorov-Smirnov test
 # against that Normal returns p = 0.985 while a test against the Uniform returns p < 0.001, and
 # six rows sit at exactly 0.010 with one at exactly 0.990 -- the floor and ceiling of a
@@ -31,7 +31,7 @@ suppressMessages({
 ROOT       <- "."
 
 # The sheet and the address source are arguments, not constants. They were hardcoded to
-# pe_obgyn_final_calling_sheet_200.csv, which is NOT the fielded cohort -- it shares only 153 of
+# pe_obgyn_final_calling_sheet_200_dedup.csv, which is NOT the fielded cohort -- it shares only 153 of
 # the 400 clinicians in the live REDCap dropdown. Running this against the wrong sheet produced
 # a real SVI column for the wrong people, which is why the fielded 400 still had none.
 # Addresses come from the study database, which must contain every fielded NPI: the plain
@@ -46,7 +46,7 @@ argval <- function(flag, default) {
   v <- sub(paste0("^", flag, "="), "", grep(paste0("^", flag, "="), a, value = TRUE))
   if (length(v)) v[1] else default
 }
-SHEET      <- file.path(ROOT, argval("--sheet", "pe_obgyn_final_calling_sheet_200.csv"))
+SHEET      <- file.path(ROOT, argval("--sheet", "pe_obgyn_final_calling_sheet_200_dedup.csv"))
 STUDY_DB   <- file.path(ROOT, argval("--db",    "pe_obgyn_study_database.csv"))
 WORK       <- file.path(ROOT, "scratch", "svi")
 SVI_YEAR   <- "2022"

@@ -11,7 +11,7 @@ while (!file.exists(file.path(repo, "R", "pe_helpers.R")) && dirname(repo) != re
 p <- function(...) file.path(repo, ...)
 read_csv_q <- function(f) utils::read.csv(f, check.names = FALSE, colClasses = "character")
 
-SHEET   <- p("pe_obgyn_final_calling_sheet_200.csv")
+SHEET   <- p("pe_obgyn_final_calling_sheet_200_dedup.csv")
 IMPORT  <- p("redcap_import_ready_200.csv")
 CHOICES <- p("redcap_physician_name_choices.txt")
 SCHED   <- p("redcap_call_schedule_800.csv")
@@ -66,15 +66,22 @@ test_that("semantic: code i and code i+400 are the same physician, not merely th
                info = "800 codes must resolve to exactly 400 distinct physicians")
 })
 
-test_that("semantic: every office receives exactly two calls, as the protocol promises", {
+test_that("semantic: offices receive two calls, except the two known shared lines", {
+  # CONTRACT CHANGED, deliberately. This asserted 400 distinct offices each receiving exactly
+  # two calls. The fielded cohort has 398: two numbers are each shared by two clinicians, so
+  # those offices receive four calls. The change is a correction, not a regression -- two NPPES
+  # numbers were served with their digits rotated one place, and correcting them revealed
+  # sharing the corrupt digits had been hiding. Asserting 400 would now require keeping the
+  # corruption. Both collisions cross pairs, so they are a clustering question rather than a
+  # matching one; see test-phone-clustering.R and SAP.lock sensitivity_2.
   key <- phone_key(sheet$Phone)
   expect_false(any(is.na(key)), info = "an unusable phone cannot be called at all")
   calls <- table(key[match(choice_npi, sheet$NPI)])
-  expect_true(all(calls == 2L),
-              info = sprintf("offices receiving other than 2 calls: %d",
-                             sum(calls != 2L)))
-  expect_equal(length(calls), N_CLIN,
-               info = "400 distinct offices, one per fielded clinician")
+  expect_equal(length(calls), 398L, info = "398 distinct dialed offices for 400 clinicians")
+  expect_setequal(as.integer(names(table(calls))), c(2L, 4L))
+  expect_equal(sum(calls == 4L), 2L,
+               info = sprintf("offices receiving four calls: %d", sum(calls == 4L)))
+  expect_equal(sum(calls == 2L), 396L)
 })
 
 test_that("semantic: the import file addresses the same physicians as the fielded sheet", {

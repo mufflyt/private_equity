@@ -14,7 +14,7 @@
 root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
 p <- function(...) file.path(root, ...)
 
-sheet <- utils::read.csv(p("pe_obgyn_final_calling_sheet_200.csv"), check.names = FALSE)
+sheet <- utils::read.csv(p("pe_obgyn_final_calling_sheet_200_dedup.csv"), check.names = FALSE)
 real  <- suppressWarnings(as.numeric(sheet$CDC_SVI_real))
 obs   <- real[!is.na(real)]
 
