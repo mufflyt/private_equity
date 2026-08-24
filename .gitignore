@@ -39,6 +39,12 @@ redcap_physician_name_choices*.txt
 !redcap/
 !redcap/**
 
+# The fielded cohort itself. Versioned for the same reason as redcap/: it is the analysis
+# input named by SAP.lock, it carries the reconstructed CDC_SVI_real that took a 400-address
+# geocoding pass to produce, and it is the sheet the live REDCap dropdown was built from. It
+# also carries PE_or_Not, so it is restricted: study team only.
+!pe_obgyn_final_calling_sheet_200_dedup.csv
+
 # Local virtualenv
 .venv/
 

@@ -246,21 +246,30 @@ similarly named `pe_obgyn_final_calling_sheet_200.csv` matches the dropdown on o
 and is a different draw. Reconciling the recovered file against the reconstruction is the
 remaining step.
 
-**`svi_z` still cannot be computed for the fielded cohort.** The seed-1978 `rnorm()`
-placeholders have been replaced with real geocoded ACS and CMS covariates, and `CDC_SVI` was
-renamed `SIMULATED_CDC_SVI` so the fake column can no longer be mistaken for the real one — but
-that work targets `pe_obgyn_final_calling_sheet_300.csv`. On the **fielded 400**, the frozen
-plan's `CDC_SVI_real` is populated for 150; the column present for all 400 is still the
-simulated draw. Until SVI is carried onto the fielded cohort, the primary models cannot be fit
-as written. Origin of the substitution: `docs/CANONICAL_SOURCES_AUDIT.md`.
+**`svi_z` is now computable — resolved.** The frozen plan names `CDC_SVI_real`, which the
+fielded cohort did not have: it carried only the simulated draw, and the real column existed
+for 150 of 400 on a *different* roster. `build_svi_covariate.R` was hardcoded to that other
+sheet, which is why running it had never fixed the fielded 400. It now takes `--sheet` and
+`--db`, and rebuilt against the fielded cohort it geocoded **400 of 400** NPPES practice
+addresses to 2020 census tracts (342 batch, 45 suite-stripped retry, 6 ZCTA-area-weighted, 2
+stored coordinate) and joined CDC/ATSDR SVI 2022 `RPL_THEMES`.
 
-**And the gap is not SVI-shaped — it is a whole block.** Eleven columns of the calling sheet
-share one missingness pattern exactly: absent for 94 control clinicians, present for all 200
-PE clinicians. `SIMULATED_CDC_SVI`, `Medicaid_Fee_Index`, `PE_Concentration_15mi`,
-`HQ_Distance_Miles` and the simulated tract and county columns all fail together, and four
-churn columns fail on a second pattern (146 / 69). Missingness that tracks the exposure is not
-ignorable: a complete-case fit silently deletes 47% of the control arm on a basis related to
-the thing being estimated. `gate_missingness()` blocks on this, which is what it is for.
+Result: real SVI for **395 of 400**, and the five gaps are **2 control and 3 PE** — no longer
+exposure-dependent. 197 of 200 pairs are complete. The column behaves like the percentile rank
+it claims to be: KS against Uniform(0,1) returns p = 0.18, where the simulated column it
+replaces returned p < 0.001 against Uniform and 0.985 against Normal. Both gates now pass on
+it, and `gate_family()` still correctly rejects the simulated column.
+
+The eight simulated columns in the fielded sheet were also renamed to `SIMULATED_*`, completing
+a rename decided on 2026-08-10 that this sheet predated. That matters more now than it did
+then: a column called `CDC_SVI` sitting beside a real `CDC_SVI_real` is a trap.
+
+**Exposure-dependent missingness remains, but not in the models.** The 94-control / 0-PE block
+across eleven columns is in `pe_obgyn_final_calling_sheet_200.csv`, the roster that is *not*
+fielded. On the fielded cohort the remaining imbalances are the four churn columns (119 / 76)
+and `Credentials` (0 / 41). Neither appears in the frozen models, so neither blocks the primary
+analysis — but a complete-case fit that reached for them would still delete rows on a basis
+related to exposure, and `gate_missingness()` will block if one is added.
 
 **Record numbering leaked the exposure — fixed.** Every odd record id was a control and every
 even one PE, across all 200 pairs without exception, with pair members adjacent in the
