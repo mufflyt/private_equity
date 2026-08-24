@@ -67,6 +67,12 @@ stopifnot("expected 400 fielded clinicians" = nrow(sheet) == 400L)
 SAP <- read_sap()
 SVI_COL <- SAP[["svi_column"]]
 
+# The analytic population is read from the plan for the same reason the deprivation covariate
+# is: restricting here rather than in the plan would make the restriction an edit buried in a
+# script. sap_restrict() is a no-op if SAP.lock declares no population, and the preflight
+# refuses to certify data that still contains rows outside a declared one.
+sheet <- sap_restrict(sheet, SAP)
+
 analysis_preflight(sheet,
                    analytic        = SVI_COL,
                    arm_col         = "PE_or_Not",

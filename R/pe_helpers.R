@@ -113,3 +113,19 @@ assign_blinded_slots <- function(pair, group, seed = 20260824L, max_tries = 1000
   stop("could not place ", n, " records without a matched pair landing on consecutive slots ",
        "in ", max_tries, " attempts")
 }
+
+# One column, two spellings, depending on which database build you loaded.
+#
+# pe_obgyn_study_database.csv spells the coordinate columns "latitude"/"longitude"; the
+# _with_churn build spells them "Latitude"/"Longitude". R's `$` does prefix matching, not
+# case-insensitive matching, so db$Latitude on the lowercase build is NULL rather than an
+# error -- and NULL then propagates into data.frame() as a differing-length argument, or into
+# `nzchar(trimws(NULL)) && ...` as a zero-length condition, which is an error in R >= 4.2.
+# Three separate call sites hit this: build_svi_covariate.R halted mid-run, and
+# test-coordinate-integrity.R and test-geography-and-churn.R could not even load.
+#
+# Ask for the column by meaning, not by spelling.
+col_ci <- function(df, nm) {
+  hit <- match(tolower(nm), tolower(names(df)))
+  if (is.na(hit)) NULL else df[[hit]]
+}

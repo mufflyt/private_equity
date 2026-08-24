@@ -116,3 +116,24 @@ test_that("adversarial: factor input yields labels, not integer level codes", {
   pf <- factor(c("305-273-4641", "212-555-0100"))
   expect_equal(phone_key(pf), c("3052734641", "2125550100"))
 })
+
+# ---------------------------------------------------------------- col_ci
+
+test_that("col_ci finds a column whatever its case", {
+  d <- data.frame(Latitude = 1:2, longitude = 3:4)
+  expect_equal(col_ci(d, "latitude"),  1:2)
+  expect_equal(col_ci(d, "LATITUDE"),  1:2)
+  expect_equal(col_ci(d, "Longitude"), 3:4)
+})
+
+test_that("adversarial: col_ci returns NULL rather than a partial match", {
+  # R's `$` prefix-matches, so db$Lat would silently return Latitude while db$Latitude on a
+  # lowercase build returns NULL. Both behaviours caused real failures; neither is wanted here.
+  d <- data.frame(Latitude = 1:2)
+  expect_null(col_ci(d, "lat"))
+  expect_null(col_ci(d, "absent"))
+})
+
+test_that("BVA: col_ci on a frame with no columns is NULL, not an error", {
+  expect_null(col_ci(data.frame(), "latitude"))
+})
