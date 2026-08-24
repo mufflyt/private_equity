@@ -232,6 +232,37 @@ others are neighbours.**
 
 ## Known issues
 
+**Two manuscript figures depicted outcomes that have not been measured.**
+`manuscript/generate_figures.R` built the study's two primary-outcome figures from numbers
+typed into the script. Figure 1's appointment-obtainment rates were literals with confidence
+intervals — PE Medicaid 41.0% against independent 72.5%. Figure 2 was `rlnorm()` draws around
+typed medians — PE Medicaid 36.8 business days against 23.4. No call has been placed, no
+REDCap outcome export exists, and the analysis in `SAP.lock` has never been run. The outputs
+were named `figure1.png` and `figure2.png`, in `manuscript/`, with titles that read as
+findings, and nothing in the script said otherwise.
+
+This repository already forbids exactly this for columns: `CDC_SVI` became `SIMULATED_CDC_SVI`
+so that no fielded artifact asserts a measurement that was not made. The same rule now applies
+to figures. The outputs are `SIMULATED_figure1_obtainment.png` and
+`SIMULATED_figure2_wait_times.png`, their titles and subtitles say so on their face, and
+`test-artifact-vintage.R` fails if either marking is removed while no outcome export exists.
+Nothing was deleted. When real outcomes arrive, drop the literals, read the export, drop the
+prefix.
+
+**The manuscript describes a different cohort.** Figure 1's STROBE flow gave 544 for both the
+de-clustering and the matching stage — a number matching nothing in the current pipeline — and
+then 200 for the fielded cohort, switching from clinicians to pairs halfway down without
+saying so. Corrected to the verifiable counts: 1,537 scraped, 1,279 unique NPIs, 918 matched
+(459 pairs), 400 fielded (200 pairs). `De-clustered (1/Office) = 544` is **not** verifiable
+against any committed artifact and was left as found rather than invented; it needs the value
+that step actually produced. The Methods said 23 states; the cohort spans 26.
+
+**Eight analysis artifacts predate the cohort.** Both dry-run analysis outputs and six power
+and sensitivity results, dated 5 July to 10 August, against a cohort recovered and corrected
+on 23–24 August. The previous check named four of them, so it had been looking at half the
+problem. The set is pinned by test, so a ninth fails; re-running them is separate work.
+
+
 Open problems, recorded rather than quietly carried.
 
 **The roster divergence is resolved.** Every test and script now reads
