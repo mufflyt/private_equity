@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: >-
+  If you use this repository, please cite it as below. This is a study
+  repository, not a published article; no manuscript citation exists yet.
+type: software
+title: >-
+  Private vs. Public: Does Equity Ownership Influence OB/GYN Appointment Wait
+  Times?
+authors:
+  - family-names: Muffly
+    given-names: Tyler
+    name-suffix: MD
+    orcid: "https://orcid.org/0000-0002-2044-1693"
+    affiliation: University of Colorado / Denver Health
+  - family-names: Gatson
+    given-names: Taylor
+    name-suffix: MD
+    affiliation: University of Colorado / Denver Health
+repository-code: "https://github.com/mufflyt/private_equity"
+license: MIT

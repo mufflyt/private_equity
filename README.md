@@ -520,4 +520,6 @@ Muffly T, Gatson T. *Private vs. Public: Does Equity Ownership Influence OB/GYN 
 Wait Times?* University of Colorado / Denver Health. COMIRB exempt. Repository:
 <https://github.com/mufflyt/private_equity>
 
-No `LICENSE` file is present in this repository. Until one is added, no license is granted.
+Licensed [MIT](LICENSE) — analysis code only. The [`redcap/`](redcap/) directory and
+`pe_obgyn_final_calling_sheet_200_dedup.csv` carry provider data and are restricted to the
+study team regardless of the code license; see their notes in [`.gitignore`](.gitignore).
