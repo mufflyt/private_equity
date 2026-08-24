@@ -26,6 +26,10 @@
 #   coordinates, max discrepancy 54 degrees. See inst/frozen/PROVENANCE.md.
 #
 # Files deliberately NOT yet blocking, with their failure counts as of 2026-08-10:
+#   test-matching-provenance.R is NOT promoted, deliberately: its control-candidate contract
+#   documents a blocker that cannot be closed with data this repository contains --
+#   control_candidates_raw.csv has no coordinates, so the 10-mile caliper never fired.
+#   Its other contracts are green and mutation-proven. Promote it when that input exists.
 #   test-table1-balance.R 12, test-redcap-instrument.R 11, test-taxonomy-eligibility.R 7,
 #   test-artifact-vintage.R 6, test-control-independence.R 6, test-covariate-imputation.R 6,
 #   (test-taxonomy-eligibility.R was promoted to blocking on 2026-08-24, green at 27 assertions)
