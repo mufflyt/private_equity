@@ -1,0 +1,540 @@
+---
+title: "Access to Generalist Obstetrics and Gynecology Care at Private Equity-Backed vs. Independent Practices: A Mystery Caller Audit Study"
+author:
+  - name: Tyler Muffly
+    degrees: MD
+    email: tyler.muffly@dhha.org
+    corresponding: true
+    affiliations:
+      - ref: dh
+  - name: "Lizeth [SURNAME NEEDED]"
+    degrees: "[CREDENTIALS NEEDED]"
+    affiliations:
+      - ref: cu
+  - name: Taylor Gatson
+    degrees: MD
+    affiliations:
+      - ref: cu
+affiliations:
+  - id: dh
+    name: "Department of Obstetrics and Gynecology, Denver Health and Hospital Authority"
+    city: Denver
+    region: Colorado
+    country: USA
+  - id: cu
+    name: "Department of Obstetrics and Gynecology, University of Colorado School of Medicine"
+    city: Aurora
+    region: Colorado
+    country: USA
+date: today
+keywords:
+  - private equity
+  - mystery caller
+  - Medicaid
+  - appointment access
+  - obstetrics and gynecology
+  - health disparities
+params:
+  abstract_limit: 250
+  word_limit: 3500
+bibliography: references.bib
+csl: ama.csl
+link-citations: true
+fig-align: center
+crossref:
+  fig-title: Figure
+  tbl-title: Table
+format:
+  docx:
+    reference-doc: pandoc-reference.docx
+    fig-cap-location: bottom
+    number-sections: false
+  html:
+    toc: true
+    toc-depth: 2
+    toc-location: left
+    toc-title: Contents
+    number-sections: false
+    embed-resources: true
+    theme: cosmo
+    df-print: paged
+    code-tools: true
+    anchor-sections: true
+    smooth-scroll: true
+    citations-hover: true
+    link-external-newwindow: true
+    lightbox: true
+    fig-cap-location: bottom
+  pdf:
+    documentclass: article
+    pdf-engine: xelatex
+    geometry: margin=1in
+    fontsize: 12pt
+    linestretch: 2
+    number-sections: false
+    fig-cap-location: bottom
+    fig-pos: "H"
+    colorlinks: true
+    keep-tex: false
+    include-in-header:
+      text: |
+        \usepackage{lineno}\linenumbers
+        \usepackage{fancyhdr}
+        \pagestyle{fancy}\fancyhf{}
+        \rhead{Muffly et al.}\cfoot{\thepage}
+        \renewcommand{\headrulewidth}{0pt}
+execute:
+  echo: false
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    dpi: 300
+    out.width: "100%"
+---
+
+```{r setup, include=FALSE}
+# Modeled on ~/lizeth/manuscript.qmd's Quarto conventions (that repo's own working sibling
+# mystery-caller manuscript), adapted to this study's precomputed-results architecture rather
+# than lizeth's live-REDCap-load-and-refit pattern: model fitting happens exactly once, in
+# primary_analysis.Rmd, which this file reads from -- it does not re-fit anything, so the
+# manuscript's numbers cannot drift from the gated, SAP.lock-verified analysis that produced
+# them.
+root <- normalizePath("..", mustWork = TRUE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      dpi = 300, out.width = "100%")
+suppressWarnings(suppressPackageStartupMessages({
+  library(dplyr); library(glmmTMB); library(flextable); library(ggplot2); library(readr)
+}))
+
+## ---- formatting helpers (ported verbatim from lizeth's manuscript.qmd) -----
+fp <- function(p) {
+  if (is.na(p)) return("NA")
+  if (p < .001) return("< .001")
+  d <- if (p >= .01 && p < .10) 3 else 2
+  sub("^0", "", sprintf(paste0("%.", d, "f"), p))
+}
+pv <- function(p) {
+  if (is.na(p)) return("= NA")
+  if (p < .001) return("< .001")
+  paste0("= ", fp(p))
+}
+f2  <- function(x) sprintf("%.2f", x)
+d0  <- function(x) format(round(x), big.mark = "")
+pct <- function(k, n) sprintf("%.1f%%", 100 * k / n)
+
+flextable::set_flextable_defaults(font.size = 9, padding = 3,
+                                  theme_fun = flextable::theme_booktabs)
+ftab <- function(df) flextable::flextable(df) |>
+  flextable::bold(part = "header") |>
+  flextable::autofit() |>
+  flextable::set_table_properties(layout = "autofit", width = 1)
+
+## ---- word-count utility (approximate; ported from lizeth) ------------------
+.src <- tryCatch(readLines(knitr::current_input(), warn = FALSE), error = function(e) character())
+wc_between <- function(start_re, end_re) {
+  if (!length(.src)) return(NA_integer_)
+  i0 <- grep(start_re, .src)[1]; if (is.na(i0)) return(NA_integer_)
+  rest <- .src[(i0 + 1):length(.src)]
+  i1   <- grep(end_re, rest)[1]
+  seg  <- if (is.na(i1)) rest else rest[seq_len(i1 - 1)]
+  keep <- cumsum(grepl("^```", seg)) %% 2 == 0 & !grepl("^```", seg)
+  txt  <- paste(seg[keep], collapse = " ")
+  txt  <- gsub("`r [^`]+`", " x ", txt)
+  txt  <- gsub("\\[?@[A-Za-z0-9;@ _-]+\\]?", " ", txt)
+  txt  <- gsub("<[^>]+>|[[:punct:]]", " ", txt)
+  length(strsplit(trimws(txt), "\\s+")[[1]])
+}
+wc_abstract <- wc_between("^# Abstract", "^\\*\\*Keywords")
+wc_body     <- wc_between("^# Introduction", "^# References")
+
+## ---- load precomputed results (primary_analysis.Rmd is the only place that fits models) ----
+RESULTS_PATH <- file.path(root, "primary_analysis_results.rds")
+if (!file.exists(RESULTS_PATH)) {
+  stop(
+    "\n\n  manuscript.qmd cannot render: ", RESULTS_PATH, " does not exist yet.\n",
+    "  Render primary_analysis.Rmd first (which itself requires pe_obgyn_study_database.csv,\n",
+    "  built by build_study_database_from_redcap.R from a real REDCap export). This file only\n",
+    "  narrates that object -- it does not fit models or derive outcomes itself.\n",
+    call. = FALSE
+  )
+}
+R <- readRDS(RESULTS_PATH)
+
+## ---- Table 1's matching covariates live in the matching pipeline's intermediate output, ----
+## not in primary_analysis_results.rds -- pe_obgyn_final_calling_sheet_200_dedup.csv (this
+## study's committed fielded sheet) carries Credentials but not Gender / Years_in_Practice /
+## Open_Payments_Years, which build_matched_control_group_psm.R computes for the propensity
+## model but does not currently write through to the fielded sheet. Fails closed separately
+## from RESULTS_PATH so the two gaps are diagnosable independently.
+MATCH_PATH <- file.path(root, "pe_obgyn_matched_calling_list.csv")
+if (!file.exists(MATCH_PATH)) {
+  stop(
+    "\n\n  manuscript.qmd cannot build Table 1: ", MATCH_PATH, " does not exist.\n",
+    "  Table 1 (credentials, gender, years in practice, Open Payments activity) needs the\n",
+    "  matching pipeline's covariates -- run build_matched_control_group_psm.R locally first.\n",
+    "  These columns are not currently carried through to the committed fielded sheet.\n",
+    call. = FALSE
+  )
+}
+match_cov <- read_csv(MATCH_PATH, show_col_types = FALSE)
+
+## ---- assemble reported statistics from the precomputed fits (no refitting) -----------------
+S <- list()
+S$n_total <- nrow(match_cov); S$n_pe <- sum(match_cov$PE_or_Not == "PE")
+S$n_indep <- sum(match_cov$PE_or_Not == "Non-PE")
+
+# primary obtainment (Medicaid-only, PE vs. independent)
+co <- summary(R$fit_ob_primary)$coefficients$cond["pe", ]
+S$ob_or <- exp(co[["Estimate"]])
+S$ob_lo <- exp(co[["Estimate"]] - 1.96 * co[["Std. Error"]])
+S$ob_hi <- exp(co[["Estimate"]] + 1.96 * co[["Std. Error"]])
+S$ob_p  <- co[["Pr(>|z|)"]]
+
+# primary wait time (payer x ownership interaction)
+tw <- R$table4[R$table4$Model == "Primary wait time", ]
+S$wt_irr <- tw$est; S$wt_lo <- tw$lo; S$wt_hi <- tw$hi; S$wt_p <- tw$p
+
+# secondary obtainment interaction
+ts <- R$table4[R$table4$Model == "Secondary obtainment", ]
+S$obs_or <- ts$est; S$obs_lo <- ts$lo; S$obs_hi <- ts$hi; S$obs_p <- ts$p
+
+# obtainment by payer x ownership cell (Table 2)
+t2 <- R$table2
+cell2 <- function(own, pay) t2[t2$Ownership == own & t2$Payer == pay, ]
+S$bcbs_indep <- cell2("Independent", "BCBS"); S$bcbs_pe <- cell2("PE-backed", "BCBS")
+S$med_indep  <- cell2("Independent", "Medicaid"); S$med_pe <- cell2("PE-backed", "Medicaid")
+S$med_rd <- 100 * (S$med_pe$pct - S$med_indep$pct) / 100
+
+# wait times by payer x ownership cell (Table 3)
+t3 <- R$table3
+cell3 <- function(own, pay) t3[t3$Ownership == own & t3$Payer == pay, ]
+S$wt_bcbs_indep <- cell3("Independent", "BCBS"); S$wt_bcbs_pe <- cell3("PE-backed", "BCBS")
+S$wt_med_indep  <- cell3("Independent", "Medicaid"); S$wt_med_pe <- cell3("PE-backed", "Medicaid")
+S$gap_indep <- S$wt_med_indep$mean_days - S$wt_bcbs_indep$mean_days
+S$gap_pe    <- S$wt_med_pe$mean_days    - S$wt_bcbs_pe$mean_days
+```
+
+**Corresponding author:** Tyler Muffly, MD (tyler.muffly@dhha.org).
+
+**Disclosure statement:** The authors report no conflicts of interest. **Funding:** None.
+**IRB:** `r if (exists("SAP")) "" else ""`COMIRB — protocol status stated as "exempt" in
+README.md but as "approved with a waiver of consent" in the prior manuscript draft
+(manuscript_cite.md); **this discrepancy is unresolved and must be reconciled against the real
+COMIRB determination letter before submission, not guessed here.**
+**Word count (body):** approximately `r format(round(wc_body, -2), big.mark = ",")` words.
+
+::: {.content-visible when-format="html"}
+::: {.callout-tip appearance="simple"}
+**Submission checklist (working preview only, hidden from Word/PDF output).**
+
+- Abstract: **`r wc_abstract`** words (target ≤ `r params$abstract_limit`),
+  `r if (!is.na(wc_abstract) && wc_abstract <= params$abstract_limit) "✓ within limit" else "⚠ over limit"`
+- Main text: **`r wc_body`** words (target ≤ `r params$word_limit`),
+  `r if (!is.na(wc_body) && wc_body <= params$word_limit) "✓ within limit" else "⚠ over limit"`
+- **Unresolved before submission:** second author's surname/credentials (YAML `author:`);
+  COMIRB protocol number and exempt-vs.-waiver status (see IRB line above); Table 1's
+  Gender/Years-in-Practice/Open-Payments columns depend on `pe_obgyn_matched_calling_list.csv`
+  existing locally.
+:::
+:::
+
+# Abstract
+
+**Objective:** To compare new-patient scheduling access and wait times for Medicaid versus
+commercially insured patients at private equity (PE)-backed and independent obstetrics and
+gynecology (OB-GYN) practices.
+
+**Methods:** We conducted a simulated-patient (mystery caller) crossover audit of
+`r S$n_total / 2` matched clinician pairs (`r S$n_total` clinicians). Trained callers requested
+new-patient gynecology appointments, presenting either Medicaid or commercial preferred-provider-
+organization (PPO) insurance. Co-primary outcomes were the appointment obtainment rate and the
+wait time in business days. The primary obtainment comparison was PE vs. independent ownership
+among Medicaid calls, estimated with a matched-pair mixed-effects logistic model; wait times were
+modeled with a negative-binomial generalized linear mixed model (GLMM) testing the
+ownership-by-insurance interaction.
+
+**Results:** Commercial insurance was accepted at `r pct(S$bcbs_indep$n_obtained, S$bcbs_indep$n)`
+(`r S$bcbs_indep$n_obtained`/`r S$bcbs_indep$n`) of independent-practice calls vs.
+`r pct(S$bcbs_pe$n_obtained, S$bcbs_pe$n)` (`r S$bcbs_pe$n_obtained`/`r S$bcbs_pe$n`) of PE-backed
+calls. Medicaid acceptance was `r pct(S$med_indep$n_obtained, S$med_indep$n)`
+(`r S$med_indep$n_obtained`/`r S$med_indep$n`) at independent clinics vs.
+`r pct(S$med_pe$n_obtained, S$med_pe$n)` (`r S$med_pe$n_obtained`/`r S$med_pe$n`) at PE-backed
+clinics (OR `r f2(S$ob_or)`, 95% CI `r f2(S$ob_lo)` to `r f2(S$ob_hi)`; *P* `r pv(S$ob_p)`). Among
+clinics that scheduled an appointment, the insurance wait-time gap was
+`r d0(S$gap_indep)` days at independent practices vs. `r d0(S$gap_pe)` days at PE-backed practices
+(interaction IRR `r f2(S$wt_irr)`, 95% CI `r f2(S$wt_lo)` to `r f2(S$wt_hi)`; *P* `r pv(S$wt_p)`).
+
+**Conclusion:** [Conclusion sentence must be written from the results above once they are real —
+not carried over from the prior placeholder draft, which asserted a specific directional finding
+that has not yet been observed.]
+
+**Keywords:** private equity; mystery caller; Medicaid; appointment access; obstetrics and
+gynecology; health disparities.
+
+# Introduction
+
+Over the past decade, corporate consolidation and financialization have reshaped the delivery of
+health care in the United States. Private equity (PE) firms, which are investment partnerships
+that acquire companies, restructure operations, and aim to resell them at a profit within a short
+horizon (typically three to seven years), have expanded aggressively into outpatient physician
+practice, acquiring hundreds of groups across specialties [@zhu2020specialties; @zhu2021ecosystem].
+Obstetrics and gynecology (OB-GYN) has become a prominent target of this activity, with multiple
+national women's-health "platforms" assembling large networks of acquired clinics
+[@zhu2020specialties].
+
+The returns underlying the PE model are typically pursued through administrative consolidation,
+expansion of ancillary services, intensified clinician productivity, and optimization of the
+"payer mix" toward higher-reimbursement commercial insurance and away from lower-reimbursement
+public programs such as Medicaid. A growing evidence base links PE ownership in health care to
+higher costs and mixed-to-worse quality across settings, including hospitals and physician
+specialties [@borsa2023systematic; @bruch2020hospital; @kannan2023adverse]. Parallel analyses in
+dermatology and ophthalmology have documented rapid PE penetration and downstream changes in
+utilization and spending, raising the question of whether similar dynamics affect access in
+women's health [@tan2019dermatology; @braun2024ophthalmology].
+
+Medicaid finances approximately 41% of births in the United States and is a cornerstone of
+reproductive health-care access [@kff_births]. Audit ("secret shopper") studies have repeatedly
+shown that Medicaid enrollees face higher appointment-denial rates and longer waits than
+commercially insured patients across specialties [@bisgaier2011auditing; @asplin2005insurance].
+Yet no study has examined whether the *ownership structure* of OB-GYN practices, namely corporate
+PE ownership versus traditional independent private practice, shapes these disparities. We
+addressed this gap with a mystery-caller audit testing two pre-specified hypotheses: (1) PE-backed
+generalist gynecology clinics decline new Medicaid patients more often than matched independent
+practices; and (2) among practices that do schedule Medicaid patients, the wait-time gap between
+public and commercial insurance is wider at PE-backed clinics.
+
+# Methods
+
+## Study Design
+
+We conducted a simulated-patient (mystery caller) crossover audit. Trained callers contacted
+generalist OB-GYN clinics posing as new patients. Each clinic was called twice: once presenting
+Medicaid and once presenting commercial Blue Cross Blue Shield (BCBS) PPO coverage, at least 48
+hours apart. The Colorado Multiple Institutional Review Board (COMIRB) [reviewed this protocol —
+see the unresolved exempt-vs.-waiver discrepancy noted above], consistent with established
+audit-study methodology [@bisgaier2011auditing].
+
+## Cohort Identification and Matching
+
+PE-backed OB-GYN clinics were identified using the PitchBook financial database to track
+acquisitions by major women's-health platforms, and each platform's active clinician roster was
+compiled from its public consumer directory. To construct a clean counterfactual, control
+candidates were drawn from the CMS Doctors and Clinicians registry and matched 1-to-1 to PE
+clinicians using a propensity-score matching pipeline.
+
+Three eligibility rules were applied to the PE roster before matching. First, five platforms were
+excluded because their business model cannot supply the appointment the study requests: four
+fertility practices and one obstetric hospitalist group with no outpatient clinic. Second,
+clinicians not observed practising within two years of the most recent year covered by the CMS
+activity file were excluded as likely to have left the practice. Third, clinicians identified as
+non-physicians on verification against the practice's own website were excluded.
+
+Each PE clinician was matched 1-to-1 to a control drawn from the same state, of the same gender,
+and within a 10-mile radius, requiring at least two eligible candidates inside that radius.
+Propensity scores came from a logistic model of PE status on credential (MD vs. DO), gender, years
+in practice, and Open Payments activity as a proxy for industry engagement; state, gender, and the
+10-mile radius were enforced as hard constraints on the candidate pool. To limit within-office
+clustering, exactly one clinician was randomly selected per physical office location. From a
+matched pool of candidate pairs across 26 U.S. states, we fielded `r S$n_total / 2` pairs
+(`r S$n_total` clinicians).
+
+## Contextual Covariates and Geographic Linkage
+
+Neighborhood social vulnerability was measured with the Centers for Disease Control and
+Prevention/Agency for Toxic Substances and Disease Registry Social Vulnerability Index
+(CDC/ATSDR SVI), 2022 release, overall summary percentile ranking (`RPL_THEMES`), reconstructed
+from each clinician's practice address to a 2020 census tract via the U.S. Census Bureau batch
+geocoder — see `docs/CANONICAL_SOURCES_AUDIT.md` and `manuscript/appendix_data_provenance.md` for
+the full provenance audit that necessitated this reconstruction.
+
+## Call Protocol and Vignette
+
+Callers followed a standardized script requesting a new-patient appointment for abnormal uterine
+bleeding (AUB). Each caller presented either as a Medicaid enrollee or as a commercial BCBS PPO
+enrollee. Insurance-presentation order was randomized, with a minimum 48-hour interval between the
+two calls to a given office. Outcomes were recorded in a blinded REDCap database — record numbers
+were assigned to carry no information about ownership arm (see
+`docs/APPENDIX_RECORD_BLINDING.md`).
+
+## Primary and Secondary Outcomes
+
+The two co-primary outcomes were (1) the appointment obtainment rate, a binary indicator of
+whether a scheduling date was offered, and (2) the appointment wait time, measured in business
+days from the call date to the first available appointment.
+
+## Statistical Analysis
+
+The primary obtainment estimand is the difference in appointment obtainment between PE-backed and
+independent clinicians among Medicaid calls only, estimated with a mixed-effects logistic model
+containing a random intercept for the matched pair (SAP.lock: `obtained ~ pe + svi_z + (1|pair)`).
+
+The primary wait-time estimand is the ownership-by-insurance interaction, estimated with a
+negative-binomial GLMM (SAP.lock: `business_days ~ pe * medicaid + svi_z + (1|pair) + (1|npi)`).
+
+The ownership-by-insurance interaction for obtainment is reported as a secondary analysis
+(SAP.lock: `obtained ~ pe * medicaid + svi_z + (1|pair) + (1|npi)`).
+
+Seven sensitivity analyses were specified before fielding (SAP.lock): excluding pairs sharing a
+practice phone line; clustering on phone line rather than clinician; restricting to pairs with
+address-level SVI linkage; refitting without the SVI covariate; complete-case analysis; repeating
+the primary analyses on all 200 pairs rather than the eligibility-restricted analytic population;
+and restricting eligibility to taxonomy alone. All tests were two-sided at α = 0.05.
+
+# Results
+
+## Baseline Cohort Demographics (Table 1)
+
+@tbl-participants summarizes the `r S$n_total` fielded clinicians (`r S$n_pe` PE-employed,
+`r S$n_indep` independent controls).
+
+## Appointment Obtainment (Medicaid Acceptance) (Table 2)
+
+Commercial BCBS PPO coverage was accepted in `r pct(S$bcbs_indep$n_obtained, S$bcbs_indep$n)`
+(`r S$bcbs_indep$n_obtained`/`r S$bcbs_indep$n`) of independent-practice calls vs.
+`r pct(S$bcbs_pe$n_obtained, S$bcbs_pe$n)` (`r S$bcbs_pe$n_obtained`/`r S$bcbs_pe$n`) of PE-backed
+calls. Medicaid acceptance was `r pct(S$med_indep$n_obtained, S$med_indep$n)`
+(`r S$med_indep$n_obtained`/`r S$med_indep$n`) at independent clinics vs.
+`r pct(S$med_pe$n_obtained, S$med_pe$n)` (`r S$med_pe$n_obtained`/`r S$med_pe$n`) at PE-backed
+clinics (primary obtainment OR `r f2(S$ob_or)`, 95% CI `r f2(S$ob_lo)` to `r f2(S$ob_hi)`;
+*P* `r pv(S$ob_p)`; @tbl-results).
+
+## Scheduling Wait Times (Table 3)
+
+Among clinics that scheduled new-patient gynecology appointments, the insurance wait-time gap was
+`r d0(S$gap_indep)` business days at independent practices vs. `r d0(S$gap_pe)` business days at
+PE-backed practices (interaction IRR `r f2(S$wt_irr)`, 95% CI `r f2(S$wt_lo)` to
+`r f2(S$wt_hi)`; *P* `r pv(S$wt_p)`; @tbl-results).
+
+## Mixed-Effects Regression (Table 4)
+
+@tbl-results presents odds ratios for obtainment and incidence rate ratios for wait time from the
+SAP.lock-specified models, alongside all seven pre-specified sensitivity analyses.
+
+# Discussion
+
+[The Discussion, including the "dual-barrier" framing, policy implications, and limitations
+carried in the prior draft (`manuscript/manuscript_cite.md`), must be rewritten from the real
+results above once they exist — not carried over verbatim, since the prior draft's Discussion
+asserted specific directional findings (a Medicaid access gap, a widened wait-time gap) that were
+placeholders, not yet observed data. Reuse `manuscript_cite.md`'s Limitations section largely as
+written; its content (single vignette, single calling week, geographic concentration, conditional
+wait-time selection, clustering on shared practice lines, non-uniform SVI geocoding precision,
+~69% power at the anchored effect size) describes real, already-established design properties of
+this study and does not depend on the results.]
+
+# References
+
+::: {#refs}
+:::
+
+# Tables
+
+```{r}
+#| label: tbl-participants
+#| tbl-cap: "Baseline clinician and practice characteristics of the fielded cohort."
+t1 <- mysterycall::mysterycall_table1_gtsummary(
+  data       = match_cov,
+  vars       = c("Credentials", "Gender", "Years_in_Practice", "Open_Payments_Years"),
+  strata_col = "PE_or_Not"
+)
+t1
+```
+
+```{r}
+#| label: tbl-results
+#| tbl-cap: "Appointment obtainment, wait time, and all seven pre-specified sensitivity analyses (SAP.lock), computed from the fitted models -- not re-derived here."
+ci <- function(e, lo, hi) sprintf("%.2f (%.2f-%.2f)", e, lo, hi)
+res <- data.frame(
+  Outcome = c("Appointment obtainment (Medicaid only, primary)",
+             "Appointment obtainment (ownership x payer, secondary)",
+             rep("Conditional wait (primary)", 1),
+             rep("Sensitivity analyses (wait-time interaction)", 7)),
+  Quantity = c("PE vs. independent", "Ownership x payer interaction",
+              "Ownership x payer interaction",
+              sapply(R$sensitivities$Sensitivity, function(s) s)),
+  Measure = c("OR", "OR", "IRR", rep("IRR", nrow(R$sensitivities))),
+  `Estimate (95% CI)` = c(
+    ci(S$ob_or, S$ob_lo, S$ob_hi),
+    ci(S$obs_or, S$obs_lo, S$obs_hi),
+    ci(S$wt_irr, S$wt_lo, S$wt_hi),
+    ifelse(is.na(R$sensitivities$IRR), "not estimable",
+          sprintf("%.2f (%s)", R$sensitivities$IRR, R$sensitivities$CI))),
+  `P value` = c(fp(S$ob_p), fp(S$obs_p), fp(S$wt_p), sapply(R$sensitivities$p, fp)),
+  check.names = FALSE, stringsAsFactors = FALSE
+)
+flextable::flextable(res) |>
+  flextable::merge_v(j = "Outcome") |>
+  flextable::valign(j = "Outcome", valign = "top") |>
+  flextable::bold(part = "header") |>
+  flextable::hline(i = c(2, 3), border = officer::fp_border(width = 0.5), part = "body") |>
+  flextable::autofit() |>
+  flextable::set_table_properties(layout = "autofit", width = 1)
+```
+
+OR, odds ratio (logistic GLMM); IRR, incidence rate ratio (negative binomial GLMM); CI,
+confidence interval. The primary and secondary models are specified in `SAP.lock` and verified
+against it by `gate_sap()` before fitting (`primary_analysis.Rmd`). All seven sensitivity
+analyses are reported regardless of what the primary result shows.
+
+# Figures
+
+```{r}
+#| label: fig-obtainment
+#| fig-cap: "Appointment obtainment (Medicaid acceptance) rates by ownership group and payer."
+ggplot(t2, aes(Payer, pct, fill = Ownership)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  geom_text(aes(label = sprintf("%.0f%%\n(%d/%d)", pct, n_obtained, n)),
+            position = position_dodge(width = 0.7), vjust = -0.3, size = 3) +
+  scale_fill_manual(values = c("Independent" = "#2c7fb8", "PE-backed" = "#d95f02")) +
+  labs(x = NULL, y = "Appointment obtainment rate", fill = NULL) +
+  ylim(0, 105) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top", panel.grid.minor = element_blank())
+```
+
+```{r}
+#| label: fig-waittime
+#| fig-cap: "Wait time in business days to first available appointment, by ownership group and payer, among calls that received an offer."
+ggplot(t3, aes(Payer, mean_days, fill = Ownership)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  geom_errorbar(aes(ymin = pmax(0, mean_days - sd), ymax = mean_days + sd),
+                position = position_dodge(width = 0.7), width = 0.15) +
+  scale_fill_manual(values = c("Independent" = "#2c7fb8", "PE-backed" = "#d95f02")) +
+  labs(x = NULL, y = "Business days to appointment", fill = NULL) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "top", panel.grid.minor = element_blank())
+```
+
+Figure 3 (STROBE flow diagram) is generated separately by `manuscript/strobe_diagram.R` via
+`mysterycall_plot_inclexcl()`, not duplicated here.
+
+# Data and Code Availability
+
+All analysis code and the reproducible manuscript source are available in the study repository
+(https://github.com/mufflyt/private_equity). All counts, ratios, and *P* values are computed from
+`pe_obgyn_study_database.csv` via `primary_analysis.Rmd`, gated by `SAP.lock` and the analysis
+gates in `R/analysis_gates.R`; this file narrates that precomputed object and fits no models of
+its own.
+
+# Author Contributions
+
+<!-- CRediT roles below are a template; authors should confirm before submission. -->
+T.M.: conceptualization, methodology, formal analysis, supervision, and writing – original draft.
+L.[SURNAME]: investigation, data curation, and writing – review and editing.
+T.G.: investigation, data curation, and writing – review and editing. All authors approved the
+final manuscript.
+
+## Computational environment
+
+```{r}
+#| label: tbl-environment
+#| tbl-cap: "Software environment used to compute the reported results."
+pkgver <- function(p) tryCatch(as.character(utils::packageVersion(p)), error = function(e) "not installed")
+env <- data.frame(
+  Component = c("R", "glmmTMB", "mysterycall", "dplyr", "Platform"),
+  Version   = c(paste(R.version$major, R.version$minor, sep = "."),
+                pkgver("glmmTMB"), pkgver("mysterycall"), pkgver("dplyr"), R.version$platform),
+  check.names = FALSE)
+ftab(env)
+```
