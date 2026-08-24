@@ -124,11 +124,58 @@ test_that("semantic: the join coverage check is the canonical one, not a local r
                info = "the local join gate was replaced by the canonical one and must not return")
 })
 
-test_that("semantic: the missingness gate delegates to the canonical mysterycall function", {
+test_that("semantic: the missingness gate does not delegate to a function that does not exist", {
+  # CONTRACT CHANGED, deliberately. This test used to assert the opposite: that the gate
+  # delegates to mysterycall::mysterycall_gate_missingness(), "promoted into the package".
+  # That export has never existed. Every call raised "not an exported object", the gate
+  # caught it and re-threw it as a gate failure, and this file then asserted properties of
+  # that error text. Gate 2 never tested missingness at all.
+  #
+  # The gate is local again. Both halves below are live: if the function is genuinely added
+  # to mysterycall, the second expectation fails and asks for the delegation to come back.
   src <- readLines(p("R", "analysis_gates.R"), warn = FALSE)
-  expect_true(any(grepl("mysterycall_gate_missingness", src, fixed = TRUE)),
-              info = "gate_missingness was promoted into mysterycall; the local copy must delegate")
-  expect_true(is.function(mysterycall::mysterycall_gate_missingness))
+  # Code only. The comment above the gate names the phantom function on purpose, to record
+  # what went wrong, and must not itself trip this check.
+  code <- src[!grepl("^\\s*#", src)]
+  expect_false(any(grepl("mysterycall_gate_missingness", code, fixed = TRUE)),
+               info = "calling a non-existent export makes the gate throw instead of check")
+  expect_false("mysterycall_gate_missingness" %in% getNamespaceExports("mysterycall"),
+               info = "this now exists upstream: promote gate_missingness and restore delegation")
+})
+
+test_that("the missingness gate reports counts, n and a p-value per covariate", {
+  # Phone_Database_Matches is complete in both arms; CDC_SVI_real is missing 3 and 3.
+  out <- gate_missingness(sheet, c("CDC_SVI_real", "Phone_Database_Matches"))
+  expect_setequal(names(out),
+                  c("variable", "arms", "missing", "n", "p_value", "dependent"))
+  expect_equal(nrow(out), 2L)
+  expect_type(out$dependent, "logical")
+  expect_false(any(out$dependent))
+})
+
+test_that("the exposure-dependent missingness is the whole covariate block, not only SVI", {
+  # 11 columns share one pattern: absent for 94 controls and present for every PE clinician.
+  # Recorded here so a future reader does not read the SVI gate failure as an SVI-only problem.
+  block <- c("SIMULATED_CDC_SVI", "Medicaid_Fee_Index", "PE_Concentration_15mi",
+             "HQ_Distance_Miles")
+  for (v in block) {
+    n_ctrl <- sum(is.na(sheet[[v]]) & sheet$PE_or_Not == "Non-PE")
+    n_pe   <- sum(is.na(sheet[[v]]) & sheet$PE_or_Not == "PE")
+    expect_equal(c(n_ctrl, n_pe), c(94L, 0L),
+                 info = sprintf("%s no longer matches the known block pattern", v))
+  }
+  expect_error(gate_missingness(sheet, block), "depends on PE_or_Not")
+})
+
+test_that("BVA: the missingness gate honours alpha at the boundary", {
+  d <- sheet
+  # 8 of 200 missing in one arm, 1 of 200 in the other: Fisher P is small but not extreme.
+  d$edge <- 1
+  d$edge[d$PE_or_Not == "Non-PE"][1:8] <- NA
+  d$edge[d$PE_or_Not == "PE"][1] <- NA
+  p <- suppressWarnings(stats::fisher.test(matrix(c(8L, 1L, 192L, 199L), nrow = 2L))$p.value)
+  expect_false(gate_missingness(d, "edge", alpha = p / 2)$dependent)
+  expect_error(gate_missingness(d, "edge", alpha = p * 2), "depends on PE_or_Not")
 })
 
 test_that("adversarial: no script defines a name an attached canonical package exports", {

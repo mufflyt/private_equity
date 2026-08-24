@@ -254,6 +254,14 @@ plan's `CDC_SVI_real` is populated for 150; the column present for all 400 is st
 simulated draw. Until SVI is carried onto the fielded cohort, the primary models cannot be fit
 as written. Origin of the substitution: `docs/CANONICAL_SOURCES_AUDIT.md`.
 
+**And the gap is not SVI-shaped — it is a whole block.** Eleven columns of the calling sheet
+share one missingness pattern exactly: absent for 94 control clinicians, present for all 200
+PE clinicians. `SIMULATED_CDC_SVI`, `Medicaid_Fee_Index`, `PE_Concentration_15mi`,
+`HQ_Distance_Miles` and the simulated tract and county columns all fail together, and four
+churn columns fail on a second pattern (146 / 69). Missingness that tracks the exposure is not
+ignorable: a complete-case fit silently deletes 47% of the control arm on a basis related to
+the thing being estimated. `gate_missingness()` blocks on this, which is what it is for.
+
 **Record numbering leaks the exposure.** In the fielded REDCap roster every odd record id is a
 control and every even record id is PE, across all 200 pairs without exception, and paired
 clinicians sit adjacent in the dropdown. Any caller who notices the pattern is unblinded.

@@ -141,16 +141,53 @@ gate_family <- function(x, nm, family) {
 
 #' Gate 2. Missingness must not depend on exposure.
 #'
-#' Delegates to mysterycall::mysterycall_gate_missingness(), which was promoted into the
-#' package from this file so that every mystery-caller study inherits it rather than
-#' re-deriving it. See docs/CANONICAL_SOURCES_AUDIT.md (A3). Only the study's default arm
-#' column and the pass message are local.
+#' This gate was documented as delegating to mysterycall::mysterycall_gate_missingness(),
+#' "promoted into the package from this file". No such export has ever existed -- not in the
+#' package namespace, not in its sources. Every call therefore raised "not an exported object
+#' from 'namespace:mysterycall'", which gate_missingness caught and re-threw as a gate failure.
+#' The gate did not check missingness; it failed closed on a typo, and its own tests recorded
+#' the resulting error text as though it were the finding. See the commit that restored this.
+#'
+#' The implementation is local until the promotion actually happens. test-analysis-gates.R
+#' asserts that the phantom name is absent from both this file and the package namespace, so
+#' if the function is ever really added, that test fails and asks for the delegation back.
+#'
+#' A covariate that is wholly present or wholly absent is skipped: it carries no missingness
+#' pattern that could depend on anything, so it is evidence neither way.
 gate_missingness <- function(df, analytic, arm_col = "PE_or_Not", alpha = 0.01) {
   if (!arm_col %in% names(df)) gate_fail("missingness", "No arm column '", arm_col, "'")
-  out <- tryCatch(
-    mysterycall::mysterycall_gate_missingness(df, vars = analytic, exposure = arm_col,
-                                              alpha = alpha, action = "error"),
-    error = function(e) gate_fail("missingness", conditionMessage(e)))
+  arms <- sort(unique(as.character(df[[arm_col]])))
+  if (length(arms) != 2L)
+    gate_fail("missingness", arm_col, " must have exactly 2 levels; found ",
+              length(arms), " (", paste(arms, collapse = ", "), ")")
+
+  rows <- lapply(analytic, function(v) {
+    if (!v %in% names(df)) gate_fail("missingness", "No column '", v, "' to test")
+    na     <- is.na(df[[v]])
+    n_miss <- vapply(arms, function(a) sum(na & df[[arm_col]] == a), integer(1))
+    n_tot  <- vapply(arms, function(a) sum(df[[arm_col]] == a), integer(1))
+    degenerate <- !any(na) || all(na)
+    p <- if (degenerate) NA_real_ else suppressWarnings(
+      stats::fisher.test(matrix(c(n_miss, n_tot - n_miss), nrow = 2L))$p.value)
+    data.frame(variable  = v,
+               arms      = paste(arms,   collapse = " / "),
+               missing   = paste(n_miss, collapse = " / "),
+               n         = paste(n_tot,  collapse = " / "),
+               p_value   = p,
+               dependent = isTRUE(p < alpha),
+               stringsAsFactors = FALSE)
+  })
+  out <- tibble::as_tibble(do.call(rbind, rows))
+
+  bad <- out[out$dependent, , drop = FALSE]
+  if (nrow(bad)) {
+    detail <- sprintf("%s: missing %s of %s across %s -- missingness depends on %s (Fisher P = %.3g)",
+                      bad$variable, bad$missing, bad$n, bad$arms, arm_col, bad$p_value)
+    gate_fail("missingness", paste(detail, collapse = "\n"),
+              "\n\nA complete-case fit would delete those rows on a basis related to exposure, ",
+              "so the loss is not ignorable and the estimate is not the one the plan names. ",
+              "Reconstruct the covariate, or drop it from the model and say so.")
+  }
   gate_pass("missingness", sprintf("independent of arm for %d covariate(s)", length(analytic)))
   invisible(out)
 }
