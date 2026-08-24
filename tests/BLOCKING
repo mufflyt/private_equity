@@ -55,3 +55,4 @@ data    test-pipeline-determinism.R
 data    test-matching-invariants.R
 data    test-activity-recency.R
 data    test-taxonomy-eligibility.R
+data    test-enrichment-covariates.R

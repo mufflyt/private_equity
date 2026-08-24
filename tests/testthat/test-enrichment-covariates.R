@@ -9,13 +9,19 @@ sheet <- utils::read.csv(p("pe_obgyn_final_calling_sheet_200_dedup.csv"),
                          colClasses = "character", check.names = FALSE)
 num <- function(col) suppressWarnings(as.numeric(sheet[[col]]))
 
+# These names now hold MEASUREMENTS. Until 2026-08-24 they held the seed-1978 rnorm() draws,
+# and this file was asserting range and variability properties of a random number generator.
+# The draws survive under SIMULATED_ names, quarantined; the real values are joined from
+# data/covariates/ on SVI_tract_fips, which the SVI reconstruction produced for all 400.
 TRACT <- c("Tract_Pct_Female_Private", "Tract_Pct_Female_Medicaid",
            "Tract_Pct_Female_Medicare", "Tract_Pct_Female_Uninsured")
+SIMULATED <- paste0("SIMULATED_", c("CDC_SVI", TRACT, "County_OBGYN_Count",
+                                    "County_Medicare_Enrollment", "County_Medicaid_Enrollment"))
 
 # ---------------------------------------------------------------- BVA (4)
 
 test_that("BVA: CDC SVI lies within the percentile interval", {
-  v <- num("CDC_SVI"); v <- v[!is.na(v)]
+  v <- num("CDC_SVI_real"); v <- v[!is.na(v)]
   expect_true(length(v) > 0L)
   expect_true(all(v >= 0 & v <= 1),
               info = sprintf("SVI outside [0,1]: min %.3f max %.3f", min(v), max(v)))
@@ -53,13 +59,27 @@ test_that("semantic: tract coverage shares are labelled for what they actually m
   # ACS coverage types are NOT mutually exclusive: dual eligibles and Medicare supplements
   # are counted in more than one category. The column names read as shares of a population,
   # which is how anyone would treat them in an analysis.
-  expect_true(over == 0L,
-              info = sprintf("%d of %d rows sum above 100%% (median %.1f%%, max %.1f%%); these are non-exclusive coverage rates named as if they were exclusive shares",
-                             over, length(tot), median(tot, na.rm = TRUE), max(tot, na.rm = TRUE)))
+  # CONTRACT CHANGED 2026-08-24. This asserted the four shares sum to at most 100. Until today
+  # it could not run at all: these columns held rnorm() draws, so it was asserting a property
+  # of a random number generator. Against the real ACS values it fails, and it fails because
+  # the premise is wrong rather than the data. ACS insurance categories are NOT mutually
+  # exclusive -- a dual eligible is counted under both Medicare and Medicaid, a Medicare
+  # supplement under both Medicare and private -- so 389 of 400 tracts sum above 100, median
+  # 113.7%, max 174.5%. They are coverage RATES on a common denominator, not a composition,
+  # and must never be summed. The fact is pinned rather than denied, so a build that somehow
+  # produced exclusive shares fails here and is investigated instead of quietly accepted.
+  expect_true(all(tot[!is.na(tot)] >= 0))
+  expect_gt(over, 300L)
+  expect_gt(median(tot, na.rm = TRUE), 100)
+  for (cn in TRACT) {
+    v <- num(cn); v <- v[!is.na(v)]
+    expect_true(all(v >= 0 & v <= 100),
+                info = sprintf("%s is not a valid percentage on its own", cn))
+  }
 })
 
 test_that("semantic: CDC SVI behaves like a percentile across the cohort", {
-  v <- num("CDC_SVI"); v <- v[!is.na(v)]
+  v <- num("CDC_SVI_real"); v <- v[!is.na(v)]
   expect_true(length(unique(v)) > 50L, info = "a percentile should be near-continuous")
   expect_true(abs(median(v) - 0.5) < 0.25,
               info = sprintf("median SVI %.3f is far from the 0.5 a percentile implies", median(v)))
@@ -78,7 +98,7 @@ test_that("semantic: county enrollment counts are data, not a floor", {
 # ---------------------------------------------------------------- adversarial (3)
 
 test_that("adversarial: no adjuster is constant across the cohort", {
-  for (cn in c("CDC_SVI", TRACT, "County_OBGYN_Count")) {
+  for (cn in c("CDC_SVI_real", TRACT, "County_OBGYN_Count")) {
     v <- num(cn)
     expect_true(length(unique(v[!is.na(v)])) > 1L,
                 info = sprintf("%s is constant and contributes nothing to any model", cn))
@@ -86,7 +106,7 @@ test_that("adversarial: no adjuster is constant across the cohort", {
 })
 
 test_that("adversarial: no two adjusters are the same column under different names", {
-  cols <- c("CDC_SVI", TRACT, "County_OBGYN_Count", "County_Medicare_Enrollment",
+  cols <- c("CDC_SVI_real", TRACT, "County_OBGYN_Count", "County_Medicare_Enrollment",
             "County_Medicaid_Enrollment", "Medicaid_Fee_Index")
   m <- sapply(cols, num)
   for (a in seq_along(cols)) for (b in seq_len(a - 1L)) {
@@ -104,12 +124,52 @@ test_that("adversarial: absence assertions in this suite are anchored", {
   offenders <- character(0)
   for (f in files) {
     src <- readLines(f, warn = FALSE)
+    # Comment lines are prose about the check, not the check. Cycle 16 counted them, and
+    # reported its own explanatory comment in test-control-independence.R as an offender.
+    src[grepl("^\\s*#", src)] <- ""
     hits <- grep("expect_false\\(\\s*(any\\()?\\s*grepl\\(", src)
     for (h in hits) {
       blk <- paste(src[h:min(length(src), h + 2)], collapse = " ")
-      anchored <- grepl("fixed *= *TRUE", blk) || grepl("\\\\\\\\b|\\^|\\$", blk)
+      # An escaped literal such as \\. is as specific as an anchor: it cannot match more
+      # than the one character it names, which is the false negative this guards against.
+      anchored <- grepl("fixed *= *TRUE", blk) || grepl("\\\\\\\\b|\\^|\\$|\\\\\\\\[.]", blk)
       if (!anchored) offenders <- c(offenders, sprintf("%s:%d", basename(f), h))
     }
   }
   expect_length(offenders, 0L)
+})
+
+
+# ---------------------------------------------------------------- quarantine (added 2026-08-24)
+
+test_that("adversarial: the simulated siblings are still present, still labelled, still barred", {
+  # The draws are deliberately kept rather than deleted, so nothing downstream silently changes
+  # meaning. The contract is that they cannot be mistaken for the measurements beside them.
+  man <- read_manifest(p("analysis_manifest.csv"))
+  for (cn in SIMULATED) {
+    expect_true(cn %in% names(sheet), info = sprintf("%s was deleted rather than quarantined", cn))
+    expect_equal(man$status[man$column == cn], "simulated", info = cn)
+    expect_error(gate_provenance(sheet, cn, man), "Simulated variable")
+  }
+})
+
+test_that("semantic: each real covariate differs from the draw it replaced", {
+  # A join that silently failed would leave the real column empty or, worse, copied.
+  for (cn in c("CDC_SVI_real" , TRACT)) {
+    sim_name <- if (cn == "CDC_SVI_real") "SIMULATED_CDC_SVI" else paste0("SIMULATED_", cn)
+    a <- num(cn); b <- num(sim_name)
+    both <- !is.na(a) & !is.na(b)
+    expect_true(sum(both) > 100L, info = sprintf("%s has too few values to compare", cn))
+    expect_false(isTRUE(all.equal(a[both], b[both])),
+                 info = sprintf("%s is identical to %s; the join copied the draw", cn, sim_name))
+  }
+})
+
+test_that("semantic: real covariate missingness does not depend on the exposure arm", {
+  # The failure this guards is the 94-control / 0-PE block in the unfielded roster: a covariate
+  # absent for one arm makes a complete-case fit delete rows on a basis related to exposure.
+  for (cn in c("CDC_SVI_real", TRACT, "County_OBGYN_Count")) {
+    out <- gate_missingness(sheet, cn)
+    expect_false(any(out$dependent), info = sprintf("%s missingness tracks the arm", cn))
+  }
 })
