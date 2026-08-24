@@ -8,6 +8,10 @@
 #                           test-matching-provenance.R is the case: the gazetteer build the
 #                           cohort was matched against was overwritten and cannot be recovered,
 #                           and control_candidates_raw.csv carries no coordinates.
+#   See docs/SCIENTIFIC_CI_LAWS.md for the two laws every scientific contract must satisfy:
+#   a positive and a negative control, and independent confirmation of any result that could
+#   change the frozen cohort.
+#
 #   publication readiness   Does not stop data collection, but must block any claim that the
 #                           cohort is fully reproducible, and must block final manuscript
 #                           release unless resolved or disclosed. See docs/MATCHING_LINEAGE.md
@@ -75,3 +79,4 @@ data    test-taxonomy-eligibility.R
 data    test-enrichment-covariates.R
 data    test-artifact-vintage.R
 data    test-manuscript-provenance.R
+data    test-control-independence.R
