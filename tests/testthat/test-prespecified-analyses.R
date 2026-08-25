@@ -78,3 +78,38 @@ test_that("semantic: non-obtainment is ranked worst rather than dropped", {
   expect_true(grepl("medicaid", trimws(sap[["access_unconditional_subset"]]), fixed = TRUE),
               info = "the plan restricts this analysis to Medicaid calls")
 })
+
+# --------------------------------------------- numbers the Abstract promises must be computed
+
+test_that("LAW: cell-level numbers the Abstract reports are computed by the analysis", {
+  # The Abstract carries placeholders for four ownership-by-payer cells, on both outcomes.
+  # An interaction coefficient is the estimand but not the quantity: it says how the payer gap
+  # differs by ownership, not how long anybody waits. If the manuscript promises cell means,
+  # something must produce them, or they will be transcribed from somewhere unaccountable --
+  # which is exactly how the two simulated figures came to exist.
+  promises_wait   <- grepl("business days", ms, fixed = TRUE)
+  promises_obtain <- grepl("Medicaid acceptance was substantially lower", ms, fixed = TRUE)
+  expect_true(promises_wait && promises_obtain,
+              info = "if the Abstract no longer reports cell means, retire this contract with it")
+  expect_true(grepl("mysterycall_marginal_effects", pa, fixed = TRUE),
+              info = "the Abstract reports cell means; the analysis computes none")
+  # Both outcomes, not just the one that was easier.
+  # Check the ASSIGNMENTS, not merely the names. The first version looked for "mm_obtain"
+  # anywhere, which the saveRDS() line satisfies on its own -- so renaming the assignment and
+  # computing nothing still passed. The mutation that renamed it was not caught until this
+  # was tightened, which is the whole reason mutations are run.
+  expect_true(grepl("mm_wait <- mysterycall::mysterycall_marginal_effects(", pa, fixed = TRUE),
+              info = "wait-time cell means must actually be computed")
+  expect_true(grepl("mm_obtain <- mysterycall::mysterycall_marginal_effects(", pa, fixed = TRUE),
+              info = "cell means must be produced for obtainment as well as wait time")
+  # POSITIVE CONTROL: computed on the response scale, or they are not interpretable numbers.
+  expect_true(grepl('type = "response"', pa, fixed = TRUE),
+              info = "link-scale means are not the quantity the Abstract reports")
+})
+
+test_that("LAW: results are written out rather than left to be transcribed", {
+  # A number that exists only in a rendered console is a number that gets retyped.
+  expect_true(grepl("saveRDS(list(wait_time = mm_wait, obtainment = mm_obtain)", pa, fixed = TRUE),
+              info = "cell means must be persisted for the manuscript to format")
+  expect_true(grepl("primary_analysis_access_curve.rds", pa, fixed = TRUE))
+})

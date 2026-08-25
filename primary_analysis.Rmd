@@ -218,6 +218,39 @@ fit_ob_secondary <- glmmTMB(F_OB_SECONDARY, family = binomial, data = design)
 summary(fit_ob_secondary)
 ```
 
+## Adjusted cell means for the four ownership-by-payer cells
+
+The Abstract reports cell-level numbers -- obtainment as `[41.0]% vs. [72.5]%` and wait time as
+`[22.3] vs. [11.3] business days` -- and nothing here computed them. The models produce an
+interaction coefficient, which is the estimand but is not the quantity a reader can hold: an
+IRR on the interaction says how the payer gap differs by ownership, not how long anybody waits.
+Four adjusted means say both.
+
+Taken from the pattern in the ortho sports-medicine mystery-caller analysis
+(`~/Documents/mystery_shopper/ortho_sports_med/R/yusra_Reviewed-*.Rmd`), which uses estimated
+marginal means to interpret exactly this shape of model. Implemented through mysterycall's
+canonical `mysterycall_marginal_effects()` rather than by adding an `emmeans` dependency, and
+rather than by re-deriving predictions locally.
+
+```{r cell-means}
+# Wait time, on the response scale: business days per cell, adjusted for svi_z and the
+# random effects. These are the numbers the Abstract's wait-time placeholders await.
+mm_wait <- mysterycall::mysterycall_marginal_effects(
+  fit_wt_primary, term = c("pe", "medicaid"), data = d_scheduled, type = "response")
+
+# Obtainment, on the response scale: probability of being offered an appointment per cell.
+mm_obtain <- mysterycall::mysterycall_marginal_effects(
+  fit_ob_secondary, term = c("pe", "medicaid"), data = design, type = "response")
+
+list(wait_time = mm_wait, obtainment = mm_obtain)
+```
+
+```{r cell-means-save}
+# Written out so the manuscript can format these rather than transcribe them, which is the
+# failure mode docs/MANUSCRIPT_PROVENANCE_AUDIT.md records for the two simulated figures.
+saveRDS(list(wait_time = mm_wait, obtainment = mm_obtain), "primary_analysis_cell_means.rds")
+```
+
 ## Unconditional access (Medicaid calls, non-obtainment ranked worst)
 
 The wait-time estimand above is conditional on a clinic offering an appointment, and obtainment
