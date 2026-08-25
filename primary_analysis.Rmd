@@ -218,6 +218,55 @@ fit_ob_secondary <- glmmTMB(F_OB_SECONDARY, family = binomial, data = design)
 summary(fit_ob_secondary)
 ```
 
+## Unconditional access (Medicaid calls, non-obtainment ranked worst)
+
+The wait-time estimand above is conditional on a clinic offering an appointment, and obtainment
+itself differs by arm. The conditional comparison is therefore made inside a selected subgroup,
+and the selection is heaviest exactly where the effect is largest: the PE Medicaid cell
+contributes the fewest scheduled appointments. If the clinics that decline Medicaid are also
+the slowest, the conditional analysis understates the gap.
+
+`SAP.lock` names this analysis (`access_unconditional_*`, amended 2026-08-24) and names the
+function that implements it. Non-obtainment is not missing data here: a clinic that never
+offers an appointment never reaches access within the horizon. The horizon and the estimand are
+read from the plan rather than chosen here, so changing either is an amendment rather than an
+edit inside a document.
+
+```{r unconditional-access}
+# The canonical implementation, not a local one. mysterycall exports it; re-deriving a
+# cumulative access curve here would be the reimplementation pattern CANONICAL_SOURCES_AUDIT.md
+# exists to stop.
+HORIZON  <- as.numeric(SAP[["access_unconditional_horizon"]])
+ACCESS_F <- SAP[["access_unconditional_function"]]
+stopifnot(
+  "SAP names no unconditional-access function" = nzchar(ACCESS_F),
+  "SAP names a function this document does not use" =
+    grepl("cumulative_access_curve", ACCESS_F, fixed = TRUE))
+
+d_access <- d_medicaid %>%
+  mutate(
+    # Ranked worst: a call that never obtained an appointment is given a time beyond the
+    # horizon rather than dropped, so it lowers cumulative access instead of vanishing from it.
+    access_days = ifelse(obtained == 1, business_days, HORIZON + 1),
+    offered     = obtained == 1)
+
+access_curve <- mysterycall::mysterycall_cumulative_access_curve(
+  data        = d_access,
+  time_col    = "access_days",
+  offered_col = "offered",
+  group_col   = "pe",
+  horizon     = HORIZON)
+
+access_curve
+```
+
+```{r unconditional-access-contrast}
+# The estimand the plan names: the PE minus non-PE difference in cumulative access at the
+# horizon, among Medicaid calls. Reported beside the conditional wait-time result so the
+# selection the conditional analysis carries is visible rather than implicit.
+saveRDS(access_curve, "primary_analysis_access_curve.rds")
+```
+
 # Table 4. Model estimates
 
 ```{r table4}
