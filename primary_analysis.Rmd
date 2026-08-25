@@ -188,9 +188,18 @@ TERM_OB_SECONDARY <- gate_sap(F_OB_SECONDARY, "obtainment_secondary", family = "
 
 ## Primary obtainment (Medicaid calls only)
 
+Every fit is put through `gate_convergence()` before anything is read off it. `summary()` on a
+non-converged model prints a coefficient table indistinguishable from a converged one --
+estimates, standard errors, p-values, no warning where it matters -- and those standard errors
+are what the section below exponentiates into the Abstract's 95% intervals. The precedent is
+the ENT mystery-caller analysis, where the same class of model failed to converge and the only
+thing that caught it was a person noticing and commenting the model out.
+
+
 ```{r fit-obtainment-primary}
 d_medicaid <- filter(design, medicaid == 1)
 fit_ob_primary <- glmmTMB(F_OB_PRIMARY, family = binomial, data = d_medicaid)
+gate_convergence(fit_ob_primary)
 summary(fit_ob_primary)
 ```
 
@@ -199,6 +208,7 @@ summary(fit_ob_primary)
 ```{r fit-waittime-primary}
 d_scheduled <- filter(design, obtained == 1)
 fit_wt_primary <- glmmTMB(F_WT_PRIMARY, family = nbinom2, data = d_scheduled)
+gate_convergence(fit_wt_primary)
 summary(fit_wt_primary)
 ```
 
@@ -215,6 +225,7 @@ gate_overdispersion(fit_wt_primary)
 
 ```{r fit-obtainment-secondary}
 fit_ob_secondary <- glmmTMB(F_OB_SECONDARY, family = binomial, data = design)
+gate_convergence(fit_ob_secondary)
 summary(fit_ob_secondary)
 ```
 
