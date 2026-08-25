@@ -1,0 +1,186 @@
+[
+ {
+  "path": "/Volumes/MufflySamsung/pecos_data/pecos_individual_enrollment_current.csv",
+  "bytes": 10,
+  "data_rows": 0,
+  "sha256": "493fda53120050f85836032324409be6c6484f90a0755ae0c6a673ba7626818b",
+  "used_as_input": "FALSE",
+  "note": "empty stub file, 10 bytes, no header row; not read by any script"
+ },
+ {
+  "path": "/Volumes/MufflySamsung/pecos_data/ppefaddr.csv",
+  "bytes": 46894585,
+  "data_rows": 989534,
+  "sha256": "f6911fe48fe383d7e45372ac416832ae021fad05478b263a6b0b14d2a0caefdc",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/pecos_data/ppefenrol.csv",
+  "bytes": 287600834,
+  "data_rows": 2248990,
+  "sha256": "90afc10bb8050b29f8875efccdd8367a6c96c10bb3d7f11101a5d9b997da1c36",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/pecos_data/ppefreassign.csv",
+  "bytes": 79200405,
+  "data_rows": 2200010,
+  "sha256": "2b96e5bc6403ed6b2d8cf9845a47243bc1d0a9b0c37c53b5fb1694a69be65752",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/pecos_data/ppefspec.csv",
+  "bytes": 27018197,
+  "data_rows": 444489,
+  "sha256": "c247d3bf9268ea0d01d1629d500eb3cccf94bcffa2419052785a72911e883835",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_addr_2016.csv",
+  "bytes": 45956077,
+  "data_rows": 951733,
+  "sha256": "3f0feb25ff74e49f072431518bb63e7a0b0e509baeee708fd34f2e41eed4ef63",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_addr_2017.csv",
+  "bytes": 39626958,
+  "data_rows": 959375,
+  "sha256": "48d2ebd2d2ebc487e8e16f3064e1416bb5635b9d054cb7aaf9c8b238cebe4749",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_addr_2018.csv",
+  "bytes": 40300719,
+  "data_rows": 974245,
+  "sha256": "a1bcc5354d657d90bb1209f8a5af9efe802c140c86f1b68e5a03026dfbc1f517",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_addr_2019.csv",
+  "bytes": 40957525,
+  "data_rows": 989534,
+  "sha256": "48b87fd3dbfd1857ac5884d83648b0235a2131a2bd1602d06dc46c3753b6a96f",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_enrol_2016.csv",
+  "bytes": 218630981,
+  "data_rows": 2011551,
+  "sha256": "794d5c85ee218baf87c0bfbc4ca9b579e8dfc11a7a20ebadab1c1b2e68fa1325",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_enrol_2017.csv",
+  "bytes": 223999150,
+  "data_rows": 2066439,
+  "sha256": "387db47aa28e98e79db5c8c2b66aaed6156e4f1dfcfb1e23f5a176870740d3ba",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_enrol_2019.csv",
+  "bytes": 246503294,
+  "data_rows": 2248990,
+  "sha256": "eef4711e0f405d3db5e52b1be3539fb3700e4a93a9533ec139f2cefff1968a1a",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_enrol_2023Q3.csv",
+  "bytes": 287331680,
+  "data_rows": 2743532,
+  "sha256": "43fde0abebfbed7693d1b1e87ad86748639fe7b4907dacd84f2e248877dfe8b1",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_enrol_2024Q3.csv",
+  "bytes": 304542824,
+  "data_rows": 2907050,
+  "sha256": "d4b0a72c6a9d656e2cd44ae48d0312ee32b4093fb477a40fa751ac24e5e9aead",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_enrol_2025.csv",
+  "bytes": 303088781,
+  "data_rows": 2894901,
+  "sha256": "9119ec3b66440a24e6e348f16ef1fad497d0cc7f9c603ef845ba49506d8345b0",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_reassign_2016.csv",
+  "bytes": 58442633,
+  "data_rows": 1826331,
+  "sha256": "ef6c385bc6865d80062df6d3e9b8f6cc7eafdf20e4a7ab68ac9f758b266fa483",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_reassign_2017.csv",
+  "bytes": 61063497,
+  "data_rows": 1908233,
+  "sha256": "535e7b6435337ac209774fa697fc0dd99d7dcd0aed2b321d41ae58748e435ce4",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_reassign_2019.csv",
+  "bytes": 70400361,
+  "data_rows": 2200010,
+  "sha256": "53b02b4a487dc9b68ef4c9137b4aba9e0463b5daec7a12f9dd993d6766fb732c",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_spec_2016.csv",
+  "bytes": 20684009,
+  "data_rows": 372327,
+  "sha256": "ede7e9414d8ba4913f6f40747d4a00c24b1a8639525b6ba9a24e15356f1bb929",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_spec_2017.csv",
+  "bytes": 21498012,
+  "data_rows": 391571,
+  "sha256": "bd7158efb1982917e708321dd0bf27ea16a3821c1447eea29ff6fe3855910ef8",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_spec_2018.csv",
+  "bytes": 23068180,
+  "data_rows": 420770,
+  "sha256": "3f7740d72c2e789fccd049d9d86d9c1e0bb0639092d62d40d7694bc96d5b290b",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppef_spec_2019.csv",
+  "bytes": 24351257,
+  "data_rows": 444489,
+  "sha256": "d32d93721e6783d2137f4ba3c3ca1b7288b62a13a6741d1e7330f99656c2cea6",
+  "used_as_input": "TRUE",
+  "note": ""
+ },
+ {
+  "path": "/Volumes/MufflySamsung/PPEF_Data/ppefenrol201811.csv",
+  "bytes": 277626309,
+  "data_rows": 2192826,
+  "sha256": "a01fb3aa24dfeb85f46451c3c6ee7719fb89c3f5fc506270c0cf4e987da91156",
+  "used_as_input": "TRUE",
+  "note": ""
+ }
+]

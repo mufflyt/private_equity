@@ -59,3 +59,15 @@ redcap_physician_name_choices*.txt
 
 # Local R package library (created by ad hoc install.packages() during this session)
 .Rlib/
+
+# PECOS/DAC comparator validation artifacts. Versioned deliberately despite the blanket *.csv
+# and *.json rules, for the same reason the redcap/ block above is versioned: the blocking test
+# test-comparator-adjudication.R reads them, and Supplementary Appendix S3 records one of them
+# by sha256 in manuscript/PROVENANCE.csv. Untracked, the suite is green only on the machine that
+# built them -- which is how this rule was found: `git add -A data/comparator` silently added
+# nothing, and PR #22 shipped the scripts and the appendix without the data they read.
+#
+# They are derived from CMS public files but are keyed to the fielded cohort, so they carry
+# provider identifiers and stay inside this private repository.
+!data/comparator/
+!data/comparator/**
