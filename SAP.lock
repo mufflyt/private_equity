@@ -58,6 +58,32 @@ analytic_population          = pairs where Eligible is TRUE for both members
 analytic_population_column   = Eligible
 analytic_population_n_pairs  = 156
 
+# ---------------------------------------------------------------- unconditional access
+# AMENDED 2026-08-24. The Methods have pre-specified this since before fielding, in the
+# Statistical Analysis section and again in the Limitations, and the plan did not name it:
+#
+#   "We therefore pre-specify an unconditional access analysis among Medicaid calls in which
+#    failure to obtain an appointment is ranked as the worst access outcome rather than
+#    treated as missing data."
+#
+# It exists because the wait-time estimand is conditional on obtaining an appointment, and
+# obtainment differs by both arms, so the conditional comparison is made inside a selected
+# subgroup and the selection is heaviest in the PE Medicaid cell. If the clinics that decline
+# Medicaid are also the slowest, the conditional analysis understates the gap.
+#
+# It was implemented only in dry_run_sap_revision.R, a simulation script, and not in the
+# document that will run on real data. Naming it here does not add an analysis; it records one
+# the Methods already promised, so the plan and the manuscript agree and the gate can check it.
+#
+# The estimand is the difference in cumulative probability of having been offered an
+# appointment by the horizon, PE against non-PE, among Medicaid calls. Non-obtainment is not
+# missing: it never reaches access within the horizon.
+access_unconditional_estimand   = pe
+access_unconditional_subset     = medicaid == 1
+access_unconditional_scale      = difference in cumulative access probability at the horizon
+access_unconditional_horizon    = 90
+access_unconditional_function   = mysterycall::mysterycall_cumulative_access_curve
+
 # ---------------------------------------------------------------- shared settings
 alpha                        = 0.05
 sided                        = two
@@ -94,10 +120,15 @@ sensitivity_7 = restrict to pairs where both members are OB/GYN by taxonomy, ign
 # PE-arm. The amendment is made BEFORE any call is placed and BEFORE any outcome exists, so
 # it cannot have been chosen to favour a result. It narrows the population; it does not touch
 # a formula, a family, an estimand or alpha.
+# 2026-08-24 | unconditional access | named the unconditional access analysis the Methods have
+# pre-specified since before fielding, with its estimand, subset, scale, horizon and the
+# canonical mysterycall function that implements it. The plan omitted an analysis the
+# manuscript promised; this records it rather than adds it. No formula, family, estimand or
+# alpha of the existing three models is touched.
 # 2026-08-24 | analytic population | Taxonomy_Is_OBGYN corrected from a substring match on
 # taxonomy descriptions to the CMS 207V family test on the primary taxonomy code, which is
 # the standard the rest of the repository already uses. The loose rule admitted one nurse
 # practitioner (363LW0102X, Women's Health) into the analytic population of a physician
 # study, because a secondary taxonomy mentioned obstetrics. analytic_population_n_pairs
 # falls from 157 to 156. Still before any call and any outcome.
-# sha256 = 112fb2f5284287f09d935179592762a72aa11f3c05e077e998ae56851eea4204
+# sha256 = c97af52e9ea668c35c1d3dcd55f6f0fabc7a16cca0aff8103e3f32e372328a71

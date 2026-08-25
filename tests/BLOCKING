@@ -90,3 +90,4 @@ data    test-artifact-vintage.R
 data    test-manuscript-provenance.R
 data    test-control-independence.R
 data    test-comparator-definition.R
+data    test-prespecified-analyses.R
