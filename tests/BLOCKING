@@ -105,3 +105,4 @@ data    test-control-independence.R
 data    test-comparator-definition.R
 data    test-prespecified-analyses.R
 nodata  test-model-convergence.R
+nodata  test-comparator-adjudication.R
