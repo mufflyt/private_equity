@@ -85,20 +85,22 @@ clinician?
 
 | Frame | Controls in a PE-platform organisation | Pairs affected |
 |---|---:|---:|
-| **Fielded (200 controls)** | **61 (30.5%)** | **61** |
-| Eligible universe (459 controls) | 223 (48.6%) | 209 |
+| **Fielded (200 controls)** | **59 (29.5%)** | **59** |
+| Eligible universe (459 controls) | 220 (47.9%) | 206 |
 
-Platforms involved, fielded frame: Axia Women's Health (16), Unified Women's Healthcare (15),
-Women's Care Enterprises (15), Femwell Group Health (7), Nova Women's Health Partners (4),
-Advantia Health (4), CCRM Fertility (1).
+Platforms involved, fielded frame: Axia Women's Health (16), Women's Care Enterprises (15),
+Unified Women's Healthcare (12), Femwell Group Health (7), Advantia Health (4), Nova Women's
+Health Partners (4), CCRM Fertility (1). Counting *any* affiliation rather than only the sampled
+office gives 61 and 223; the office-resolved figure is primary because it describes the practice
+a caller actually reached.
 
 Independently confirmed: 21 organisations, 46 controls sharing an organisation with a *fielded*
 PE-arm clinician, reproduced exactly by both implementations. External verification confirms the
 largest are private-equity platforms: Women's Care (BC Partners → Lindsay Goldberg), Axia
 (Audax → Partners Group), Unified Women's Healthcare.
 
-**A redraw does not fix this.** The eligible universe is proportionally worse (48.6% vs 30.5%).
-Only **236 of 459** universe controls are free of a PE-platform link.
+**A redraw does not fix this.** The eligible universe is proportionally worse (47.9% vs 29.5%).
+Only **239 of 459** universe controls are free of a sampled-office PE-platform link.
 
 ## S5. Adjudicated comparator status
 
@@ -108,12 +110,19 @@ eligible universe, and the full roster. Three states; ambiguity is never forced.
 | | Fielded controls (200) | Eligible universe (459) |
 |---|---:|---:|
 | `not_independent_supported` | **91** | 271 |
-| `independence_unresolved` | 87 | 165 |
-| `independent_supported` | **22** | 23 |
+| `independence_unresolved` | 86 | 165 |
+| `independent_supported` | **23** | 23 |
 
-Location resolution: 198/200 fielded controls resolved to a single organisation; 2 ambiguous.
+Location resolution, fielded controls: 170 resolved to a single organisation, 29 matched only
+rows carrying no organisation, 1 ambiguous.
 
-Affirmative evidence of independent private practice exists for **22 of 200** fielded controls.
+Affirmative evidence of independent private practice exists for **23 of 200** fielded controls.
+
+**A defect was found and fixed here.** A DAC row with an empty `org_pac_id` records *no*
+organisational affiliation for that row. The first implementation selected such rows when they
+matched the sampled office, which discarded the organisation-bearing rows at the same address for
+74 clinicians -- 29 fielded controls -- including one whose only organisation was a PE platform.
+Organisation-bearing rows are now preferred, and an all-blank match gets its own status.
 
 ## S6. Size, kept as measurement — never as definition
 
@@ -123,17 +132,17 @@ physician-owned group can be independent; a 4-physician hospital-owned clinic is
 | Measure | min | median | max |
 |---|---:|---:|---:|
 | Existing `num_org_mem` | 2 | 252 | 7,694 |
-| DAC national clinicians | 0 | 230 | 7,694 |
-| **DAC local (sampled office)** | 0 | **8** | 1,606 |
+| DAC national clinicians | 2 | 248 | 7,694 |
+| **DAC local (sampled office)** | 1 | **8** | 1,606 |
 
 The gap between national and local is the whole point: the median control sits in an
-**8-clinician office belonging to a 230-clinician organisation**. Descriptive thresholds, for
+**8-clinician office belonging to a 248-clinician organisation**. Descriptive thresholds, for
 sensitivity only:
 
 | ≤ | 1 | 5 | 10 | 25 | 50 | 100 |
 |---|---:|---:|---:|---:|---:|---:|
-| national | 2 | 18 | 25 | 36 | 51 | 61 |
-| local | 15 | 73 | 105 | 131 | 142 | 148 |
+| national | 0 | 16 | 23 | 34 | 49 | 59 |
+| local | 13 | 71 | 103 | 129 | 140 | 146 |
 
 Recommended covariates for Table 1 and sensitivity: `log1p(dac_local_clinicians)` and
 `log1p(dac_national_clinicians)`, **separately**.
@@ -142,8 +151,8 @@ Recommended covariates for Table 1 and sensitivity: `log1p(dac_local_clinicians)
 
 | Comparison | Result |
 |---|---:|
-| Controls with both measures | 173 / 200 |
-| `num_org_mem` == DAC national clinicians | **168 / 173** |
+| Controls with both measures | 171 / 200 |
+| `num_org_mem` == DAC national clinicians | **168 / 171** |
 | DAC national more than 2× existing | 0 |
 
 The two agree because they are the same quantity: `control_candidates_raw.csv` is a DAC extract.
@@ -156,9 +165,9 @@ with the 25 found here.
 ## S8. Evidence category
 
 **C — comparator materially violated.** Not on the independence definition, which remains
-partly unresolvable from administrative data, but on the finding above it: 61 of 200 controls
+partly unresolvable from administrative data, but on the finding above it: 59 of 200 controls
 bill through organisations containing clinicians the study itself classifies as PE-owned, and
-only 22 of 200 have affirmative evidence of independent private practice.
+only 23 of 200 have affirmative evidence of independent private practice.
 
 Because a redraw from the eligible universe is proportionally worse, the available options are
 restriction and re-matching against a comparator definition fixed in advance — not a redraw.
@@ -167,7 +176,7 @@ restriction and re-matching against a comparator definition fixed in advance —
 
 PECOS and DAC record **where Medicare benefits are reassigned and billed**, not ownership. A
 shared organisation is strong evidence of a shared corporate practice platform; it is not a
-title search. The 87 unresolved controls are unresolved, and the manual adjudication columns
+title search. The 86 unresolved controls are unresolved, and the manual adjudication columns
 (`external_source`, `evidence_date`, `adjudicator`, `adjudication_confidence`,
 `adjudication_note`) are present and empty by design, awaiting human adjudication.
 
@@ -175,4 +184,5 @@ Enforced by `tests/testthat/test-comparator-adjudication.R` (blocking): missing 
 imply independence; admitting affiliation cannot imply employment; size alone cannot decide
 ownership; classification is order-invariant and deterministic; any definitive classification
 must retain affirmative evidence; and the contamination count cannot be zeroed out. Ten
-mutations, all caught.
+mutations, all caught. A manuscript appendix drawn from this document is at
+`manuscript/appendix_comparator_validation.md` (Supplementary Appendix S3).

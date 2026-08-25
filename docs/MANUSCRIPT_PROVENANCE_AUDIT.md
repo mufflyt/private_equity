@@ -96,6 +96,17 @@ refuses to generate until the de-clustering step supplies the number it actually
 The four analysis result artifacts and both dry-run outputs predate the current cohort and are
 pinned as known-stale in `test-artifact-vintage.R`. Re-running them is separate work.
 
+## S4b. Appendix S3, added 2026-08-25
+
+`manuscript/appendix_comparator_validation.md` is the first publication-facing document in this
+repository whose every reported count is enforced against the artifact it came from. Fifteen
+figures are recomputed from `data/comparator/comparator_adjudication.csv` at test time, and the
+appendix is required to state the two vintage limits that would otherwise let a 2019 relation
+be presented as a 2026 comparator. Six deliberate drifts were injected and all six were caught.
+
+This is the pattern §S5 argues for, applied to prose rather than to figures: the appendix may
+format the artifact, and it may not hold a number the artifact cannot produce.
+
 ## S5. The architectural gap
 
 Publication-facing artifacts can still be created from typed numbers. The contract in

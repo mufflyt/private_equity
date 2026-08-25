@@ -125,3 +125,102 @@ test_that("LAW: PE-platform contamination of the control arm is recorded, not si
   expect_true(all(resolved_pe$comparator_class == "not_independent_supported"),
               info = "a resolved office inside a PE-platform organisation must be non-independent")
 })
+
+test_that("LAW: a blank organisation is never treated as a resolved organisation", {
+  # A DAC row with an empty org_pac_id records NO organisational affiliation for that row.
+  # Selecting one reports "organisation = nothing", which is a different claim, and it discards
+  # the organisation-bearing rows at the same office. The first version of the builder did
+  # exactly that for 74 clinicians, one of whose only organisation was a PE platform -- so the
+  # contamination count was understated and the evidence silently vanished.
+  bad <- adj[adj$pecos_status == "location_resolved" & !nzchar(adj$dac_org_pac_id), , drop = FALSE]
+  expect_true(nrow(bad) == 0L,
+              info = paste("resolved to a blank organisation for NPIs:",
+                           paste(utils::head(bad$npi, 5), collapse = ", ")))
+  # POSITIVE CONTROL: the honest status must actually be in use, or the rule was implemented by
+  # deleting the affected rows rather than by classifying them.
+  expect_true(sum(adj$pecos_status == "no_organisation_on_sampled_row") > 0,
+              info = "no clinician carries the blank-organisation status; check it is reachable")
+  expect_true(all(adj$comparator_class[adj$pecos_status == "no_organisation_on_sampled_row"] ==
+                    "independence_unresolved"),
+              info = "a blank-organisation match is unresolved, never a definitive state")
+})
+
+test_that("LAW: the any-affiliation sensitivity view is retained beside the primary figure", {
+  # Sampled-office resolution is the primary rule, deliberately: max() across every affiliation
+  # was rejected. But the broader view must remain visible, because dropping it would hide that
+  # 61 fielded controls have SOME PE-platform affiliation while 59 have one at the office called.
+  expect_true("pe_platform_any_affiliation" %in% names(adj),
+              info = "the any-affiliation column must be retained")
+  n_any <- sum(nzchar(ctl$pe_platform_any_affiliation))
+  n_smp <- sum(nzchar(ctl$pe_platform_link))
+  expect_true(n_any >= n_smp,
+              info = "any-affiliation can never be narrower than the sampled-office measure")
+  expect_true(n_smp > 0 && n_any > 0, info = "neither contamination measure may be zeroed out")
+})
+
+# ------------------------------------- the appendix must not carry numbers nobody can recompute
+
+test_that("LAW: every count in Supplementary Appendix S3 is recomputable from the artifact", {
+  # This repository exists partly because two publication-shaped figures were once built from
+  # numbers typed into a script. An appendix full of hand-copied counts is the same object with
+  # better prose. Each figure below is recomputed from comparator_adjudication.csv and required
+  # to appear in the appendix; a figure that drifts fails here rather than reaching a journal.
+  ap <- paste(readLines(testthat::test_path("..", "..", "manuscript",
+                                            "appendix_comparator_validation.md"), warn = FALSE),
+              collapse = "\n")
+  uni <- adj[grepl("universe", adj$frame) & adj$arm != "PE", , drop = FALSE]
+  has <- function(x) grepl(x, ap, fixed = TRUE)
+
+  n_smp  <- sum(nzchar(ctl$pe_platform_link))
+  n_any  <- sum(nzchar(ctl$pe_platform_any_affiliation))
+  n_pair <- length(unique(ctl$pair[nzchar(ctl$pe_platform_link) & nzchar(ctl$pair)]))
+  u_smp  <- sum(nzchar(uni$pe_platform_link))
+  u_any  <- sum(nzchar(uni$pe_platform_any_affiliation))
+  u_cln  <- sum(!nzchar(uni$pe_platform_link))
+
+  expect_true(has(paste0("**", n_smp, " (29.5%)**")),
+              info = paste("appendix must report", n_smp, "contaminated fielded controls"))
+  expect_true(has(as.character(n_pair)), info = "affected pair count must appear")
+  expect_true(has(paste0(u_smp, " (47.9%)")), info = "universe contamination must appear")
+  expect_true(has(paste0("are ", n_any, " and ", u_any)),
+              info = "the any-affiliation sensitivity figures must both appear")
+  expect_true(has(paste0(u_cln, " of 459")), info = "clean-universe count must appear")
+
+  for (st in c("not_independent_supported", "independent_supported", "independence_unresolved")) {
+    n <- sum(ctl$comparator_class == st)
+    expect_true(has(as.character(n)),
+                info = paste("appendix must report", n, "fielded controls as", st))
+  }
+  expect_true(has(paste0("**", sum(ctl$comparator_class == "independent_supported"), " of 200**")),
+              info = "the headline independence count must be stated as a fraction of 200")
+
+  res <- sum(ctl$pecos_status == "location_resolved")
+  noorg <- sum(ctl$pecos_status == "no_organisation_on_sampled_row")
+  expect_true(has(paste0(res, " resolved")) && has(paste0(noorg, " matched only")),
+              info = "office-resolution breakdown must match the artifact")
+  # The appendix uses journal thousands separators, so accept either rendering of the same
+  # integer rather than forcing the prose to be written for the test's convenience.
+  n_rows <- nrow(adj)
+  expect_true(has(as.character(n_rows)) || has(formatC(n_rows, big.mark = ",", format = "d")),
+              info = "the adjudication row count must appear")
+
+  # POSITIVE CONTROL: the appendix must actually be the comparator appendix, not any file that
+  # happens to contain these integers.
+  expect_true(has("Supplementary Appendix S3") && has("PECOS Associate Control"),
+              info = "wrong document; these contracts would be vacuous")
+})
+
+test_that("LAW: the appendix states the vintage limits rather than implying currency", {
+  # The archive's enrolment extract reads as current and is April 2019; reassignment stops at
+  # 2019 entirely. An appendix that omitted this would describe a 2026 comparator using a 2019
+  # relation without saying so.
+  ap <- paste(readLines(testthat::test_path("..", "..", "manuscript",
+                                            "appendix_comparator_validation.md"), warn = FALSE),
+              collapse = "\n")
+  expect_true(grepl("April 15, 2019", ap, fixed = TRUE),
+              info = "the archive's true internal date must be disclosed")
+  expect_true(grepl("2016, 2017, and 2019", ap, fixed = TRUE),
+              info = "the reassignment vintages available must be stated")
+  expect_true(grepl("May 2024", ap, fixed = TRUE),
+              info = "the primary measurement vintage must be named")
+})
