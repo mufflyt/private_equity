@@ -1,0 +1,83 @@
+name: nightly
+
+# Runs the same CI-safe blocking suite gates.yml runs on every push, but on a fresh nightly
+# install of the canonical dependencies (github::mufflyt/mysterycall, github::mufflyt/
+# researchpaths) rather than only when this repo itself changes.
+#
+# That distinction is the entire reason this workflow exists: this repo delegates real
+# scientific-integrity logic (record-blinding allocation, business-day arithmetic,
+# overdispersion checks) to mysterycall rather than reimplementing it, and gates.yml only
+# re-installs those dependencies when private_equity itself gets a new commit. A breaking
+# change landing on mysterycall's main -- a renamed export, a removed function, a changed
+# default -- would sit invisible until the next unrelated push here happened to notice it.
+# That is exactly the failure mode this session hit directly: a stale local mysterycall install
+# elsewhere made mysterycall_assign_blinded_slots() look absent when it was not, and the
+# opposite failure -- a genuine removal that nothing catches until someone stumbles on it -- is
+# the same class of risk in the other direction. A nightly run against a fresh install closes
+# that gap with a scheduled check instead of an accidental one.
+
+on:
+  schedule:
+    - cron: '0 9 * * *'   # 09:00 UTC daily; a fixed UTC time, not local-time-of-day sensitive
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: nightly-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  blocking:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.2'
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          # Same pin, same reason, as gates.yml: Deriv >= 4.3.0 needs R >= 4.5's C API.
+          packages: |
+            any::testthat
+            any::digest
+            any::dplyr
+            any::readr
+            any::DBI
+            any::duckdb
+            Deriv@4.2.0
+            github::mufflyt/mysterycall
+            github::mufflyt/researchpaths
+      - name: blocking gates (data-independent subset, fresh canonical dependencies)
+        run: Rscript tests/run_blocking.R --no-data
+
+  report-failure:
+    needs: blocking
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: open or comment on the tracking issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          TITLE="nightly: blocking gates failed against a fresh mysterycall install"
+          EXISTING=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$TITLE\"" --json number --jq '.[0].number' || true)
+          BODY="Nightly run failed: $RUN_URL
+
+          This runs the same nodata blocking suite gates.yml runs on push, but against a fresh
+          install of github::mufflyt/mysterycall and github::mufflyt/researchpaths. A failure
+          here that does not reproduce against the currently-committed dependency versions
+          usually means an upstream breaking change landed on one of those repos' main branches,
+          not a defect in this repo -- check mysterycall's recent commits first."
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --repo "$GITHUB_REPOSITORY" --body "$BODY"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY" --label "nightly-failure"
+          fi
