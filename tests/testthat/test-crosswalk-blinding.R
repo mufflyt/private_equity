@@ -84,3 +84,23 @@ test_that("adversarial: reverts to the shipped defect are caught, not just novel
   expect_equal(leaked_adjacent, nrow(leaked_order) / 2L,
               info = "sanity check: the leaked ordering must put every pair adjacent")
 })
+
+# ---------------------------------------------------------------------------- regression: hash pin
+#
+# The invariant checks above (parity balance, no adjacency) would still pass if this file were
+# silently regenerated with a different seed, or hand-edited, as long as the new version also
+# happened to be blinded -- they check the CONTRACT, not that the specific, already-deployed
+# mapping is unchanged. This file is "the only record of which id is which clinician" (see
+# docs/APPENDIX_RECORD_BLINDING.md): if it silently changes, this repo's local copy stops
+# agreeing with whatever is actually loaded into the live REDCap project, even though every
+# invariant above would still be green. Pin the exact byte content so any change -- accidental
+# regeneration, a hand edit, a bad merge -- is caught as a regression, not just a contract check.
+test_that("regression: the committed crosswalk's content has not changed", {
+  expect_equal(
+    artifact_sha256(p("redcap", "redcap_slot_crosswalk_400.csv")),
+    "4b937c1354d3a2fa03fcc76ed4ac9cdffdaf6d9bcf0293ada8def7d6673f4d57",
+    info = paste("redcap_slot_crosswalk_400.csv changed. If this is a deliberate re-fielding or",
+                "correction, update this hash deliberately and say so in the commit message --",
+                "do not update it to silence a failure you have not investigated.")
+  )
+})

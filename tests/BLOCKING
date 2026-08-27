@@ -75,6 +75,7 @@ nodata  test-decode-redcap-transfers.R
 nodata  test-blinded-slot-assignment.R
 nodata  test-crosswalk-blinding.R
 nodata  test-sap-contract-gates.R
+nodata  test-call-schedule-integrity.R
 
 data    test-frozen-geo-reference.R
 data    test-analysis-gates.R

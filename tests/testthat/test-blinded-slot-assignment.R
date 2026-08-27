@@ -99,3 +99,23 @@ test_that("semantic: pair members stay together in the study, just not in the nu
   expect_true(all(vapply(by_pair, function(g) length(unique(g)) == 2L, logical(1))))
   expect_equal(length(unique(slot)), n)
 })
+
+# ---------------------------------------------------------------------------- regression: golden value
+#
+# Every test above checks that assign_blinded_slots()'s output satisfies the two invariants
+# (parity balance, no adjacency) -- it would still pass if mysterycall_assign_blinded_slots()'s
+# internal shuffle algorithm changed to something that happens to satisfy both while returning a
+# DIFFERENT permutation for the same seed. That would be invisible here even though it changes
+# every downstream output built from it. Pin one small, exact, reproducible case -- mysterycall's
+# own documented example -- so an algorithm change becomes a visible diff instead of a silent one.
+test_that("regression: the allocator's output for a fixed seed has not changed", {
+  small_pair  <- rep(1:4, each = 2)
+  small_group <- rep(c("treatment", "control"), 4)
+  expect_identical(
+    assign_blinded_slots(small_pair, small_group, seed = 1L),
+    c(3L, 5L, 4L, 6L, 7L, 1L, 8L, 2L),
+    info = paste("mysterycall_assign_blinded_slots()'s output for this seed changed. If this is",
+                "a deliberate, reviewed change to the allocator's algorithm, update this pinned",
+                "value deliberately and say so -- do not update it to silence an unexplained diff.")
+  )
+})
