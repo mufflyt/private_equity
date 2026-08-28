@@ -4,15 +4,6 @@ name: gates
 # the configuration gates: manifest integrity, the frozen analysis plan, its hash, and the
 # requirement that the analysis runs its preflight before fitting anything. The full blocking
 # set runs locally through hooks/pre-commit, where the data exists.
-#
-# mysterycall and researchpaths are pinned to specific commits (below), not floating main.
-# This job blocks every commit and PR in this repo; before the pin, it also re-installed both
-# dependencies fresh on every run, which meant a breaking change pushed to either repo's main --
-# a renamed export, a removed function -- would fail every commit here regardless of whether
-# this repo's own code was correct. nightly.yml intentionally keeps floating main instead: its
-# whole purpose is catching that class of upstream drift on a schedule, without making it block
-# day-to-day development here. Bump these SHAs deliberately, in their own commit, when a new
-# mysterycall/researchpaths feature is actually needed -- not silently by omission.
 
 on:
   push:
@@ -44,7 +35,7 @@ jobs:
             any::DBI
             any::duckdb
             Deriv@4.2.0
-            github::mufflyt/mysterycall@42d66d92ef52a0f85d1f7c61208c2ddd79d9c06e
-            github::mufflyt/researchpaths@26ec3f1981d66626bdf31f356b1097be0d7c1572
+            github::mufflyt/mysterycall
+            github::mufflyt/researchpaths
       - name: blocking gates (data-independent subset)
         run: Rscript tests/run_blocking.R --no-data
