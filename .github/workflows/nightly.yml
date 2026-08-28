@@ -18,7 +18,15 @@ name: nightly
 
 on:
   schedule:
-    - cron: '0 9 * * *'   # 09:00 UTC daily; a fixed UTC time, not local-time-of-day sensitive
+    # 06:23 UTC daily (00:23 MDT / 23:23 MST the previous day, Denver) -- not 09:00 UTC.
+    # GitHub's own guidance is that scheduled workflows queue behind everyone else's, and
+    # round times (top of the hour, and especially common hours like 00:00/09:00/12:00 UTC)
+    # are where that queue is deepest: https://docs.github.com/actions/using-workflows/
+    # events-that-trigger-workflows#schedule -- "scheduled workflows may be delayed during
+    # periods of high load ... to decrease the probability of delay, run jobs at a different
+    # time of hour." First real firing at 09:00 UTC landed ~10 hours late (19:18 UTC); this
+    # moves off both the round hour and the round minute rather than tuning the same slot.
+    - cron: '23 6 * * *'
   workflow_dispatch: {}
 
 permissions:
