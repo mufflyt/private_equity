@@ -56,16 +56,19 @@ jobs:
             any::readr
             any::DBI
             any::duckdb
+            any::tibble
             Deriv@4.2.0
             github::mufflyt/mysterycall
             github::mufflyt/researchpaths
       - name: blocking gates (data-independent subset, fresh canonical dependencies)
+        timeout-minutes: 15
         run: Rscript tests/run_blocking.R --no-data
 
   report-failure:
     needs: blocking
     if: failure() && github.event_name == 'schedule'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       issues: write
     steps:

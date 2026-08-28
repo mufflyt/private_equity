@@ -50,19 +50,28 @@
 #   exists. Re-resolving through the current build reproduces 82.2% of the persisted
 #   coordinates, max discrepancy 54 degrees. See inst/frozen/PROVENANCE.md.
 #
-# Files deliberately NOT yet blocking, with their failure counts as of 2026-08-10:
+# Files deliberately NOT yet blocking.
 #   test-matching-provenance.R is NOT promoted, deliberately: its control-candidate contract
 #   documents a blocker that cannot be closed with data this repository contains --
 #   control_candidates_raw.csv has no coordinates, so the 10-mile caliper never fired.
 #   Its other contracts are green and mutation-proven. Promote it when that input exists.
-#   test-table1-balance.R 12, test-redcap-instrument.R 11, test-taxonomy-eligibility.R 7,
-#   test-artifact-vintage.R 6, test-control-independence.R 6, test-covariate-imputation.R 6,
-#   (test-taxonomy-eligibility.R was promoted to blocking on 2026-08-24, green at 27 assertions)
-#   test-roster-currency.R 5, test-cohort-definition.R 4, test-enrichment-covariates.R 4,
-#   test-matching-balance.R 4, test-pe-exposure.R 4, test-matching-provenance.R 3,
-#   test-name-credential-parsing.R 3, test-pe-universe.R 3, test-coordinate-provenance.R 2,
-#   test-key-joins.R 2, test-coordinate-integrity.R (1 error),
-#   test-geography-and-churn.R (1 error)
+#
+#   STALE, corrected 2026-08-28 (per ~/CI_BEST_PRACTICES.md item 9 -- re-verify "as of DATE"
+#   claims rather than propagate them): this list used to name a per-file failure count "as of
+#   2026-08-10". Spot-checking test-table1-balance.R against that claim on 2026-08-28 found it
+#   no longer matches -- the file now errors before producing the 12 individual failures the
+#   comment names, consistent with the file itself having changed in the 2026-08-23/24 merge,
+#   not with the count being re-measured and confirmed. The other counts below were not
+#   independently re-verified (this machine has no gitignored cohort data to run them against)
+#   and must not be read as current. Re-run each file listed below with the real cohort data
+#   present before trusting any number attached to it; test-taxonomy-eligibility.R was already
+#   confirmed promoted (2026-08-24, green at 27 assertions) and is not in this list.
+#   test-table1-balance.R, test-redcap-instrument.R, test-artifact-vintage.R,
+#   test-control-independence.R, test-covariate-imputation.R, test-roster-currency.R,
+#   test-cohort-definition.R, test-enrichment-covariates.R, test-matching-balance.R,
+#   test-pe-exposure.R, test-matching-provenance.R, test-name-credential-parsing.R,
+#   test-pe-universe.R, test-coordinate-provenance.R, test-key-joins.R,
+#   test-coordinate-integrity.R, test-geography-and-churn.R
 
 nodata  test-pe_helpers.R
 nodata  test-address-key-parity.R

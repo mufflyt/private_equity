@@ -4,6 +4,19 @@ name: gates
 # the configuration gates: manifest integrity, the frozen analysis plan, its hash, and the
 # requirement that the analysis runs its preflight before fitting anything. The full blocking
 # set runs locally through hooks/pre-commit, where the data exists.
+#
+# tibble is in the install list below even though nothing in the current --no-data path calls
+# it directly at present: gate_missingness() (R/analysis_gates.R) uses tibble::as_tibble(), and
+# "not currently exercised by a nodata test" is not the same guarantee as "not needed" -- found
+# by grepping the whole nodata-reachable file set for pkg::fn() calls, not just top-of-file
+# library() (per ~/CI_BEST_PRACTICES.md item 2). Cheap to add now; an unexplained "no package
+# called 'tibble'" the first time someone adds a nodata test that reaches gate_missingness()
+# would not be cheap to debug later.
+#
+# The blocking-gates step has an explicit 15-minute timeout, distinct from the job/workflow
+# default (GitHub's own unset default is 360 minutes). The suite runs in well under a minute
+# normally; a step that hangs or degrades badly should fail fast and visibly rather than
+# silently burn hours of Actions minutes before GitHub's default finally kills it.
 
 on:
   push:
@@ -34,8 +47,10 @@ jobs:
             any::readr
             any::DBI
             any::duckdb
+            any::tibble
             Deriv@4.2.0
             github::mufflyt/mysterycall
             github::mufflyt/researchpaths
       - name: blocking gates (data-independent subset)
+        timeout-minutes: 15
         run: Rscript tests/run_blocking.R --no-data

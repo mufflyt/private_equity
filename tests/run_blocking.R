@@ -78,25 +78,36 @@ for (f in file) {
   r <- tryCatch(as.data.frame(test_file(path, reporter = "silent")),
                 error = function(e) NULL)
   if (is.null(r)) {
-    rows[[f]] <- data.frame(file = f, pass = 0L, fail = 0L, err = 1L)
+    rows[[f]] <- data.frame(file = f, pass = 0L, fail = 0L, err = 1L, skip = 0L)
     cat(sprintf("  [FAIL] %-34s could not be sourced\n", f))
     next
   }
-  d <- data.frame(file = f, pass = sum(r$passed), fail = sum(r$failed), err = sum(r$error))
+  # A skip and a pass must not read the same in this summary: skip() is a real, live path in
+  # this suite (test-manifest-sources-populated.R), and testthat's own return object already
+  # carries a `skipped` column that nothing here was reading -- a shrinking passed-count from a
+  # newly-live skip would have looked identical to "this file just has fewer tests now."
+  d <- data.frame(file = f, pass = sum(r$passed), fail = sum(r$failed), err = sum(r$error),
+                  skip = sum(r$skipped))
   rows[[f]] <- d
-  cat(sprintf("  [%s] %-34s %3d passed, %d failed, %d error\n",
-              if (d$fail + d$err == 0L) "ok  " else "FAIL", f, d$pass, d$fail, d$err))
+  cat(sprintf("  [%s] %-34s %3d passed, %d failed, %d error%s\n",
+              if (d$fail + d$err == 0L) "ok  " else "FAIL", f, d$pass, d$fail, d$err,
+              if (d$skip > 0L) sprintf(", %d SKIPPED", d$skip) else ""))
   if (d$fail + d$err > 0L) {
     bad <- r[r$failed > 0 | r$error > 0, ]
     for (i in seq_len(nrow(bad))) cat(sprintf("           - %s\n", bad$test[i]))
+  }
+  if (d$skip > 0L) {
+    skipped <- r[r$skipped, ]
+    for (i in seq_len(nrow(skipped))) cat(sprintf("           ~ SKIPPED: %s\n", skipped$test[i]))
   }
 }
 
 res <- do.call(rbind, rows)
 n_fail <- if (is.null(res)) 0L else sum(res$fail) + sum(res$err)
+n_skip <- if (is.null(res)) 0L else sum(res$skip)
 
-cat(sprintf("\n=== %d passed, %d failed across %d file(s); %d configuration gate(s) failed ===\n",
-            if (is.null(res)) 0L else sum(res$pass), n_fail,
+cat(sprintf("\n=== %d passed, %d failed, %d skipped across %d file(s); %d configuration gate(s) failed ===\n",
+            if (is.null(res)) 0L else sum(res$pass), n_fail, n_skip,
             if (is.null(res)) 0L else nrow(res), length(cfg_fail)))
 for (m in cfg_fail) cat("  ", m, "\n")
 
