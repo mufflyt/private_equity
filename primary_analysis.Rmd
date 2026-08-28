@@ -188,9 +188,18 @@ TERM_OB_SECONDARY <- gate_sap(F_OB_SECONDARY, "obtainment_secondary", family = "
 
 ## Primary obtainment (Medicaid calls only)
 
+Every fit is put through `gate_convergence()` before anything is read off it. `summary()` on a
+non-converged model prints a coefficient table indistinguishable from a converged one --
+estimates, standard errors, p-values, no warning where it matters -- and those standard errors
+are what the section below exponentiates into the Abstract's 95% intervals. The precedent is
+the ENT mystery-caller analysis, where the same class of model failed to converge and the only
+thing that caught it was a person noticing and commenting the model out.
+
+
 ```{r fit-obtainment-primary}
 d_medicaid <- filter(design, medicaid == 1)
 fit_ob_primary <- glmmTMB(F_OB_PRIMARY, family = binomial, data = d_medicaid)
+gate_convergence(fit_ob_primary)
 summary(fit_ob_primary)
 ```
 
@@ -199,6 +208,7 @@ summary(fit_ob_primary)
 ```{r fit-waittime-primary}
 d_scheduled <- filter(design, obtained == 1)
 fit_wt_primary <- glmmTMB(F_WT_PRIMARY, family = nbinom2, data = d_scheduled)
+gate_convergence(fit_wt_primary)
 summary(fit_wt_primary)
 ```
 
@@ -215,7 +225,140 @@ gate_overdispersion(fit_wt_primary)
 
 ```{r fit-obtainment-secondary}
 fit_ob_secondary <- glmmTMB(F_OB_SECONDARY, family = binomial, data = design)
+gate_convergence(fit_ob_secondary)
 summary(fit_ob_secondary)
+```
+
+## Adjusted cell means for the four ownership-by-payer cells
+
+The Abstract reports cell-level numbers -- obtainment as `[41.0]% vs. [72.5]%` and wait time as
+`[22.3] vs. [11.3] business days` -- and nothing here computed them. The models produce an
+interaction coefficient, which is the estimand but is not the quantity a reader can hold: an
+IRR on the interaction says how the payer gap differs by ownership, not how long anybody waits.
+Four adjusted means say both.
+
+Taken from the pattern in the ortho sports-medicine mystery-caller analysis
+(`~/Documents/mystery_shopper/ortho_sports_med/R/yusra_Reviewed-*.Rmd`), which uses estimated
+marginal means to interpret exactly this shape of model. Implemented through mysterycall's
+canonical `mysterycall_marginal_effects()` rather than by adding an `emmeans` dependency, and
+rather than by re-deriving predictions locally.
+
+```{r cell-means}
+# Wait time, on the response scale: business days per cell, adjusted for svi_z and the
+# random effects. These are the numbers the Abstract's wait-time placeholders await.
+mm_wait <- mysterycall::mysterycall_marginal_effects(
+  fit_wt_primary, term = c("pe", "medicaid"), data = d_scheduled, type = "response")
+
+# Obtainment, on the response scale: probability of being offered an appointment per cell.
+mm_obtain <- mysterycall::mysterycall_marginal_effects(
+  fit_ob_secondary, term = c("pe", "medicaid"), data = design, type = "response")
+
+list(wait_time = mm_wait, obtainment = mm_obtain)
+```
+
+```{r cell-means-save}
+# Written out so the manuscript can format these rather than transcribe them, which is the
+# failure mode docs/MANUSCRIPT_PROVENANCE_AUDIT.md records for the two simulated figures.
+saveRDS(list(wait_time = mm_wait, obtainment = mm_obtain), "primary_analysis_cell_means.rds")
+```
+
+## Effect estimates on the scale `SAP.lock` names
+
+Each prespecified estimand carries a reporting scale in the frozen plan -- odds ratio, odds
+ratio, incidence rate ratio -- and the Abstract reports each one with a 95% interval and a
+p-value: `OR [0.26], 95% CI [0.17 to 0.40]`, `IRR [1.31], 95% CI [1.07 to 1.56]`. Above, the
+only thing that happens to a fitted model is `summary()`, which prints a console block on the
+**link** scale. Filling those brackets from a printed summary means a person reading log-odds
+off a screen and exponentiating by hand: a transcription step and an arithmetic step, neither
+recorded anywhere, for numbers that go in an abstract.
+
+So the estimates are extracted here, exponentiated once, in code, and written out. The Wald
+interval matches what `SAP.lock` specifies; nothing is chosen after seeing it.
+
+```{r effect-estimates}
+#' Pull one prespecified estimand off a glmmTMB fit on its reporting scale.
+#'
+#' @param fit A fitted glmmTMB model.
+#' @param term Fixed-effect term named by `SAP.lock` as the estimand.
+#' @param scale Reporting scale from `SAP.lock`; the exponential is taken for both
+#'   "odds ratio" and "incidence rate ratio" since both are log-link.
+#' @return One row: term, estimate, ci_lower, ci_upper, p_value, on the reporting scale.
+sap_effect <- function(fit, term, scale, label) {
+  co <- summary(fit)$coefficients$cond
+  if (!term %in% rownames(co))
+    stop(sprintf("SAP names estimand '%s' but the fit has no such term. Terms: %s",
+                 term, paste(rownames(co), collapse = ", ")), call. = FALSE)
+  est <- co[term, "Estimate"]; se <- co[term, "Std. Error"]; p <- co[term, "Pr(>|z|)"]
+  # Wald interval on the link scale, then exponentiated -- transforming the endpoints keeps
+  # the interval inside the positive half-line, which building it on the ratio scale does not.
+  z <- stats::qnorm(0.975)
+  tf <- if (scale %in% c("odds ratio", "incidence rate ratio")) exp else identity
+  data.frame(analysis = label, term = term, scale = scale,
+             estimate = tf(est), ci_lower = tf(est - z * se), ci_upper = tf(est + z * se),
+             p_value = p, stringsAsFactors = FALSE)
+}
+
+effects <- rbind(
+  sap_effect(fit_ob_primary,   TERM_OB_PRIMARY,   SAP[["obtainment_primary_scale"]],   "primary obtainment (Medicaid)"),
+  sap_effect(fit_wt_primary,   TERM_WT_PRIMARY,   SAP[["waittime_primary_scale"]],     "primary wait time (interaction)"),
+  sap_effect(fit_ob_secondary, TERM_OB_SECONDARY, SAP[["obtainment_secondary_scale"]], "secondary obtainment (interaction)")
+)
+print(effects)
+saveRDS(effects, "primary_analysis_effects.rds")
+write.csv(effects, "primary_analysis_effects.csv", row.names = FALSE)
+```
+
+The wait-time row is formatted through mysterycall's canonical IRR table rather than a local
+`gt` call, which is what that function is for.
+
+```{r irr-table}
+irr_row <- effects[effects$scale == "incidence rate ratio", ]
+irr_row$irr <- irr_row$estimate
+mysterycall::mysterycall_irr_table(
+  irr_row,
+  title    = "Ownership-by-insurance interaction, wait time",
+  subtitle = "Negative-binomial GLMM among calls that obtained an appointment")
+```
+
+### The commercial-arm comparison is read off a prespecified model, not tested separately
+
+The Abstract also reports `[98.5]% independent vs. [99.0]% PE, [p = 0.68]` for commercial
+calls. `SAP.lock` names no commercial-arm analysis, and the temptation is to run a fresh test
+to fill that bracket -- which would be an unplanned comparison entering an abstract.
+
+It does not need one. The secondary obtainment model is `obtained ~ pe * medicaid + ...` over
+both payers, so with `medicaid` at 0 the `pe` main effect **is** the ownership contrast among
+commercial calls. The two percentages come from the cell means already computed above. Both
+quantities are therefore products of a prespecified model, and this chunk only names which
+part of it they are.
+
+```{r commercial-arm}
+co_sec <- summary(fit_ob_secondary)$coefficients$cond
+commercial <- data.frame(
+  analysis = "commercial-arm ownership contrast (pe main effect, medicaid = 0)",
+  term     = "pe",
+  scale    = SAP[["obtainment_secondary_scale"]],
+  estimate = exp(co_sec["pe", "Estimate"]),
+  ci_lower = exp(co_sec["pe", "Estimate"] - stats::qnorm(0.975) * co_sec["pe", "Std. Error"]),
+  ci_upper = exp(co_sec["pe", "Estimate"] + stats::qnorm(0.975) * co_sec["pe", "Std. Error"]),
+  p_value  = co_sec["pe", "Pr(>|z|)"], stringsAsFactors = FALSE)
+print(commercial)
+saveRDS(commercial, "primary_analysis_commercial_arm.rds")
+```
+
+### The absolute difference
+
+`[-31.5]%` is the Medicaid obtainment gap in percentage points. It is a contrast of two of the
+adjusted cell means, so it is computed from them rather than subtracted by hand off the
+Abstract's own rounded percentages -- which would be circular.
+
+```{r absolute-difference}
+ob_cells <- as.data.frame(mm_obtain)
+abs_diff <- mysterycall::mysterycall_marginal_effects(
+  fit_ob_primary, term = "pe", data = d_medicaid, type = "response")
+print(ob_cells)
+saveRDS(list(cells = ob_cells, medicaid_by_ownership = abs_diff),
+        "primary_analysis_absolute_difference.rds")
 ```
 
 ## Unconditional access (Medicaid calls, non-obtainment ranked worst)

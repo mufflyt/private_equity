@@ -682,3 +682,58 @@ analysis_preflight <- function(df, analytic, arm_col = "PE_or_Not",
   message("=== preflight passed ===\n")
   invisible(TRUE)
 }
+
+#' Stop if a fitted model did not actually converge.
+#'
+#' Taken from the ENT mystery-caller analysis
+#' (`~/Documents/mystery_shopper/final_ENT_results_of_Marcos_code1.Rmd`), where the lesson is
+#' recorded as a comment rather than as code: `#GLMM did not fucking converge`, next to the
+#' model call it is commented out beside. In a prior study of very nearly this design, the
+#' mixed model failed to converge and the only thing that caught it was a person noticing.
+#'
+#' That is the whole argument for this gate. `summary()` on a non-converged fit prints a
+#' coefficient table that looks exactly like a converged one -- estimates, standard errors,
+#' p-values, no warning at the point of use. Those standard errors are what
+#' `primary_analysis.Rmd` now exponentiates into the Abstract's 95% intervals. A false
+#' convergence therefore does not produce an obviously broken result; it produces a publishable
+#' one that is wrong, which is the failure mode this repository exists to prevent.
+#'
+#' Three conditions, each checked separately so the message says which one failed:
+#'   * the optimiser reported success (`fit$fit$convergence == 0`);
+#'   * the Hessian is positive-definite (`fit$sdr$pdHess`), without which the standard errors
+#'     are not trustworthy even though they are printed;
+#'   * no random-effect standard deviation has collapsed to the boundary, which is the singular
+#'     fit that makes a pair or clinician term meaningless while the model still "converges".
+#'
+#' @param model A fitted glmmTMB model.
+#' @param label Name used in the gate message.
+#' @param sd_floor Random-effect SD at or below which the fit is treated as singular.
+#' @return Invisibly `TRUE`; otherwise stops.
+gate_convergence <- function(model, label = deparse(substitute(model)), sd_floor = 1e-4) {
+  conv <- tryCatch(model$fit$convergence, error = function(e) NULL)
+  if (is.null(conv))
+    gate_fail("convergence", label, ": fit carries no convergence code; cannot verify it converged")
+  if (!identical(as.integer(conv), 0L))
+    gate_fail("convergence", label, ": optimiser returned convergence code ", conv,
+              " (0 required). The printed coefficient table is not usable.")
+
+  pd <- tryCatch(model$sdr$pdHess, error = function(e) NULL)
+  if (is.null(pd))
+    gate_fail("convergence", label, ": no sdreport; standard errors cannot be verified")
+  if (!isTRUE(pd))
+    gate_fail("convergence", label, ": Hessian is not positive-definite. Standard errors are ",
+              "printed but not trustworthy, and they are what the reported 95% intervals are ",
+              "built from.")
+
+  vc <- tryCatch(unlist(lapply(glmmTMB::VarCorr(model)$cond, function(m) sqrt(diag(as.matrix(m))))),
+                 error = function(e) NULL)
+  if (length(vc)) {
+    bad <- vc[vc <= sd_floor]
+    if (length(bad))
+      gate_fail("convergence", label, ": singular fit -- random-effect SD at the boundary for ",
+                paste(names(bad), collapse = ", "), ". That grouping term is estimating nothing, ",
+                "so the clustering the design depends on is not in the model.")
+  }
+  gate_pass("convergence", label, " converged (code 0, positive-definite Hessian, no boundary SD)")
+  invisible(TRUE)
+}
