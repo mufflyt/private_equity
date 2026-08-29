@@ -193,10 +193,24 @@ test_that("every publication-facing output records what it was generated from", 
   led <- rd(p("manuscript", "PROVENANCE.csv"))
   expect_setequal(names(led),
                   c("output", "source", "source_sha256", "generated_by", "status"))
+  # Widened 2026-08-25. The ledger originally covered figures only, because figures were the
+  # artifacts that had been fabricated. A prose appendix whose counts are enforced against an
+  # artifact is a publication-facing output in exactly the same sense, so the ledger now admits
+  # non-figure outputs -- but the invariant that matters is unchanged and is asserted first:
+  # EVERY figure must still be registered. Only the reverse direction was relaxed.
   figs <- list.files(p("manuscript"), pattern = "[.]png$")
-  expect_setequal(led$output, figs)
+  expect_true(all(figs %in% led$output),
+              info = paste("unregistered figure(s):",
+                           paste(setdiff(figs, led$output), collapse = ", ")))
+  # Anything else in the ledger must be a file that actually exists in manuscript/.
+  extra <- setdiff(led$output, figs)
+  expect_true(all(file.exists(file.path(p("manuscript"), extra))),
+              info = paste("ledger names a non-existent output:",
+                           paste(extra[!file.exists(file.path(p("manuscript"), extra))],
+                                 collapse = ", ")))
   expect_true(all(nzchar(T(led$generated_by))))
-  expect_true(all(led$status %in% c("simulated", "derived", "measured")))
+  # "verified" = every reported quantity is recomputed from the named source at test time.
+  expect_true(all(led$status %in% c("simulated", "derived", "measured", "verified")))
 })
 
 test_that("a derived output's recorded source digests still match the artifacts", {

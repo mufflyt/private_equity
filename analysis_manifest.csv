@@ -58,3 +58,8 @@ County_FIPS,derived,identifier,First five digits of SVI_tract_fips,
 County_OBGYN_Count,measured,count,"ACS 2022 5-year (tract) / CMS county files, joined on SVI_tract_fips",
 County_Medicare_Enrollment,measured,count,"ACS 2022 5-year (tract) / CMS county files, joined on SVI_tract_fips",
 County_Medicaid_Enrollment,measured,count,"ACS 2022 5-year (tract) / CMS county files, joined on SVI_tract_fips",
+dac_org_pac_id,measured,identifier,CMS Doctors and Clinicians 05/2024,Organisation entity key (PAC ID). NOT organisation NPI: an organisational enrolment can carry several NPIs.
+dac_national_clinicians,measured,count,CMS Doctors and Clinicians 05/2024,Distinct clinicians in the organisation nationally. Descriptive/sensitivity only; never a definition of independence.
+dac_local_clinicians,measured,count,CMS Doctors and Clinicians 05/2024,Distinct clinicians at the SAMPLED office. Kept separate from national size deliberately.
+pe_platform_link,derived,categorical,pe_obgyn_providers_active.csv x DAC 05/2024,PE platform whose roster clinicians share this organisation. Exposure-contamination flag.
+comparator_class,derived,categorical,build via pecos/classify.py,"Three states: independent_supported / not_independent_supported / independence_unresolved. Never forced."

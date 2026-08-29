@@ -39,8 +39,9 @@ flowchart LR
 
 ## Figures
 
-All three are rebuilt from committed artifacts by `make_readme_figures.py`. No simulated
-column is plotted anywhere in them.
+All five are rebuilt from committed artifacts by `make_readme_figures.py`. No simulated
+column is plotted anywhere in them, and `test-readme-figures.R` requires every figure the
+README references to exist and to be newer than the artifact it is drawn from.
 
 ### 1. From PitchBook universe to fielded calls
 ![Sampling funnel](figures/fig_readme_sampling_funnel.png)
@@ -53,6 +54,14 @@ column is plotted anywhere in them.
 ### 3. Covariate balance after matching
 ![Covariate balance](figures/fig_readme_covariate_balance.png)
 *Figure 3: Standardized mean differences on the committed covariates. County- and platform-level covariates balance well; the four census-tract payer-mix measures exceed ±0.10, which is what the pair random effect and the frozen covariate set are there to absorb. CDC SVI is **excluded from this figure** — see [Known issues](#known-issues).*
+
+### 4. Does the control arm meet the prespecified comparator?
+![Comparator status](figures/fig_readme_comparator_status.png)
+*Figure 4: Adjudication of all 200 fielded controls and all 459 controls in the eligible matched universe against CMS enrollment records, from `data/comparator/comparator_adjudication.csv`. Affirmative evidence of independent private practice exists for **23 of 200** fielded controls. The redraw option is worse, not better. Detail in [Supplementary Appendix S3](manuscript/appendix_comparator_validation.md).*
+
+### 5. The office a caller reaches is not the organization that owns it
+![Practice scale](figures/fig_readme_practice_scale.png)
+*Figure 5: Clinicians at the sampled office against clinicians in the owning organization nationally, for fielded controls with a resolved organization. The medians differ by a factor of 31 (8 against 248). This is why organization size is kept as two separate measurements and is never used to define independence — a 30-physician physician-owned group can be independent while a 4-physician hospital-owned clinic is not.*
 
 ## What the study asks
 
@@ -224,6 +233,8 @@ near-miss, so read this before treating any of them as the sample.
 | `pe_obgyn_final_calling_sheet_200.csv` | 400 | A **later, different** draw. Overlaps the fielded sample by only 153 clinicians. Has `CDC_SVI_real` and `SIMULATED_CDC_SVI` split out |
 | `redcap_call_schedule_800.csv` | 400 | Arm order and 48-hour spacing for the **later** roster. Its record ids do **not** address the loaded REDCap project — only 14 of 400 resolve correctly |
 | `pe_obgyn_matched_calling_list.csv` | 918 | The full 459-pair matched pool the fielded sample was drawn from |
+| `data/comparator/comparator_adjudication.csv` | 1,845 | **Comparator adjudication.** One row per clinician across the fielded frame, the eligible universe and the PE roster: resolved organisation, national and local practice size, PE-platform link, three-state independence classification. Built by `pecos/build_comparator_adjudication.py`; see [Appendix S3](manuscript/appendix_comparator_validation.md) |
+| `data/comparator/pecos_source_manifest.csv` | 23 | Every PECOS/DAC input with byte count, row count and sha256. Records that `pecos_data/` is a **2019** snapshot despite its file timestamps |
 | `pe_obgyn_study_database.csv` | 1,397 | PE-eligible clinicians plus controls, 62 columns, pre-matching |
 | `redcap_physician_name_choices.txt` | 800 | The REDCap dropdown string, ids 1–400 Medicaid and 401–800 commercial |
 
@@ -231,6 +242,16 @@ If you need one sentence: **`pe_obgyn_final_calling_sheet_200_dedup.csv` is the 
 others are neighbours.**
 
 ## Known issues
+
+**The control arm contains private-equity practices.** Validated against Medicare enrollment
+records in 2026-08 ([Supplementary Appendix S3](manuscript/appendix_comparator_validation.md),
+[audit](docs/COMPARATOR_ADJUDICATION.md)). **59 of 200 fielded controls (29.5%)** bill through a
+CMS organization that also contains a clinician from this study's own PE roster — Axia Women's
+Health, Women's Care Enterprises, Unified Women's Healthcare, Femwell, Advantia, Nova, CCRM.
+No control NPI appears in the roster itself (0 of 200, against 200 of 200 for the PE arm), so
+exposure assignment is internally consistent per clinician; the roster is simply not a census of
+platform practices. The bias runs toward the null. **Redrawing from the eligible universe makes
+it worse** (47.9%), so this is not fixable by re-sampling. Undecided; nothing has been changed.
 
 **The comparator is not what the protocol prespecified.** COMIRB protocol v2 (2026-07-05)
 names the comparator as **independent private practices** — in its title, design, objectives,
@@ -508,6 +529,15 @@ Track A additionally requires an authenticated PitchBook session. The frozen geo
 `match_all_providers.py` adds columns when these are present and silently falls back to `N/A`:
 a local DuckDB database, an ABOG subspecialty crosswalk CSV, and an R script for name-based
 gender inference. Paths are hardcoded — adjust for your machine.
+
+## Supplementary appendices
+
+| Appendix | Subject |
+|---|---|
+| [S1](manuscript/appendix_power.md) | Statistical power |
+| [S2](manuscript/appendix_data_provenance.md) | Covariate provenance, reconstruction, and observational independence |
+| [S3](manuscript/appendix_comparator_validation.md) | Comparator validation against Medicare enrollment records |
+| [S4](manuscript/appendix_analytic_provenance.md) | Analytic output provenance and model diagnostics |
 
 ## Changelog
 
