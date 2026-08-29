@@ -131,4 +131,89 @@ ax.text(0.115, -0.62, "±0.10 balance threshold", fontsize=8.5, color=INK3, ha="
 ax.xaxis.grid(True, color=GRID, linewidth=0.8, zorder=0); ax.set_axisbelow(True)
 ax.spines["left"].set_visible(False); ax.tick_params(axis="y", length=0)
 fig.savefig(OUT + "/fig_readme_covariate_balance.png", dpi=200); plt.close(fig)
-print("wrote 3 figures")
+
+# ───────────────────── 4. comparator status of the fielded controls ─────────────────────
+# Every count read from data/comparator/comparator_adjudication.csv, the artifact
+# Supplementary Appendix S3 is checked against. Nothing here is simulated.
+adj = list(csv.DictReader(open(D + "/data/comparator/comparator_adjudication.csv",
+                              encoding="utf-8-sig")))
+ctl = [r for r in adj if r["frame"].startswith("fielded") and r["arm"] != "PE"]
+uni = [r for r in adj if "universe" in r["frame"] and r["arm"] != "PE"]
+
+def counts(rs):
+    c = collections.Counter(r["comparator_class"] for r in rs)
+    return [c["not_independent_supported"], c["independence_unresolved"],
+            c["independent_supported"]]
+
+LABELS = ["Not independent", "Unresolved", "Independent"]
+COLS = [CTL, "#d9d7d0", PE]
+fig, ax = frame(9.2, 4.3,
+    "Does the control arm meet the prespecified comparator?",
+    "The protocol restricts controls to independent private practices. Adjudicated against\n"
+    "CMS enrollment records. Bars are clinicians; a redraw makes the proportion worse.",
+    top=0.76, left=0.20, bottom=0.40)
+for i, (lab, rs) in enumerate([("Fielded controls\n(n = 200)", ctl),
+                               ("Eligible universe\n(n = 459)", uni)]):
+    vals = counts(rs); tot = sum(vals); left = 0
+    for v, c in zip(vals, COLS):
+        ax.barh(i, 100 * v / tot, left=left, height=0.46, color=c,
+                edgecolor=SURF, linewidth=2, zorder=3)
+        if v / tot > 0.05:
+            ax.text(left + 50 * v / tot, i, str(v), va="center", ha="center",
+                    fontsize=10.5, fontweight="bold",
+                    color=SURF if c != "#d9d7d0" else INK2, zorder=4)
+        left += 100 * v / tot
+ax.set_yticks([0, 1]); ax.set_yticklabels(["Fielded controls\n(n = 200)",
+                                           "Eligible universe\n(n = 459)"],
+                                          fontsize=9.5, color=INK)
+ax.set_xlim(0, 100); ax.set_xticks([0, 25, 50, 75, 100])
+ax.set_xticklabels(["0%", "25%", "50%", "75%", "100%"], fontsize=9)
+ax.set_ylim(-0.6, 1.6); ax.tick_params(axis="y", length=0)
+ax.spines["left"].set_visible(False)
+# Legend laid out on a measured grid rather than by eye: the first attempt overlapped
+# "Unresolved" because the labels carried their parenthetical qualifiers.
+for i, (lab, c) in enumerate(zip(LABELS, COLS)):
+    x = 0.20 + i * 0.17
+    fig.text(x, 0.245, "\u25a0", fontsize=13, color=c, va="center", ha="left")
+    fig.text(x + 0.022, 0.245, lab, fontsize=9, color=INK2, va="center", ha="left")
+fig.text(0.20, 0.185, "affirmative evidence required for either definitive state",
+         fontsize=8, color=INK3, va="center", ha="left")
+n_pe = sum(1 for r in ctl if r["pe_platform_link"])
+fig.text(0.20, 0.075,
+         f"{n_pe} of 200 fielded controls ({100*n_pe/200:.1f}%) bill through an organization\n"
+         f"that also contains a clinician from the study's own PE roster.",
+         fontsize=9, color=CTL, fontweight="bold", va="center", linespacing=1.45)
+fig.savefig(OUT + "/fig_readme_comparator_status.png", dpi=200); plt.close(fig)
+
+# ───────────────────── 5. local practice vs owning organization ─────────────────────
+loc = sorted(int(r["dac_local_clinicians"]) for r in ctl if r["dac_local_clinicians"])
+nat = sorted(int(r["dac_national_clinicians"]) for r in ctl if r["dac_national_clinicians"])
+fig, ax = frame(9.2, 3.9,
+    "The office a caller reaches is not the organization that owns it",
+    "Fielded controls with a resolved organization. Log scale: the two measures differ by\n"
+    "more than an order of magnitude, so neither can stand in for the other.",
+    top=0.74, left=0.215, bottom=0.20)
+import math
+def jitter(i, n): return 0.16 * ((i % 7) - 3) / 3.0
+for i, v in enumerate(loc):
+    ax.plot(max(v, 1), 1 + jitter(i, len(loc)), "o", markersize=5.5, color=PE,
+            alpha=0.55, markeredgewidth=0, zorder=3)
+for i, v in enumerate(nat):
+    ax.plot(max(v, 1), 0 + jitter(i, len(nat)), "o", markersize=5.5, color=CTL,
+            alpha=0.55, markeredgewidth=0, zorder=3)
+for y, vals, c in ((1, loc, PE), (0, nat, CTL)):
+    med = st.median(vals)
+    ax.plot([med, med], [y - 0.32, y + 0.32], color=INK, linewidth=2.4, zorder=5)
+    ax.text(med, y + 0.40, f"median {med:,.0f}", fontsize=9.5, fontweight="bold",
+            color=INK, ha="center", va="bottom", zorder=5)
+ax.set_xscale("log"); ax.set_xlim(0.8, 12000)
+ax.set_yticks([1, 0]); ax.set_yticklabels(["Clinicians at the\nsampled office",
+                                           "Clinicians in the owning\norganization, nationally"],
+                                          fontsize=9.5, color=INK)
+ax.set_ylim(-0.7, 1.75); ax.tick_params(axis="y", length=0)
+ax.set_xlabel("Clinicians (log scale)", fontsize=9.5)
+ax.xaxis.grid(True, color=GRID, linewidth=0.8, zorder=0); ax.set_axisbelow(True)
+ax.spines["left"].set_visible(False)
+fig.savefig(OUT + "/fig_readme_practice_scale.png", dpi=200); plt.close(fig)
+
+print("wrote 5 figures")

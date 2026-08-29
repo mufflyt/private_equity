@@ -71,3 +71,10 @@ redcap_physician_name_choices*.txt
 # provider identifiers and stay inside this private repository.
 !data/comparator/
 !data/comparator/**
+
+# Manuscript provenance ledger. Versioned despite the blanket *.csv rule: it records which
+# artifact each publication-facing output was built from, and its sha256, and
+# test-manuscript-provenance.R reads it. It holds filenames and digests, no provider data.
+# It was itself untracked until 2026-08-29, so the test that audits provenance was reading a
+# file that existed only on one machine.
+!manuscript/PROVENANCE.csv

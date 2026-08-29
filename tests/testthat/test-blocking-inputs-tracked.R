@@ -9,10 +9,17 @@
 # Appendix S3, and a blocking test reading comparator_adjudication.csv -- without the file. The
 # comparator artifacts are now excepted and tracked.
 #
-# This test is ADVISORY because 18 further inputs were already in the same state before that
+# This test is ADVISORY because 18 further inputs remain in the same state after that
 # work, several of them carrying provider rosters whose versioning is the owner's decision, not
 # a side effect of a test. It is here so the number is visible and can only shrink. Promote it
-# to blocking once the backlog below is empty. The count at the time of writing is 18.
+# to blocking once the backlog below is empty.
+#
+# The count is 18. manuscript/PROVENANCE.csv came off the list on 2026-08-29 -- the test that
+# audits provenance had been reading a ledger that existed on one machine only -- but the same
+# day's rebase brought six further test files from main that reference inputs in the same
+# state, so the total did not fall. The remainder are provider rosters, pipeline outputs, and
+# inst/frozen/geo_reference_fielded_cohort.csv, which inst/frozen/PROVENANCE.md describes as
+# the frozen reference the cohort was matched against and which exists nowhere but one disk.
 
 testthat::local_edition(3)
 ROOT <- normalizePath(testthat::test_path("..", ".."))

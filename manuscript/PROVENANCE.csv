@@ -1,0 +1,6 @@
+"output","source","source_sha256","generated_by","status"
+"SIMULATED_figure1_obtainment.png","NONE","NONE","generate_figures.R","simulated"
+"SIMULATED_figure2_wait_times.png","NONE","NONE","generate_figures.R","simulated"
+"figure3.png","pe_obgyn_providers_active.csv; pe_obgyn_matched_calling_list.csv; pe_obgyn_final_calling_sheet_200_dedup.csv","69e3420e9f6fc4b315d45089672dd0103910ad156d7884893c429c2aa00b5264; 3cda9c2e0c1cc45ca06e065f151838023e61c111d28cc6d71c9406020f463bbc; d2db427b86d73ae2e88336bb113e4cd2c64dfc6b15620f183dca5bcc09c3193c","strobe_diagram.R","derived"
+"appendix_comparator_validation.md","data/comparator/comparator_adjudication.csv","d8665a35a89dae8f0bba1969c118e84ae57d3d9dfa78645f2f1d9bb93352a11e","pecos/build_comparator_adjudication.py","verified"
+"appendix_analytic_provenance.md","primary_analysis.Rmd","e4524f79934991c802b8f8cf3fffe3ec0ce6b1859679748968e68bf75416301f","manual, from the analysis document and SAP.lock","derived"
