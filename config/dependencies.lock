@@ -68,6 +68,7 @@ github  researchpaths    0.1.0 26ec3f1981d66626bdf31f356b1097be0d7c1572
 
 # ---- Python, from requirements.txt ----
 pypi    beautifulsoup4   NOT_INSTALLED_LOCALLY
+pypi    matplotlib       NOT_INSTALLED_LOCALLY
 pypi    duckdb           1.5.5
 pypi    numpy            2.5.2
 pypi    pandas           3.0.5
