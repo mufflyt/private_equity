@@ -69,6 +69,8 @@ blocking_suite:
       guards: "record id encoding the exposure, which unblinds callers"
     - file: test-pipeline-output-regression.R
       guards: "silent value changes in the derivation functions the study reports"
+    - file: test-row-contract.R
+      guards: "row-level design invariants: pair balance, id coverage, cross-artifact agreement"
     - file: test-estimand-drift.R
       guards: "an effect reported on a scale the frozen plan does not name for it"
     - file: test-manuscript-claims.R
