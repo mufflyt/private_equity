@@ -1,0 +1,104 @@
+name: manuscript
+
+# Renders the manuscript on every change, so a document that no longer builds is caught here
+# rather than the night before submission.
+#
+# WHAT CAN AND CANNOT BE RENDERED IN CI, and why the split below is not laziness:
+#
+#   manuscript_cite.md            Pure pandoc markdown with placeholder results. Renders
+#                                 COMPLETELY in CI, citations resolved through references.bib
+#                                 and ama.csl. This is the real check.
+#   private_equity_cover_letter.qmd
+#   private_equity_strobe_checklist.qmd
+#                                 Quarto, no computed values. Render with --no-execute.
+#   private_equity_manuscript.qmd
+#   private_equity_title_page.qmd Quarto, and they read primary_analysis_results.rds and
+#                                 pe_obgyn_study_database.csv -- both gitignored, neither
+#                                 present in CI. They CANNOT be rendered here, and pretending
+#                                 otherwise would mean a green check that proves nothing.
+#                                 Note that --no-execute does not help: it skips chunks but
+#                                 still evaluates INLINE R, so `r wc_body` fails on a variable
+#                                 the skipped chunk would have defined.
+#
+#                                 What IS checked for those two, in the blocking suite rather
+#                                 than here because it needs no pandoc: every citation key
+#                                 resolves, and the YAML header parses. See
+#                                 tests/testthat/test-manuscript-render.R.
+#
+# Rendered outputs are uploaded as artifacts so a reviewer can read the built document from the
+# PR without installing anything.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+        with:
+          pandoc-version: '3.6.4'   # matches the local toolchain in config/dependencies.lock
+
+      # The substantive check: a complete render, citations and all, of the document that
+      # needs no analysis output.
+      - name: render manuscript_cite.md (pandoc, complete)
+        timeout-minutes: 10
+        working-directory: manuscript
+        run: |
+          set -euo pipefail
+          pandoc manuscript_cite.md \
+            --citeproc \
+            --bibliography=references.bib \
+            --csl=ama.csl \
+            --reference-doc=pandoc-reference.docx \
+            -o "Manuscript_CI_${GITHUB_SHA::8}.docx"
+          ls -l "Manuscript_CI_${GITHUB_SHA::8}.docx"
+
+      # An unresolved citation is not a pandoc error: it renders as a literal "**citekey?**"
+      # and the build still succeeds. Fail on it explicitly, or a broken reference reaches a
+      # submitted manuscript behind a green check.
+      - name: fail on unresolved citations
+        timeout-minutes: 5
+        working-directory: manuscript
+        run: |
+          set -euo pipefail
+          pandoc manuscript_cite.md --citeproc --bibliography=references.bib \
+            --csl=ama.csl -t plain -o /tmp/plain.txt
+          if grep -nE '\*\*[A-Za-z0-9_:.-]+\?\*\*|\[\?\]' /tmp/plain.txt; then
+            echo "::error::unresolved citation(s) above; the key is not in references.bib"
+            exit 1
+          fi
+          echo "all citations resolved"
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.2'
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::knitr
+            any::rmarkdown
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: render the Quarto documents that need no analysis output
+        timeout-minutes: 15
+        working-directory: manuscript
+        run: |
+          set -euo pipefail
+          for f in private_equity_cover_letter.qmd private_equity_strobe_checklist.qmd; do
+            echo "--- $f ---"
+            quarto render "$f" --no-execute --to docx
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rendered-manuscript
+          path: |
+            manuscript/*.docx
+          retention-days: 14
