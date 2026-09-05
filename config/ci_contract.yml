@@ -1,0 +1,77 @@
+# What continuous integration must enforce.
+#
+# WHY THIS FILE EXISTS. Every other frozen contract in this repository is checked by CI --
+# SAP.lock by gate_sap(), analysis_manifest.csv by gate_provenance(), the dependency set by
+# test-dependency-lockfile.R. Nothing checked CI ITSELF. A workflow edit that dropped a step,
+# widened a trigger, or quietly stopped running the blocking suite would land green, because
+# the thing that would have complained is the thing that was edited.
+#
+# This is the contract; tests/testthat/test-ci-contract.R is the enforcement. Changing what CI
+# guarantees now takes TWO deliberate edits, in the same commit, and the diff says plainly
+# which guarantee moved.
+#
+# HOW TO CHANGE A GUARANTEE. Edit this file and the workflow together, and say in the commit
+# message which guarantee changed and why. Do not edit only the workflow to make something
+# pass -- that is the failure this file exists to make visible.
+
+version: 2026-09-05
+
+workflows:
+
+  # The gate that blocks day-to-day work. Must stay cheap, must stay mandatory.
+  gates:
+    path: .github/workflows/gates.yml
+    # Both triggers are load-bearing. Dropping pull_request lets a PR merge unchecked;
+    # dropping the push-to-main trigger lets a direct push to main go unchecked.
+    must_trigger_on: [push, pull_request]
+    must_push_branches: [main]
+    jobs:
+      blocking:
+        # The command IS the contract. A workflow that installs everything correctly and then
+        # runs a different script proves nothing about this repository's gates.
+        must_run: "Rscript tests/run_blocking.R --no-data"
+        # An unset step timeout inherits GitHub's 360-minute default: a hung job burns hours of
+        # Actions minutes before anything notices. The suite runs in well under a minute.
+        max_step_timeout_minutes: 15
+        # Must equal r_version in config/dependencies.lock. Two files naming the same R version
+        # independently is how they drift; the test compares them rather than trusting both.
+        r_version_matches_lockfile: true
+
+  # Catches upstream drift on a schedule. Deliberately NOT a blocking gate: its whole purpose
+  # is to install floating dependency heads and report, rather than to stop work here.
+  nightly:
+    path: .github/workflows/nightly.yml
+    must_trigger_on: [schedule]
+
+blocking_suite:
+
+  # Files that must never silently leave tests/BLOCKING. Each is listed with the defect it is
+  # the regression test for, so a future reader can judge a removal rather than just see one.
+  must_remain_blocking:
+    - file: test-pe_helpers.R
+      guards: "key normalisation; the NPI float suffix and ZIP zero-loss join failures"
+    - file: test-staff-deidentification.R
+      guards: "real study-staff names returning to a fixture or a committed artifact"
+    - file: test-dependency-lockfile.R
+      guards: "a package entering the code without being recorded in the environment"
+    - file: test-sap-contract-gates.R
+      guards: "gate_sap() itself; a frozen-plan check that cannot fail is not a check"
+    - file: test-blinded-slot-assignment.R
+      guards: "record id encoding the exposure, which unblinds callers"
+    - file: test-pipeline-output-regression.R
+      guards: "silent value changes in the derivation functions the study reports"
+
+  # A floor, not a target. Deleting a handful of nodata files would otherwise shrink CI's real
+  # coverage while every remaining check still passed and the summary line still said green.
+  min_nodata_files: 14
+
+configuration_gates:
+
+  # run_blocking.R runs these before any test file. They are listed here so that removing one
+  # from the runner is a contract change, not a silent edit.
+  must_run:
+    - "provenance manifest parses"
+    - "frozen plan parses"
+    - "assumed constants sourced"
+    - "SAP.lock hash current"
+    - "analysis runs preflight before fitting"
