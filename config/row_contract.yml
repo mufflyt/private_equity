@@ -1,0 +1,116 @@
+# Row-level data contract.
+#
+# analysis_manifest.csv is a COLUMN contract: what each column means and where it came from.
+# It cannot say anything about ROWS. This file does.
+#
+# Every invariant below was verified true against the committed artifacts on 2026-09-05 before
+# being written down, not assumed from the design documents. R/row_contract.R enforces them and
+# tests/testthat/test-row-contract.R runs it. The tracked calling artifacts are committed, so
+# unlike most data checks here these run in CI against the real files.
+#
+# ADDING A RULE: verify it holds first, then add it. A rule written from what the design
+# intended rather than from what the data does turns CI red on a true artifact.
+
+version: 2026-09-05
+
+datasets:
+
+  # The fielded cohort: 200 matched pairs, one clinician per office.
+  calling_sheet_200:
+    path: pe_obgyn_final_calling_sheet_200_dedup.csv
+    rows: 400
+    unique: [NPI]
+    # Provider Name and Phone are deliberately NOT unique. Two clinicians share a name, and two
+    # phone numbers are shared -- practice lines, which is why phone_id exists as a separate
+    # clustering unit. Asserting uniqueness here would be asserting something false.
+    non_empty: [NPI, Provider Name, Phone, City, State, PE_or_Not, Matched Pair ID]
+    domains:
+      PE_or_Not: [PE, Non-PE]
+      Subspecialty: [Generalist]
+    group_size:
+      column: Matched Pair ID
+      size: 2
+    # The invariant that makes a matched pair a comparison rather than two rows: exactly one PE
+    # and exactly one non-PE per pair. A pair with two PE members is not a pair.
+    balanced_groups:
+      group: Matched Pair ID
+      arm: PE_or_Not
+
+  # One row per clinician, carrying both of that clinician's call slots.
+  call_schedule_800:
+    path: redcap/redcap_call_schedule_800.csv
+    rows: 400
+    non_empty: [Provider Name, State, Phone, PE_or_Not, pair, first_arm, second_arm]
+    domains:
+      PE_or_Not: [PE, Non-PE]
+      first_arm: [Medicaid, Blue Cross/Blue Shield]
+      second_arm: [Medicaid, Blue Cross/Blue Shield]
+    group_size:
+      column: pair
+      size: 2
+    # The crossover design: each clinician is called once under each payer. Equal arms on one
+    # row would mean a clinician called twice under the same insurance.
+    columns_differ: [first_arm, second_arm]
+    # The 800 planned calls must map onto record ids 1..800 exactly once. An id issued twice
+    # double-books a call; an id never issued leaves a planned call with no slot.
+    id_coverage:
+      columns: [first_record_id, second_record_id]
+      max: 800
+
+  # Blinded record-id crosswalk: which record id is the Medicaid slot and which the commercial.
+  slot_crosswalk_400:
+    path: redcap/redcap_slot_crosswalk_400.csv
+    rows: 400
+    unique: [NPI, medicaid_record_id, bcbs_record_id]
+    non_empty: [NPI, pair_id, ownership, medicaid_record_id, bcbs_record_id]
+    domains:
+      ownership: [PE, Non-PE]
+    group_size:
+      column: pair_id
+      size: 2
+    balanced_groups:
+      group: pair_id
+      arm: ownership
+    columns_differ: [medicaid_record_id, bcbs_record_id]
+    id_coverage:
+      columns: [medicaid_record_id, bcbs_record_id]
+      max: 800
+
+  # The caller-facing sheet: one row per planned call.
+  caller_sheet_800:
+    path: redcap/pe_mystery_caller_call_sheet_400.csv
+    rows: 800
+    unique: [code]
+    non_empty: [code, name, state, phone, npi, ins]
+    domains:
+      ins: [Medicaid, Blue Cross/Blue Shield]
+    id_coverage:
+      columns: [code]
+      max: 800
+
+  # The REDCap record load.
+  redcap_import_200:
+    path: redcap/redcap_import_ready_200.csv
+    rows: 800
+    unique: [record_id, physician_name]
+    non_empty: [record_id, physician_name]
+    id_coverage:
+      columns: [record_id]
+      max: 800
+    # REDCap silently ignores a completion column for a form the project does not have: the
+    # records import and none of them is marked complete. The form named here must therefore
+    # exist in the project's own data dictionary.
+    complete_form:
+      dictionary: redcap/PrivateVsPublicDoesEquityOwner_DataDictionary_2026-08-24_blinded.csv
+      form_column: Form Name
+
+cross_dataset:
+
+  # Three artifacts describe the same 400 clinicians. Nothing compared them.
+  sheet_vs_crosswalk:
+    left:  { path: pe_obgyn_final_calling_sheet_200_dedup.csv, column: NPI }
+    right: { path: redcap/redcap_slot_crosswalk_400.csv, column: NPI }
+
+  sheet_vs_caller_sheet:
+    left:  { path: pe_obgyn_final_calling_sheet_200_dedup.csv, column: NPI }
+    right: { path: redcap/pe_mystery_caller_call_sheet_400.csv, column: npi }

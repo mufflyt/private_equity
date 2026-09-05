@@ -29,7 +29,14 @@ source(file.path(dirname(sub("^--file=", "", grep("^--file=", commandArgs(FALSE)
 
 SHEET300 <- "pe_obgyn_final_calling_sheet_300.csv"
 SHEET    <- "pe_obgyn_final_calling_sheet_200_dedup.csv"
-FORM     <- "acost_three_dx_urogyn_2"
+# The form name of THIS project's instrument. It was "acost_three_dx_urogyn_2" until
+# 2026-09-05 -- the form of a different study (the IC vs POP vs SUI urogynecology project),
+# copied in when this repository was seeded from it. REDCap silently ignores a completion
+# column for a form the project does not have, so the 800 records would have imported with
+# none of them marked complete, and nothing would have said so. Verified against
+# redcap/PrivateVsPublicDoesEquityOwner_DataDictionary_2026-08-24_blinded.csv, whose only
+# form is taylor_private_equity, and enforced by config/row_contract.yml.
+FORM     <- "taylor_private_equity"
 N_TARGET <- 200L                       # pairs
 ARMS     <- c("Medicaid", "Blue Cross/Blue Shield")
 SEED     <- 1978L
