@@ -91,6 +91,7 @@ nodata  test-dependency-lockfile.R
 nodata  test-ci-contract.R
 nodata  test-manuscript-render.R
 nodata  test-manuscript-claims.R
+nodata  test-estimand-drift.R
 
 data    test-frozen-geo-reference.R
 data    test-analysis-gates.R

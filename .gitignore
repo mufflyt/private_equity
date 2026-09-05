@@ -28,6 +28,12 @@ redcap_physician_name_choices*.txt
 !analysis_manifest.csv
 !power_analysis_new_results.csv
 !manuscript/manuscript_claims.csv
+# Configuration, not data. The blanket *.csv rule above is aimed at cohort and derived data
+# files; anything under config/ is a contract the code reads and must ship with the repository.
+# config/derived_estimands.csv was silently excluded by that rule, and CI caught it: the
+# estimand drift report regenerated WITHOUT the declaration and no longer matched the committed
+# copy. A gate finding a missing gate input is the system working.
+!config/*.csv
 
 # Fielded REDCap artifacts. Versioned deliberately, despite the blanket *.csv / *.xlsx rules
 # and despite carrying provider data, because this repository is private and single-owner and
