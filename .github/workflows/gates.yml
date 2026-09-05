@@ -48,6 +48,7 @@ jobs:
             any::DBI
             any::duckdb
             any::tibble
+            any::yaml
             Deriv@4.2.0
             github::mufflyt/mysterycall
             github::mufflyt/researchpaths
