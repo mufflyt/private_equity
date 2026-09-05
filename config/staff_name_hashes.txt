@@ -1,0 +1,23 @@
+# Salted SHA-256 of every real study-staff given name that must not appear as DATA in this
+# repository. The hashes are here so the guard can DETECT a name without the repository
+# CONTAINING one; tests/testthat/test-staff-deidentification.R is the enforcement.
+#
+#   hash = sha256("pe-obgyn-staff-deid-v1" + tolower(name))
+#
+# To add a name (do NOT paste the name itself into any tracked file):
+#   Rscript -e 'cat(digest::digest(paste0("pe-obgyn-staff-deid-v1", tolower("NAME")),
+#                                  algo = "sha256", serialize = FALSE), "\n")'
+#
+# HONEST LIMITS, so nobody mistakes this for more than it is:
+#   1. The salt is committed and the space of given names is small, so these hashes are
+#      brute-forceable by anyone who wants to. This is a REGRESSION GUARD against a name
+#      being reintroduced, not a confidentiality mechanism.
+#   2. It does not remove the names already in git history (commits 9e98029, 5cb7cb5,
+#      7c96199, b439b51, 2d277ed). Purging those needs a history rewrite and a force-push
+#      across every clone, which is a repository-owner decision, not a code change. See
+#      docs/APPENDIX_DEIDENTIFICATION.md.
+#   3. Author bylines in manuscript/ are attribution, not data, and are deliberately out of
+#      scope. The guard says so explicitly rather than silently skipping them.
+318e1cc2fc0f59d1a5e368271671376f2d338589f742337d2ce724f6dd65613a
+636580047a530db5151fad72b8716ba9f9b99424ea6bac8dce6e936ca3c39bb0
+8d0be27b5f2f60029082a79b8b2c4df5a4a137765bdf62bd46453ccc348c990f

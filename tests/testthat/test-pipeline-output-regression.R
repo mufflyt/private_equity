@@ -33,12 +33,17 @@ test_that("regression: mysterycall_prepare_calls() golden output on its own docu
     contacted2  = c(99, 99, 1, 99, 99),
     appdate     = c("2024-02-01", "", "2024-02-05", "2024-02-03", "2024-02-10"),
     exclusions  = c(0, 9, 0, 0, 7),
-    initials    = c("lizeth", "MERILYN", "Lizeth", "jessica", "merilyn"),
+    # Synthetic caller given names. These were real study-staff names until 2026-09-05;
+    # caller identity is data about a person, and it does not belong in a public fixture.
+    # The mixed case is load-bearing -- it is what exercises the normalisation asserted
+    # below -- so the shapes ("x", "Y", "X", other, "y") are preserved exactly.
+    # tests/testthat/test-staff-deidentification.R stops the real names coming back.
+    initials    = c("avery", "BRIAR", "Avery", "carson", "briar"),
     stringsAsFactors = FALSE
   )
   result <- suppressWarnings(mysterycall::mysterycall_prepare_calls(df))
   expect_equal(result$logistic_data$appt_offered, c(1L, 0L, 1L, 1L))
-  expect_equal(result$logistic_data$caller, c("Lizeth", "Merilyn", "Lizeth", "Merilyn"))
+  expect_equal(result$logistic_data$caller, c("Avery", "Briar", "Avery", "Briar"))
   expect_equal(result$waittime_data$business_days_until_appointment, c(15L, 15L))
   expect_equal(result$waittime_data$calendar_days, c(22, 24))
   expect_equal(result$waterfall$n_remaining, c(5L, 4L, 4L, 2L))

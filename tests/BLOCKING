@@ -86,6 +86,7 @@ nodata  test-crosswalk-blinding.R
 nodata  test-sap-contract-gates.R
 nodata  test-call-schedule-integrity.R
 nodata  test-pipeline-output-regression.R
+nodata  test-staff-deidentification.R
 
 data    test-frozen-geo-reference.R
 data    test-analysis-gates.R
