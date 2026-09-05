@@ -37,6 +37,15 @@ workflows:
         # independently is how they drift; the test compares them rather than trusting both.
         r_version_matches_lockfile: true
 
+  # Renders what can be rendered without the gitignored analysis output. Two Quarto documents
+  # cannot be built in CI at all (they read primary_analysis_results.rds and
+  # pe_obgyn_study_database.csv); the checks that cover THOSE two -- citations resolve, YAML
+  # header parses -- live in the blocking suite instead, where they need no pandoc.
+  manuscript:
+    path: .github/workflows/manuscript.yml
+    must_trigger_on: [push, pull_request]
+    must_render: manuscript_cite.md
+
   # Catches upstream drift on a schedule. Deliberately NOT a blocking gate: its whole purpose
   # is to install floating dependency heads and report, rather than to stop work here.
   nightly:
@@ -60,6 +69,8 @@ blocking_suite:
       guards: "record id encoding the exposure, which unblinds callers"
     - file: test-pipeline-output-regression.R
       guards: "silent value changes in the derivation functions the study reports"
+    - file: test-manuscript-render.R
+      guards: "an unresolved citation, which pandoc renders as \"key?\" and exits 0 on"
 
   # A floor, not a target. Deleting a handful of nodata files would otherwise shrink CI's real
   # coverage while every remaining check still passed and the summary line still said green.
