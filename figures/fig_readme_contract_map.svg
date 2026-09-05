@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="490" viewBox="0 0 900 490" role="img" aria-label="Six frozen contracts, each checked on every commit">
+<rect width="900" height="490" fill="#fcfcfb"/>
+<text x="24.0" y="30.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="15" fill="#0b0b0b" font-weight="bold" text-anchor="start">Six frozen contracts, each checked on every commit</text>
+<text x="24.0" y="50.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="10.5" fill="#52514e" font-weight="normal" text-anchor="start">Entry counts are read from the files themselves at figure-build time.</text>
+<rect x="24" y="62.0" width="852" height="48" rx="4" fill="#ffffff" stroke="#e6e5e0"/>
+<rect x="24" y="62.0" width="4" height="48" rx="2" fill="#2a78d6"/>
+<text x="40.0" y="80.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0b0b0b" font-weight="bold" text-anchor="start">SAP.lock</text>
+<text x="40.0" y="97.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="9.5" fill="#52514e" font-weight="normal" text-anchor="start">formula, family, subset, estimand and reporting scale</text>
+<text x="860.0" y="80.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="10" fill="#2a78d6" font-weight="bold" text-anchor="end">governs the model</text>
+<text x="860.0" y="97.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="9.5" fill="#8a8880" font-weight="normal" text-anchor="end">3 entries</text>
+<rect x="24" y="124.0" width="852" height="48" rx="4" fill="#ffffff" stroke="#e6e5e0"/>
+<rect x="24" y="124.0" width="4" height="48" rx="2" fill="#2a78d6"/>
+<text x="40.0" y="142.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0b0b0b" font-weight="bold" text-anchor="start">analysis_manifest.csv</text>
+<text x="40.0" y="159.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="9.5" fill="#52514e" font-weight="normal" text-anchor="start">provenance, status and distributional family</text>
+<text x="860.0" y="142.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="10" fill="#2a78d6" font-weight="bold" text-anchor="end">governs every column</text>
+<text x="860.0" y="159.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="9.5" fill="#8a8880" font-weight="normal" text-anchor="end">59 entries</text>
+<rect x="24" y="186.0" width="852" height="48" rx="4" fill="#ffffff" stroke="#e6e5e0"/>
+<rect x="24" y="186.0" width="4" height="48" rx="2" fill="#2a78d6"/>
+<text x="40.0" y="204.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0b0b0b" font-weight="bold" text-anchor="start">config/row_contract.yml</text>
+<text x="40.0" y="221.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="9.5" fill="#52514e" font-weight="normal" text-anchor="start">counts, keys, pair balance, id coverage, cross-artifact agreement</text>
+<text x="860.0" y="204.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="10" fill="#2a78d6" font-weight="bold" text-anchor="end">governs every row</text>
+<text x="860.0" y="221.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="9.5" fill="#8a8880" font-weight="normal" text-anchor="end">7 entries</text>
+<rect x="24" y="248.0" width="852" height="48" rx="4" fill="#ffffff" stroke="#e6e5e0"/>
+<rect x="24" y="248.0" width="4" height="48" rx="2" fill="#2a78d6"/>
+<text x="40.0" y="266.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0b0b0b" font-weight="bold" text-anchor="start">config/dependencies.lock</text>
+<text x="40.0" y="283.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="9.5" fill="#52514e" font-weight="normal" text-anchor="start">CRAN, GitHub and PyPI versions the analysis ran on</text>
+<text x="860.0" y="266.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="10" fill="#2a78d6" font-weight="bold" text-anchor="end">governs the software</text>
+<text x="860.0" y="283.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="9.5" fill="#8a8880" font-weight="normal" text-anchor="end">40 entries</text>
+<rect x="24" y="310.0" width="852" height="48" rx="4" fill="#ffffff" stroke="#e6e5e0"/>
+<rect x="24" y="310.0" width="4" height="48" rx="2" fill="#2a78d6"/>
+<text x="40.0" y="328.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0b0b0b" font-weight="bold" text-anchor="start">config/ci_contract.yml</text>
+<text x="40.0" y="345.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="9.5" fill="#52514e" font-weight="normal" text-anchor="start">triggers, commands, timeouts and which gates may never leave</text>
+<text x="860.0" y="328.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="10" fill="#2a78d6" font-weight="bold" text-anchor="end">governs CI itself</text>
+<text x="860.0" y="345.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="9.5" fill="#8a8880" font-weight="normal" text-anchor="end">11 entries</text>
+<rect x="24" y="372.0" width="852" height="48" rx="4" fill="#ffffff" stroke="#e6e5e0"/>
+<rect x="24" y="372.0" width="4" height="48" rx="2" fill="#2a78d6"/>
+<text x="40.0" y="390.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="11.5" fill="#0b0b0b" font-weight="bold" text-anchor="start">manuscript/manuscript_claims.csv</text>
+<text x="40.0" y="407.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="9.5" fill="#52514e" font-weight="normal" text-anchor="start">artifact, locator, provenance status and source</text>
+<text x="860.0" y="390.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="10" fill="#2a78d6" font-weight="bold" text-anchor="end">governs every published number</text>
+<text x="860.0" y="407.0" font-family="DejaVu Sans, Helvetica, Arial, sans-serif" font-size="9.5" fill="#8a8880" font-weight="normal" text-anchor="end">31 entries</text>
+</svg>

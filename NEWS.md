@@ -3,6 +3,25 @@
 Highlights of recent work on the PE OB/GYN mystery-caller study. See `CHANGELOG.md`
 for the detailed log.
 
+## 2026-09-05
+
+- **The repository's contracts now cover rows, software, CI and every published number.**
+  `SAP.lock` froze the model and `analysis_manifest.csv` froze every column; four more contracts
+  close the gaps around them. Each is a file a person can audit, re-read by code on every commit.
+- **Four of them found something real on their first run.** The record load named a REDCap form
+  belonging to a different study, so all 800 records would have imported unmarked. The Abstract
+  had six placeholder values nobody had registered. A real outcome export, which carries the
+  caller's name, was committable. And writing the CI contract exposed that a YAML quirk had made
+  every trigger assertion pass vacuously.
+- **Real study-staff names removed from a test fixture**, with a hashed regression guard so they
+  cannot return. The names remain in git history; removing them is an owner decision, documented
+  rather than taken.
+- **The REDCap outcome pipeline is now end to end.** `redcap_pull.R` fetches the export that
+  `build_study_database_from_redcap.R` had always named and nothing produced.
+- **The manuscript is rendered in CI**, and an unresolved citation now fails the build rather
+  than rendering as `**key?**` behind a green check.
+- Blocking gates grew from 283 to 545 expectations, all runnable without cohort data.
+
 ## 2026-07-05
 
 - **Fielded sample locked.** A geographically balanced 200 matched pairs (400 clinicians,

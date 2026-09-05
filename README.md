@@ -39,8 +39,9 @@ flowchart LR
 
 ## Figures
 
-All three are rebuilt from committed artifacts by `make_readme_figures.py`. No simulated
-column is plotted anywhere in them.
+Figures 1 to 3 are rebuilt from committed artifacts by `make_readme_figures.py`; figures 4 and
+5 by `make_contract_figures.py`. No simulated column is plotted anywhere in them, and no figure
+hard-codes a number it displays: every value is counted from the repository at build time.
 
 ### 1. From PitchBook universe to fielded calls
 ![Sampling funnel](figures/fig_readme_sampling_funnel.png)
@@ -53,6 +54,14 @@ column is plotted anywhere in them.
 ### 3. Covariate balance after matching
 ![Covariate balance](figures/fig_readme_covariate_balance.png)
 *Figure 3: Standardized mean differences on the committed covariates. County- and platform-level covariates balance well; the four census-tract payer-mix measures exceed ±0.10, which is what the pair random effect and the frozen covariate set are there to absorb. CDC SVI is **excluded from this figure** — see [Known issues](#known-issues).*
+
+### 4. Six frozen contracts, each checked on every commit
+![Contract map](figures/fig_readme_contract_map.svg)
+*Figure 4: What each contract governs, with entry counts read from the files themselves. `SAP.lock` freezes the model and `analysis_manifest.csv` freezes every column; the four added since cover the rows, the software, CI itself, and every number the manuscript prints.*
+
+### 5. What CI blocks a commit on
+![Gate coverage](figures/fig_readme_gate_coverage.svg)
+*Figure 5: Expectations per blocking test file. All of it runs without cohort data, which is why it runs on a CI runner rather than only on a machine that happens to hold the fielded sample. The full blocking set, including the data-dependent files, runs locally through `hooks/pre-commit`.*
 
 ## What the study asks
 
@@ -141,9 +150,29 @@ corresponds to a defect that actually occurred here:
 | `gate_clustering` | 400 clinicians were once reached through 385 practice lines, with two pairs putting both arms on one line — the dedup step fixed this, and the gate keeps it fixed |
 | `gate_analytic_n` | The power calculation gave all 800 calls a wait time; ~622 will be observed |
 
-32 `testthat` files. The blocking subset is listed in [`tests/BLOCKING`](tests/BLOCKING) with
-promotion as a one-line edit. CI runs only the data-independent subset, because the cohort
-CSVs are gitignored; the full set runs locally through `hooks/pre-commit`.
+The blocking subset is listed in [`tests/BLOCKING`](tests/BLOCKING) with promotion as a one-line
+edit. CI runs the data-independent subset — 545 expectations across 22 files — because most
+cohort CSVs are gitignored; the full set runs locally through `hooks/pre-commit`.
+
+### Six frozen contracts
+
+A gate blocks; a **contract** states, in a file a non-programmer can audit, what the gate is
+enforcing. When a contract and the world disagree, the diff says which guarantee moved.
+
+| Contract | Governs | Enforced by |
+|---|---|---|
+| [`SAP.lock`](SAP.lock) | The model: formula, family, subset, estimand, reporting scale | `gate_sap()`, `test-estimand-drift.R` |
+| [`analysis_manifest.csv`](analysis_manifest.csv) | Every column: provenance, status, family | `gate_provenance()` |
+| [`config/row_contract.yml`](config/row_contract.yml) | Every **row**: counts, keys, pair balance, id coverage, cross-artifact agreement | `test-row-contract.R` |
+| [`config/dependencies.lock`](config/dependencies.lock) | The **software** the analysis ran on | `test-dependency-lockfile.R` |
+| [`config/ci_contract.yml`](config/ci_contract.yml) | **CI itself**: triggers, commands, timeouts, gates that may never leave | `test-ci-contract.R` |
+| [`manuscript/manuscript_claims.csv`](manuscript/manuscript_claims.csv) | Every **published number**: artifact, locator, provenance, source | `test-manuscript-claims.R` |
+
+Four of them found a real defect on the day they were written — a REDCap form name belonging to
+a different study, six unregistered Abstract placeholders, a committable outcome export, and a
+YAML quirk that had made every CI trigger assertion pass vacuously. See
+[`docs/APPENDIX_REPOSITORY_CONTRACTS.md`](docs/APPENDIX_REPOSITORY_CONTRACTS.md) for what each
+found, the two mistakes that generalise, and where the contracts deliberately do not reach.
 
 ## Pipeline
 
@@ -181,6 +210,20 @@ Three tracks, each independently runnable, in the order below.
 
 ### REDCap
 
+`redcap_pull.R` fetches the outcome export from the REDCap API (project 40415) into `redcap/`,
+producing `redcap_raw_export_800.csv` — the input `build_study_database_from_redcap.R` names and
+which, until now, nothing produced. It is the only script here that touches the network.
+
+```sh
+Rscript redcap_pull.R                        # needs REDCAP_PE_TOKEN in ~/.Renviron
+Rscript build_study_database_from_redcap.R   # merge into the analytic frame
+```
+
+REDCap answers **HTTP 200** both for a bad token (JSON error body) and for a moved instance (an
+HTML login page), and both parse as a valid zero-row CSV — so the pull checks the payload, not
+just the status. Its outputs are gitignored by name: a real export carries `initials`, REDCap's
+*"Name of person completing form"*.
+
 `generate_redcap_data_dictionary.py` / `update_redcap_dictionary.py` build the call instrument.
 `build_200_redcap_import.R` produces `redcap_import_ready_200.csv` and
 `redcap_physician_name_choices.txt` — the 800 physician-by-insurance dropdown choices,
@@ -190,7 +233,8 @@ ids 1–400 Medicaid and 401–800 Blue Cross/Blue Shield, contiguous, no gaps.
 
 `make_figures.R`, `make_figures2.R`, `make_polish.R`, `fig3_simr.R` build the study figures
 into `figures/` using the `mysterycall` package's Green Journal styling.
-`make_readme_figures.py` builds the three design figures above. `manuscript/` holds the
+`make_readme_figures.py` builds design figures 1-3 above (needs `matplotlib`);
+`make_contract_figures.py` builds figures 4-5 as stdlib-only SVG. `manuscript/` holds the
 pandoc-sourced manuscript; see `manuscript/README.md`.
 
 ## Data sources
