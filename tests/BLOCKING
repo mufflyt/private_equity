@@ -93,6 +93,7 @@ nodata  test-manuscript-render.R
 nodata  test-manuscript-claims.R
 nodata  test-estimand-drift.R
 nodata  test-row-contract.R
+nodata  test-redcap-pull-contract.R
 
 data    test-frozen-geo-reference.R
 data    test-analysis-gates.R
