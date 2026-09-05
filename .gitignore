@@ -46,6 +46,18 @@ redcap_physician_name_choices*.txt
 !redcap/
 !redcap/**
 
+# ...but NOT a real export pulled from the API. `!redcap/**` above un-ignores the whole
+# directory so the fielded calling artifacts can be versioned, and redcap_pull.R writes its
+# output into that same directory because build_study_database_from_redcap.R reads it from
+# there. A real outcome export carries the `initials` field -- REDCap's "Name of person
+# completing form" -- so committing one would publish which staff member made each call, the
+# exact exposure docs/APPENDIX_DEIDENTIFICATION.md exists to prevent. Re-ignore the pull
+# outputs by name; later rules win.
+redcap/redcap_raw_export*.csv
+redcap/redcap_labels_*.csv
+redcap/redcap_metadata_*.csv
+redcap/redcap_project_info_*.json
+
 # The fielded cohort itself. Versioned for the same reason as redcap/: it is the analysis
 # input named by SAP.lock, it carries the reconstructed CDC_SVI_real that took a 400-address
 # geocoding pass to produce, and it is the sheet the live REDCap dropdown was built from. It

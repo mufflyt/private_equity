@@ -143,8 +143,16 @@ test_that("adversarial: no committed artifact carries a caller-identity column",
   # `initials` is REDCap's "Name of person completing form"; mysterycall derives `caller` from
   # it. Either column in a committed file publishes who made each call.
   banned <- "^(initials|caller|caller_name|rater|interviewer|staff)$"
-  csvs <- list.files(root, pattern = "\\.csv$", recursive = TRUE, full.names = TRUE)
-  csvs <- csvs[!grepl("/(\\.git|\\.venv|__pycache__)/", csvs)]
+  # TRACKED files, not the working tree. "Committed artifact" means committed: once real
+  # calling begins, redcap_pull.R writes redcap/redcap_raw_export_800.csv into this checkout
+  # and that export DOES carry `initials` -- legitimately, because it is the raw export. It is
+  # gitignored and will never be committed. Scanning the working tree would turn this gate red
+  # on every machine holding a real export, which is a gate people learn to bypass.
+  tracked <- suppressWarnings(system2("git", c("-C", shQuote(root), "ls-files", "*.csv"),
+                                      stdout = TRUE, stderr = FALSE))
+  skip_if(!length(tracked), "git not available to enumerate tracked files")
+  csvs <- file.path(root, tracked)
+  csvs <- csvs[file.exists(csvs)]
   offenders <- character(0)
   for (f in csvs) {
     hdr <- tryCatch(names(utils::read.csv(f, nrows = 1L, check.names = FALSE)),

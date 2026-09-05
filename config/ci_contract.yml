@@ -69,6 +69,8 @@ blocking_suite:
       guards: "record id encoding the exposure, which unblinds callers"
     - file: test-pipeline-output-regression.R
       guards: "silent value changes in the derivation functions the study reports"
+    - file: test-redcap-pull-contract.R
+      guards: "a real REDCap export, which carries caller identity, becoming committable"
     - file: test-row-contract.R
       guards: "row-level design invariants: pair balance, id coverage, cross-artifact agreement"
     - file: test-estimand-drift.R
