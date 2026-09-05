@@ -69,6 +69,8 @@ blocking_suite:
       guards: "record id encoding the exposure, which unblinds callers"
     - file: test-pipeline-output-regression.R
       guards: "silent value changes in the derivation functions the study reports"
+    - file: test-manuscript-claims.R
+      guards: "a publication-facing number drifting from its registered provenance"
     - file: test-manuscript-render.R
       guards: "an unresolved citation, which pandoc renders as \"key?\" and exits 0 on"
 
