@@ -1,0 +1,32 @@
+claim_id,artifact,claim,value,match_string,status,source,verified_on,notes
+MC001,manuscript_cite.md,Fielded matched pairs,200,[200] matched clinician pairs,verified,build_200_redcap_import.R,2026-08-24,Bracketed because the fielded count is a design parameter reported in a results sentence.
+MC002,manuscript_cite.md,Fielded clinicians,400,([400] clinicians),verified,build_200_redcap_import.R,2026-08-24,Two per pair.
+MC003,manuscript_cite.md,States represented,26,across 26 states,verified,pe_obgyn_final_calling_sheet_200_dedup.csv,2026-08-24,Was 23 before the 2026-08-24 audit; corrected.
+MC004,manuscript_cite.md,Matched pool size,459,matched pool of 459 pairs,verified,build_matched_control_group_psm.R,2026-08-24,The pool the fielded 200 were drawn from.
+MC005,manuscript_cite.md,SVI recovered PE clinicians,197,197 of 200 PE clinicians,verified,build_svi_covariate.R,2026-08-24,
+MC006,manuscript_cite.md,SVI recovered control clinicians,198,198 of 200 controls,verified,build_svi_covariate.R,2026-08-24,Was 197 before the audit; corrected.
+MC007,manuscript_cite.md,Census tracts,319,across 319 census tracts,verified,build_svi_covariate.R,2026-08-24,Was 312 before the audit; corrected.
+MC008,manuscript_cite.md,Clustering units (practice lines),387,(387 units rather than 400),verified,build_phone_cluster_vars.R,2026-08-24,Was 385 before the audit; corrected.
+MC009,manuscript_cite.md,Pairs with address-level SVI linkage,195,the 195 pairs in which both members,verified,build_svi_covariate.R,2026-08-24,Was 154 before the audit; corrected.
+MC010,manuscript_cite.md,Phone numbers matching 2+ sources,69.0%,69.0% matched across two or more sources,verified,cross_reference_phones.py,2026-08-24,Was 73.3% before the audit; corrected.
+MC011,manuscript_cite.md,Abstract PE Medicaid obtainment,PLACEHOLDER,[41.0],unresolved,NONE - no call has been placed,2026-08-24,MUST stay bracketed. The identical value rendered without brackets became SIMULATED_figure1_obtainment.png.
+MC012,manuscript_cite.md,Abstract independent Medicaid obtainment,PLACEHOLDER,[72.5],unresolved,NONE - no call has been placed,2026-08-24,MUST stay bracketed.
+MC013,appendix_data_provenance.md,States represented,26,26,verified,pe_obgyn_final_calling_sheet_200_dedup.csv,2026-08-24,Must agree with MC003; the audit found them disagreeing.
+MC014,appendix_data_provenance.md,Clustering units,387,387,verified,build_phone_cluster_vars.R,2026-08-24,Must agree with MC008.
+MC015,appendix_data_provenance.md,Pairs with address-level linkage,195,195,verified,build_svi_covariate.R,2026-08-24,Must agree with MC009.
+MC016,strobe_diagram.R,Initial scraped roster,1537,1537,verified,parse_scraped_directories.py,2026-08-24,
+MC017,strobe_diagram.R,Unique NPI verified,1279,1279,verified,match_all_providers.py,2026-08-24,
+MC018,strobe_diagram.R,Geographically matched clinicians,918,918,verified,build_matched_control_group_psm.R,2026-08-24,Was 544 and in pair units; the figure had switched units mid-flow.
+MC019,strobe_diagram.R,Fielded cohort clinicians,400,400,verified,build_200_redcap_import.R,2026-08-24,Was 200; same unit switch.
+MC020,strobe_diagram.R,De-clustered one per office,NA,NA,unresolved,NOT REPRODUCIBLE from any committed artifact,2026-08-24,Deliberately NA. Deducing it by subtraction would produce an unfalsifiable number. The script stops rather than draw the figure.
+MC021,appendix_power.md,Nie et al. independent wait,17.5,17.5,external,Nie J et al. Urology 2022;164:112-117,2026-08-24,Published; cited @nie2022urology.
+MC022,appendix_power.md,Nie et al. PE wait,21.4,21.4,external,Nie J et al. Urology 2022;164:112-117,2026-08-24,Published; cited @nie2022urology.
+MC023,SAP.lock,Pre-specified primary IRR,1.22,effect_primary_irr           = 1.22,design,Pre-specified; gate_sourced_constants requires a source,2026-08-10,
+MC024,SAP.lock,Pre-specified conservative IRR,1.10,effect_conservative_irr      = 1.10,design,Pre-specified sensitivity,2026-08-10,
+MC025,SAP.lock,Pre-specified optimistic IRR,1.35,effect_larger_irr            = 1.35,design,Pre-specified sensitivity,2026-08-10,
+MC026,manuscript_cite.md,Abstract independent commercial obtainment,PLACEHOLDER,[98.5],unresolved,NONE - no call has been placed,2026-09-05,Found unregistered by the reverse-direction check on 2026-09-05.
+MC027,manuscript_cite.md,Abstract PE commercial obtainment,PLACEHOLDER,[99.0],unresolved,NONE - no call has been placed,2026-09-05,Found unregistered by the reverse-direction check on 2026-09-05.
+MC028,manuscript_cite.md,Abstract Medicaid obtainment odds ratio,PLACEHOLDER,OR [0.26],unresolved,NONE - no call has been placed,2026-09-05,The audit named this one in prose but it was never registered.
+MC029,manuscript_cite.md,Abstract PE Medicaid wait time,PLACEHOLDER,[22.3],unresolved,NONE - no call has been placed,2026-09-05,Found unregistered by the reverse-direction check on 2026-09-05.
+MC030,manuscript_cite.md,Abstract independent Medicaid wait time,PLACEHOLDER,[11.3],unresolved,NONE - no call has been placed,2026-09-05,Found unregistered by the reverse-direction check on 2026-09-05.
+MC031,manuscript_cite.md,Abstract interaction IRR,PLACEHOLDER,IRR [1.31],unresolved,NONE - no call has been placed,2026-09-05,The audit named this one in prose but it was never registered.
