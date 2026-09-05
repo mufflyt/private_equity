@@ -1,0 +1,2 @@
+reported_as,derived_from,term,scale,justification
+commercial-arm ownership contrast,obtainment_secondary,pe,odds ratio,"The secondary obtainment model is obtained ~ pe * medicaid + ..., fitted over both payers. At medicaid = 0 the pe main effect IS the ownership contrast among commercial calls. It is a reading OF a prespecified model, not a new analysis, so SAP.lock correctly does not name it -- and declaring it here is what separates it from an unplanned comparison, which would look identical in the output."

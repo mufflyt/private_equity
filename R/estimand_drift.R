@@ -200,8 +200,12 @@ write_drift_report <- function(path = "docs/ESTIMAND_DRIFT_REPORT.md", root = ".
   L <- c(L, if (nrow(d)) c("| Severity | Item | Detail |", "|---|---|---|",
                            sprintf("| %s | %s | %s |", d$severity, d$item, d$detail))
               else "No drift detected: every scale the manuscript prints is one a prespecified or declared-derived analysis uses.")
-  dir.create(dirname(file.path(root, path)), showWarnings = FALSE, recursive = TRUE)
-  writeLines(L, file.path(root, path))
+  # An absolute `path` must not be joined to `root`: file.path(".", "/tmp/x.md") silently
+  # yields "./tmp/x.md" and writes a tmp/ directory inside the repository, which is how a
+  # stray tmp/fresh.md nearly got committed.
+  out <- if (grepl("^(/|[A-Za-z]:)", path)) path else file.path(root, path)
+  dir.create(dirname(out), showWarnings = FALSE, recursive = TRUE)
+  writeLines(L, out)
   invisible(d)
 }
 
