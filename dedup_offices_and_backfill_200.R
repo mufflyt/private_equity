@@ -218,23 +218,15 @@ new_rows <- pool %>%
   select(all_of(intersect(sheet_cols, names(pool))), npi_key) %>%
   left_join(churn_db %>% select(npi_key, all_of(ENRICH_DB)), by = "npi_key")
 
-# Recompute the phone-verification columns exactly as cross_reference_phones.py does:
+# Recompute the phone-verification columns exactly as cross_reference_phones.R does:
 # count how many of NPPES / CMS-DAC / WebScrape agree with the dialed number.
+# The counting rule lives in phone_verification() in R/pe_helpers.R, shared with
+# cross_reference_phones.R so the two cannot drift into different definitions of "verified".
 verify_phone <- function(df) {
   src <- df %>% select(npi_key) %>%
     left_join(study_db %>% select(npi_key, `NPPES Phone`, `DAC Phone`, `Scraped Phone`),
               by = "npi_key")
-  dialed <- phone_key(df$Phone)
-  hits <- cbind(NPPES     = !is.na(dialed) & dialed == phone_key(src$`NPPES Phone`),
-                `CMS-DAC` = !is.na(dialed) & dialed == phone_key(src$`DAC Phone`),
-                WebScrape = !is.na(dialed) & dialed == phone_key(src$`Scraped Phone`))
-  hits[is.na(hits)] <- FALSE
-  n <- rowSums(hits)
-  first_src <- apply(hits, 1, function(r) if (any(r)) colnames(hits)[which(r)[1]] else NA_character_)
-  tibble(Phone_Database_Matches = as.integer(n),
-         Phone_Verification_Status = ifelse(n >= 2, "Verified (2+ DBs)",
-                                     ifelse(n == 1, sprintf("Verified (1 DB: %s)", first_src),
-                                            "Unverified")))
+  phone_verification(df$Phone, src$`NPPES Phone`, src$`DAC Phone`, src$`Scraped Phone`)
 }
 
 if (nrow(new_rows) > 0) new_rows <- bind_cols(new_rows %>% select(-any_of(ENRICH_PHONE)),
