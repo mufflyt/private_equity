@@ -275,7 +275,9 @@ if (!file.exists(zcta_file) || file.info(zcta_file)$size < 1e6) {
 rel <- read.delim(zcta_file, sep = "|", colClasses = "character", quote = "")
 rel <- rel[nzchar(rel$GEOID_ZCTA5_20) & nzchar(rel$GEOID_TRACT_20), ]
 rel$area <- suppressWarnings(as.numeric(rel$AREALAND_PART))
-rel$rpl  <- svi$rpl[match(formatC(rel$GEOID_TRACT_20, width = 11, flag = "0"), svi$tract_fips)]
+# GEOID_TRACT_20 is character here (colClasses above), and formatC space-pads character
+# input regardless of flag -- the zero-padding applies to numerics only. Zero-pad explicitly.
+rel$rpl  <- svi$rpl[match(sprintf("%011.0f", as.numeric(rel$GEOID_TRACT_20)), svi$tract_fips)]
 rel <- rel[!is.na(rel$rpl) & !is.na(rel$area) & rel$area > 0, ]
 zip_svi <- tapply(seq_len(nrow(rel)), rel$GEOID_ZCTA5_20,
                   function(i) sum(rel$rpl[i] * rel$area[i]) / sum(rel$area[i]))
