@@ -551,27 +551,36 @@ if __name__ == "__main__":
 
     
     # Time Zone mapping dictionary
-    STATE_TIMEZONES = {
-        'ME': 'Eastern', 'NH': 'Eastern', 'VT': 'Eastern', 'MA': 'Eastern', 'RI': 'Eastern', 'CT': 'Eastern',
-        'NY': 'Eastern', 'NJ': 'Eastern', 'PA': 'Eastern', 'DE': 'Eastern', 'MD': 'Eastern', 'DC': 'Eastern',
-        'VA': 'Eastern', 'WV': 'Eastern', 'NC': 'Eastern', 'SC': 'Eastern', 'GA': 'Eastern', 'FL': 'Eastern',
-        'MI': 'Eastern', 'OH': 'Eastern', 'KY': 'Eastern', 'TN': 'Eastern', 'IN': 'Eastern',
-        'IL': 'Central', 'WI': 'Central', 'MN': 'Central', 'IA': 'Central', 'MO': 'Central', 'AR': 'Central',
-        'LA': 'Central', 'MS': 'Central', 'AL': 'Central', 'ND': 'Central', 'SD': 'Central', 'NE': 'Central',
-        'KS': 'Central', 'OK': 'Central', 'TX': 'Central',
-        'CO': 'Mountain', 'WY': 'Mountain', 'MT': 'Mountain', 'ID': 'Mountain', 'UT': 'Mountain',
-        'NM': 'Mountain', 'AZ': 'Mountain',
-        'WA': 'Pacific', 'OR': 'Pacific', 'CA': 'Pacific', 'NV': 'Pacific',
-        'AK': 'Alaska', 'HI': 'Hawaii'
-    }
-    
+    # The time-zone table is NOT defined here. This file once carried its own STATE_TIMEZONES
+    # copy -- no territories, no minority-zone cities, TN/IN/KY mis-defaulted -- the third and
+    # wrongest implementation of the same logic. The canonical mapping lives in R/pe_helpers.R
+    # (assign_time_zone) and is exported to timezone_reference.csv by export_timezone_reference.R;
+    # this pipeline reads that artifact so both languages share one vocabulary for the calling
+    # window. Re-run export_timezone_reference.R if the file is missing; do not re-type the table.
+    if not os.path.exists('timezone_reference.csv'):
+        raise FileNotFoundError(
+            "timezone_reference.csv not found. Generate it with: Rscript export_timezone_reference.R")
+    _tz_ref = pd.read_csv('timezone_reference.csv', dtype=str).fillna('')
+    _tz_state = {r['state']: r['timezone'] for _, r in _tz_ref[_tz_ref['city'] == ''].iterrows()}
+    _tz_city = {(r['state'], r['city']): r['timezone']
+                for _, r in _tz_ref[_tz_ref['city'] != ''].iterrows()}
+
+    def lookup_timezone(state, city=''):
+        state_clean = str(state).strip().upper()
+        city_clean = str(city).strip().upper()
+        if (state_clean, city_clean) in _tz_city:
+            return _tz_city[(state_clean, city_clean)]
+        return _tz_state.get(state_clean, 'N/A')
+
     def get_timezone(row):
         state = row.get('NPPES State')
         if pd.isna(state) or str(state).strip() == '' or str(state).strip().upper() == 'N/A':
             state = row.get('Input State')
+        city = row.get('NPPES City')
+        if pd.isna(city) or str(city).strip().upper() in ('', 'N/A', 'NAN'):
+            city = row.get('Input City', '')
         if pd.notna(state):
-            state_clean = str(state).strip().upper()
-            return STATE_TIMEZONES.get(state_clean, 'N/A')
+            return lookup_timezone(state, city if pd.notna(city) else '')
         return 'N/A'
         
     final_df['Time Zone'] = final_df.apply(get_timezone, axis=1)

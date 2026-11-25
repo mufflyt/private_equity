@@ -639,90 +639,10 @@ TitleCase <- function(x) mysterymaps::mysterymaps_place_title_case(x)
 # previously lacked PR/VI/GU/etc., and an unmapped state was silently overwritten with
 # "Eastern" -- for Puerto Rico (Atlantic time) that is not a default but an error, and
 # the calling window is part of the measurement protocol in a mystery-caller study.
-TIME_ZONES <- c(
-  'CT'='Eastern', 'ME'='Eastern', 'MA'='Eastern', 'NH'='Eastern', 'RI'='Eastern', 'VT'='Eastern',
-  'NY'='Eastern', 'NJ'='Eastern', 'PA'='Eastern', 'DE'='Eastern', 'DC'='Eastern', 'MD'='Eastern',
-  'VA'='Eastern', 'WV'='Eastern', 'NC'='Eastern', 'SC'='Eastern', 'GA'='Eastern', 'FL'='Eastern',
-  'OH'='Eastern', 'MI'='Eastern', 'IN'='Eastern', 'KY'='Eastern',
-  'AL'='Central', 'AR'='Central', 'IL'='Central', 'IA'='Central', 'KS'='Central', 'LA'='Central',
-  'MN'='Central', 'MS'='Central', 'MO'='Central', 'NE'='Central', 'ND'='Central', 'OK'='Central',
-  'SD'='Central', 'TN'='Central', 'TX'='Central', 'WI'='Central',
-  'CO'='Mountain', 'MT'='Mountain', 'NM'='Mountain', 'UT'='Mountain', 'WY'='Mountain', 'ID'='Mountain',
-  'AZ'='Mountain',
-  'CA'='Pacific', 'NV'='Pacific', 'OR'='Pacific', 'WA'='Pacific',
-  'AK'='Alaska', 'HI'='Hawaii',
-  'PR'='Atlantic', 'VI'='Atlantic',
-  'GU'='Chamorro', 'MP'='Chamorro', 'AS'='Samoa'
-)
+# TIME_ZONES, TZ_MINORITY_CITIES and assign_time_zone() live in R/pe_helpers.R, sourced
+# above, so the Python pipeline can share one canonical vocabulary through
+# timezone_reference.csv (export_timezone_reference.R) rather than drifting into a third copy.
 
-# Cities inside the minority time zone of a split-timezone state, for the states in which
-# the minority zone contains a meaningful share of the population. The state table alone
-# mis-times these offices (e.g. Pensacola FL is Central, not Eastern; El Paso TX is
-# Mountain, not Central; Memphis TN is Central, which the state default already covers).
-# Not exhaustive -- county-level granularity without a ZIP-to-timezone reference is not
-# possible here -- but covers the population centers a sample is likely to draw.
-TZ_MINORITY_CITIES <- list(
-  FL = list(zone = "Central", cities = c(
-    "PENSACOLA", "PANAMA CITY", "DESTIN", "FORT WALTON BEACH", "CRESTVIEW", "NICEVILLE",
-    "MILTON", "GULF BREEZE", "NAVARRE", "DEFUNIAK SPRINGS", "CHIPLEY", "MARIANNA",
-    "BONIFAY", "PENSACOLA BEACH", "MARY ESTHER", "SHALIMAR", "VALPARAISO")),
-  IN = list(zone = "Central", cities = c(
-    "GARY", "HAMMOND", "EVANSVILLE", "MERRILLVILLE", "VALPARAISO", "MUNSTER", "HIGHLAND",
-    "SCHERERVILLE", "CROWN POINT", "GRIFFITH", "EAST CHICAGO", "HOBART", "JASPER",
-    "VINCENNES", "WASHINGTON", "PRINCETON", "MOUNT VERNON", "BOONVILLE", "NEWBURGH")),
-  MI = list(zone = "Central", cities = c(
-    "IRON MOUNTAIN", "IRONWOOD", "MENOMINEE", "KINGSFORD", "NORWAY", "IRON RIVER",
-    "CRYSTAL FALLS", "STEPHENSON", "DAGGETT", "POWERS")),
-  TX = list(zone = "Mountain", cities = c(
-    "EL PASO", "SOCORRO", "HORIZON CITY", "SAN ELIZARIO", "FABENS", "FORT BLISS")),
-  TN = list(zone = "Eastern", cities = c(
-    "KNOXVILLE", "CHATTANOOGA", "JOHNSON CITY", "KINGSPORT", "BRISTOL", "OAK RIDGE",
-    "CLEVELAND", "MARYVILLE", "MORRISTOWN", "GREENEVILLE", "SEVIERVILLE", "GATLINBURG",
-    "PIGEON FORGE", "ATHENS", "HARRIMAN", "LENOIR CITY")),
-  KY = list(zone = "Central", cities = c(
-    "BOWLING GREEN", "OWENSBORO", "HOPKINSVILLE", "PADUCAH", "MURRAY", "MAYFIELD",
-    "MADISONVILLE", "HENDERSON", "ELIZABETHTOWN", "FORT CAMPBELL", "GLASGOW", "RUSSELLVILLE")),
-  ND = list(zone = "Mountain", cities = c(
-    "DICKINSON", "WILLISTON", "BOWMAN", "BELFIELD", "KILLDEER", "BEULAH", "HAZEN", "CENTER")),
-  SD = list(zone = "Mountain", cities = c(
-    "RAPID CITY", "STURGIS", "SPEARFISH", "DEADWOOD", "LEAD", "HOT SPRINGS", "CUSTER",
-    "HILL CITY", "WALL", "PHILIP", "WINNER", "MISSION", "MARTIN")),
-  NE = list(zone = "Mountain", cities = c(
-    "SCOTTSBLUFF", "GERING", "ALLIANCE", "CHADRON", "SIDNEY", "KIMBALL", "BRIDGEPORT",
-    "OGALLALA", "IMPERIAL", "MCCOOK")),
-  KS = list(zone = "Mountain", cities = c(
-    "GOODLAND", "COLBY", "OAKLEY", "SHARON SPRINGS", "TRIBUNE", "LEOTI")),
-  OR = list(zone = "Mountain", cities = c(
-    "ONTARIO", "NYSSA", "VALE", "JORDAN VALLEY", "ADRIAN", "BURNS")),
-  ID = list(zone = "Pacific", cities = c(
-    "COEUR D'ALENE", "MOSCOW", "POST FALLS", "LEWISTON", "SANDPOINT", "HAYDEN",
-    "RATHDRUM", "KELLOGG", "WALLACE", "OROFINO", "GRANGEVILLE"))
-)
-
-# Canonical time-zone assignment for BOTH arms. The PE roster's own Time Zone column is
-# scrape-era data and is wrong in practice (the fielded sheet carries an Arlington TX
-# office labelled "Eastern" and a Memphis TN office labelled "Eastern" whose own matched
-# control is correctly "Central"), so it is not consulted: geography decides, not the
-# scrape. An unmapped state stops the script rather than silently defaulting to Eastern,
-# which is how the silent-default defect must never come back.
-assign_time_zone <- function(state, city = NA_character_) {
-  st <- toupper(trimws(ifelse(is.na(state), "", state)))
-  ci <- toupper(trimws(ifelse(is.na(city), "", city)))
-  out <- rep(NA_character_, length(st))
-  for (i in seq_along(st)) {
-    if (!nzchar(st[i]) || !(st[i] %in% names(TIME_ZONES))) {
-      stop(sprintf("No time zone mapping for state '%s' (city '%s'). Add it to TIME_ZONES ",
-                   st[i], ci[i]),
-           "deliberately rather than inheriting a default; the calling window depends on it.",
-           call. = FALSE)
-    }
-    z <- TIME_ZONES[[st[i]]]
-    exc <- TZ_MINORITY_CITIES[[st[i]]]
-    if (!is.null(exc) && nzchar(ci[i]) && ci[i] %in% exc$cities) z <- exc$zone
-    out[i] <- z
-  }
-  out
-}
 
 # NOTE: get_subspecialty_from_tax() is intentionally NOT redefined here. This file once
 # carried a second, fail-open copy at this spot (no 207V family test; NA/blank/unknown all
@@ -927,13 +847,8 @@ pe_selected_map <- pe_selected[, c("NPI", "Matched_Pair_Group")]
 # phantom clinician rows in the unified study database. First-occurrence dedupe matches the
 # semantics of match() used for the coordinates below, and the count is reported so the
 # arbitrariness is visible rather than silent.
-for (nm in c("pe_map_df", "pe_selected_map")) {
-  m <- get(nm)
-  ndup <- sum(duplicated(m$NPI))
-  if (ndup > 0)
-    cat(sprintf("  NOTE: %s has %d duplicated NPI rows; keeping first occurrence so the merge cannot multiply rows.\n", nm, ndup))
-  assign(nm, m[!duplicated(m$NPI), , drop = FALSE])
-}
+pe_map_df      <- dedupe_first(pe_map_df, "NPI", "pe_map_df")
+pe_selected_map <- dedupe_first(pe_selected_map, "NPI", "pe_selected_map")
 n_before <- nrow(pe_full_df)
 pe_full_df <- merge(pe_full_df, pe_map_df, by = "NPI", all.x = TRUE)
 pe_full_df <- merge(pe_full_df, pe_selected_map, by = "NPI", all.x = TRUE)

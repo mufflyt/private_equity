@@ -232,3 +232,194 @@ STATE_ABB_BY_NAME <- c(setNames(state.abb, state.name),
                        "District of Columbia" = "DC",
                        "Puerto Rico" = "PR",
                        "Virgin Islands" = "VI")
+
+
+# ------------------------------------------------------------------ time zones
+#
+# Canonical time-zone assignment for the calling window, shared by every script that
+# stamps a Time Zone column. The calling window is part of the measurement protocol in a
+# mystery-caller study, so a mis-timed zone is a measurement defect, not a cosmetic one.
+# This table exists because the defect has already happened twice: PR silently defaulted
+# to Eastern (it is Atlantic), and a state-level table mis-times minority-zone cities in
+# the 13 split-timezone states (the fielded sheet carried an Arlington TX office labelled
+# "Eastern" and a Memphis TN office labelled "Eastern").
+#
+# The same mapping is exported to timezone_reference.csv by export_timezone_reference.R
+# for the remaining Python pipeline pieces, and tests/testthat/test-timezone-reference.R
+# proves the artifact and this function cannot drift apart.
+
+TIME_ZONES <- c(
+  'CT'='Eastern', 'ME'='Eastern', 'MA'='Eastern', 'NH'='Eastern', 'RI'='Eastern', 'VT'='Eastern',
+  'NY'='Eastern', 'NJ'='Eastern', 'PA'='Eastern', 'DE'='Eastern', 'DC'='Eastern', 'MD'='Eastern',
+  'VA'='Eastern', 'WV'='Eastern', 'NC'='Eastern', 'SC'='Eastern', 'GA'='Eastern', 'FL'='Eastern',
+  'OH'='Eastern', 'MI'='Eastern', 'IN'='Eastern', 'KY'='Eastern',
+  'AL'='Central', 'AR'='Central', 'IL'='Central', 'IA'='Central', 'KS'='Central', 'LA'='Central',
+  'MN'='Central', 'MS'='Central', 'MO'='Central', 'NE'='Central', 'ND'='Central', 'OK'='Central',
+  'SD'='Central', 'TN'='Central', 'TX'='Central', 'WI'='Central',
+  'CO'='Mountain', 'MT'='Mountain', 'NM'='Mountain', 'UT'='Mountain', 'WY'='Mountain', 'ID'='Mountain',
+  'AZ'='Mountain',
+  'CA'='Pacific', 'NV'='Pacific', 'OR'='Pacific', 'WA'='Pacific',
+  'AK'='Alaska', 'HI'='Hawaii',
+  'PR'='Atlantic', 'VI'='Atlantic',
+  'GU'='Chamorro', 'MP'='Chamorro', 'AS'='Samoa'
+)
+
+# Cities inside the minority time zone of a split-timezone state, for the states in which
+# the minority zone contains a meaningful share of the population. The state table alone
+# mis-times these offices (e.g. Pensacola FL is Central, not Eastern; El Paso TX is
+# Mountain, not Central). Not exhaustive -- county-level granularity without a
+# ZIP-to-timezone reference is not possible here -- but covers the population centers a
+# sample is likely to draw. The value is the MINORITY zone; the state default covers
+# everything else.
+TZ_MINORITY_CITIES <- list(
+  FL = list(zone = "Central", cities = c(
+    "PENSACOLA", "PANAMA CITY", "DESTIN", "FORT WALTON BEACH", "CRESTVIEW", "NICEVILLE",
+    "MILTON", "GULF BREEZE", "NAVARRE", "DEFUNIAK SPRINGS", "CHIPLEY", "MARIANNA",
+    "BONIFAY", "PENSACOLA BEACH", "MARY ESTHER", "SHALIMAR", "VALPARAISO")),
+  IN = list(zone = "Central", cities = c(
+    "GARY", "HAMMOND", "EVANSVILLE", "MERRILLVILLE", "VALPARAISO", "MUNSTER", "HIGHLAND",
+    "SCHERERVILLE", "CROWN POINT", "GRIFFITH", "EAST CHICAGO", "HOBART", "JASPER",
+    "VINCENNES", "WASHINGTON", "PRINCETON", "MOUNT VERNON", "BOONVILLE", "NEWBURGH")),
+  MI = list(zone = "Central", cities = c(
+    "IRON MOUNTAIN", "IRONWOOD", "MENOMINEE", "KINGSFORD", "NORWAY", "IRON RIVER",
+    "CRYSTAL FALLS", "STEPHENSON", "DAGGETT", "POWERS")),
+  TX = list(zone = "Mountain", cities = c(
+    "EL PASO", "SOCORRO", "HORIZON CITY", "SAN ELIZARIO", "FABENS", "FORT BLISS")),
+  TN = list(zone = "Eastern", cities = c(
+    "KNOXVILLE", "CHATTANOOGA", "JOHNSON CITY", "KINGSPORT", "BRISTOL", "OAK RIDGE",
+    "CLEVELAND", "MARYVILLE", "MORRISTOWN", "GREENEVILLE", "SEVIERVILLE", "GATLINBURG",
+    "PIGEON FORGE", "ATHENS", "HARRIMAN", "LENOIR CITY")),
+  KY = list(zone = "Central", cities = c(
+    "BOWLING GREEN", "OWENSBORO", "HOPKINSVILLE", "PADUCAH", "MURRAY", "MAYFIELD",
+    "MADISONVILLE", "HENDERSON", "ELIZABETHTOWN", "FORT CAMPBELL", "GLASGOW", "RUSSELLVILLE")),
+  ND = list(zone = "Mountain", cities = c(
+    "DICKINSON", "WILLISTON", "BOWMAN", "BELFIELD", "KILLDEER", "BEULAH", "HAZEN", "CENTER")),
+  SD = list(zone = "Mountain", cities = c(
+    "RAPID CITY", "STURGIS", "SPEARFISH", "DEADWOOD", "LEAD", "HOT SPRINGS", "CUSTER",
+    "HILL CITY", "WALL", "PHILIP", "WINNER", "MISSION", "MARTIN")),
+  NE = list(zone = "Mountain", cities = c(
+    "SCOTTSBLUFF", "GERING", "ALLIANCE", "CHADRON", "SIDNEY", "KIMBALL", "BRIDGEPORT",
+    "OGALLALA", "IMPERIAL", "MCCOOK")),
+  KS = list(zone = "Mountain", cities = c(
+    "GOODLAND", "COLBY", "OAKLEY", "SHARON SPRINGS", "TRIBUNE", "LEOTI")),
+  OR = list(zone = "Mountain", cities = c(
+    "ONTARIO", "NYSSA", "VALE", "JORDAN VALLEY", "ADRIAN", "BURNS")),
+  ID = list(zone = "Pacific", cities = c(
+    "COEUR D'ALENE", "MOSCOW", "POST FALLS", "LEWISTON", "SANDPOINT", "HAYDEN",
+    "RATHDRUM", "KELLOGG", "WALLACE", "OROFINO", "GRANGEVILLE"))
+)
+
+# Vectorised canonical assignment. Stops on any state it cannot map rather than silently
+# defaulting to Eastern -- the silent default is how PR ended up mis-timed, and it must
+# never come back. Geography decides; no scrape-era Time Zone column is consulted.
+assign_time_zone <- function(state, city = NA_character_) {
+  st <- toupper(trimws(ifelse(is.na(state), "", state)))
+  ci <- toupper(trimws(ifelse(is.na(city), "", city)))
+  out <- rep(NA_character_, length(st))
+  for (i in seq_along(st)) {
+    if (!nzchar(st[i]) || !(st[i] %in% names(TIME_ZONES))) {
+      stop(sprintf("No time zone mapping for state '%s' (city '%s'). Add it to TIME_ZONES ",
+                   st[i], ci[i]),
+           "deliberately rather than inheriting a default; the calling window depends on it.",
+           call. = FALSE)
+    }
+    z <- TIME_ZONES[[st[i]]]
+    exc <- TZ_MINORITY_CITIES[[st[i]]]
+    if (!is.null(exc) && nzchar(ci[i]) && ci[i] %in% exc$cities) z <- exc$zone
+    out[i] <- z
+  }
+  out
+}
+
+# The full (state, city) -> zone reference as a data frame: one row per state with an
+# empty city (the state default), plus one row per minority-zone city. This is what
+# export_timezone_reference.R writes and what the Python pipeline reads, so there is one
+# vocabulary for the calling window across both languages.
+timezone_reference_df <- function() {
+  base <- data.frame(state = names(TIME_ZONES), city = "",
+                     timezone = unname(TIME_ZONES), stringsAsFactors = FALSE)
+  exc <- do.call(rbind, lapply(names(TZ_MINORITY_CITIES), function(s) {
+    e <- TZ_MINORITY_CITIES[[s]]
+    data.frame(state = s, city = e$cities, timezone = e$zone, stringsAsFactors = FALSE)
+  }))
+  rbind(base, exc)
+}
+
+
+# ------------------------------------------------------------------ phone verification
+#
+# Count how many of the three phone databases (NPPES, CMS DAC, scraped) agree with the
+# number being dialed, plus the human-readable status string the calling sheet carries.
+# Extracted from dedup_offices_and_backfill_200.R so cross_reference_phones.R implements
+# the same counting -- before this extraction the Python cross-referencer and the R dedup
+# script were two implementations of one rule, free to drift.
+#
+# All inputs are character vectors of equal length; any may be NA. Keys are compared after
+# phone_key() normalisation, so "float-suffixed" or punctuation-variant spellings of the
+# same number cannot false-negative, and unresolvable numbers never count as agreeing.
+phone_verification <- function(dialed, nppes, dac, scraped) {
+  dk  <- phone_key(dialed)
+  hits <- cbind(NPPES     = !is.na(dk) & !is.na(phone_key(nppes))   & dk == phone_key(nppes),
+                `CMS-DAC` = !is.na(dk) & !is.na(phone_key(dac))     & dk == phone_key(dac),
+                WebScrape = !is.na(dk) & !is.na(phone_key(scraped)) & dk == phone_key(scraped))
+  hits[is.na(hits)] <- FALSE
+  n <- rowSums(hits)
+  first_src <- apply(hits, 1, function(r) if (any(r)) colnames(hits)[which(r)[1]] else NA_character_)
+  data.frame(Phone_Database_Matches = as.integer(n),
+             Phone_Verification_Status = ifelse(n >= 2, "Verified (2+ DBs)",
+                                         ifelse(n == 1, sprintf("Verified (1 DB: %s)", first_src),
+                                                "Unverified")),
+             stringsAsFactors = FALSE)
+}
+
+
+# ------------------------------------------------------------------ merge safety
+
+# merge() multiplies rows silently when the key is duplicated on either side. This keeps
+# the first row per key with a loud count, so a downstream merge cannot fabricate rows and
+# the arbitrariness of first-occurrence is visible rather than silent.
+dedupe_first <- function(df, key, label = "") {
+  k <- as.character(df[[key]])
+  ndup <- sum(duplicated(k))
+  if (ndup > 0)
+    message(sprintf("dedupe_first: %s has %d duplicated '%s' row(s); keeping first occurrence.",
+                    label, ndup, key))
+  df[!duplicated(k), , drop = FALSE]
+}
+
+# ------------------------------------------------------------------ office churn
+
+# Churn metrics for one office from its historical year/NPI panel: mean annual churn,
+# total exits, total entries, max staff count.
+#
+# An office observed in a single year is UNMEASURABLE, not zero-churn: no turnover could
+# have been observed, so Mean_Annual_Churn is NA. The zero-fill this replaces asserted no
+# turnover for exactly the offices about which nothing could be said.
+#
+# The rate for a step is (joined + left) / prior-year staff. Steps are taken between
+# consecutive OBSERVED years; a gap in the panel means one step spans several calendar
+# years, which is a coarser measurement than annual -- callers with gappy panels should
+# treat the mean accordingly.
+office_churn <- function(year, npi) {
+  years <- sort(unique(year))
+  staff_counts <- vapply(years, function(y) length(unique(npi[year == y])), integer(1))
+  churn_rates <- numeric(0)
+  total_joined <- 0
+  total_left <- 0
+  if (length(years) > 1) {
+    for (j in 2:length(years)) {
+      cur  <- unique(npi[year == years[j]])
+      prev <- unique(npi[year == years[j - 1]])
+      joined <- sum(!cur %in% prev)
+      left   <- sum(!prev %in% cur)
+      total_joined <- total_joined + joined
+      total_left   <- total_left + left
+      base <- length(prev)
+      churn_rates <- c(churn_rates, if (base > 0) (joined + left) / base else 0)
+    }
+  }
+  list(Mean_Annual_Churn = if (length(churn_rates)) round(mean(churn_rates), 3) else NA_real_,
+       Total_Exits       = total_left,
+       Total_Entries     = total_joined,
+       Max_Staff_Count   = if (length(staff_counts)) max(staff_counts) else 0L)
+}

@@ -86,42 +86,17 @@ for (i in 1:nrow(unique_offices)) {
     next
   }
   
-  years <- sort(unique(df$year))
-  churn_rates <- numeric()
-  total_joined <- 0
-  total_left <- 0
-  staff_counts <- numeric()
-  
-  for (j in seq_along(years)) {
-    yr <- years[j]
-    current_npis <- df$npi[df$year == yr]
-    staff_counts <- c(staff_counts, length(current_npis))
-    
-    if (j > 1) {
-      prev_yr <- years[j - 1]
-      prev_npis <- df$npi[df$year == prev_yr]
-      
-      joined <- sum(!current_npis %in% prev_npis)
-      left <- sum(!prev_npis %in% current_npis)
-      
-      total_joined <- total_joined + joined
-      total_left <- total_left + left
-      
-      baseline_staff <- length(prev_npis)
-      churn_rate <- if (baseline_staff > 0) (joined + left) / baseline_staff else 0.0
-      churn_rates <- c(churn_rates, churn_rate)
-    }
-  }
-  
+  # The computation lives in office_churn() in R/pe_helpers.R so it can be unit-tested
+  # without the 80 GB warehouse, and so the single-year-is-unmeasurable rule has exactly
+  # one implementation.
+  m <- office_churn(df$year, df$npi)
   office_churn_metrics <- rbind(office_churn_metrics, data.frame(
     Address = off$Address,
     Zip = off$Zip,
-    # A single observed year is unmeasurable, not zero-churn: no turnover could have been
-    # observed, so NA -- consistent with the no-data branch above -- rather than 0.0.
-    Mean_Annual_Churn = if (length(churn_rates) > 0) round(mean(churn_rates), 3) else NA_real_,
-    Total_Exits = total_left,
-    Total_Entries = total_joined,
-    Max_Staff_Count = if (length(staff_counts) > 0) max(staff_counts) else 0
+    Mean_Annual_Churn = m$Mean_Annual_Churn,
+    Total_Exits = m$Total_Exits,
+    Total_Entries = m$Total_Entries,
+    Max_Staff_Count = m$Max_Staff_Count
   ))
 }
 

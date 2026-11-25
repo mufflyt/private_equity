@@ -112,4 +112,5 @@ data    test-manuscript-provenance.R
 data    test-control-independence.R
 data    test-comparator-definition.R
 data    test-prespecified-analyses.R
+nodata  test-audit-fixes.R
 nodata  test-model-convergence.R

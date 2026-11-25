@@ -59,11 +59,11 @@ def main():
     run_command(f'Rscript "{distance_script}"')
     
     # 7. Validate phone numbers in final calling sheet
-    validation_script = os.path.join(base_dir, "verify_phones.py")
+    validation_script = os.path.join(base_dir, "verify_phones.R")
     if not os.path.exists(validation_script):
         print(f"ERROR: Phone validation script not found at {validation_script}")
         sys.exit(1)
-    run_command(f'python3 "{validation_script}"')
+    run_command(f'Rscript "{validation_script}"')
     
     print("=== COMPLETE PIPELINE EXECUTED SUCCESSFULLY ===")
 

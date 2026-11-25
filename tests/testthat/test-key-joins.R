@@ -100,13 +100,16 @@ test_that("adversarial: enrichment does not depend on the order of the source ro
                info = "reversing the source must not change any fielded clinician's enrichment")
 })
 
-test_that("adversarial: the Python phone cross-reference cannot silently pick a row", {
-  py <- readLines(p("cross_reference_phones.py"))
-  expect_true(any(grepl("db_row\\.iloc\\[0\\]", py)),
-              info = "documents the first-row-on-duplicate behaviour")
-  # Safe only while NPIs are unique in the study database, which the semantic test above
-  # asserts. If that ever fails, this line silently attributes one clinician's phones to
-  # another, and phone identity is what the two-calls-per-office guarantee rests on.
-  expect_true(any(grepl("isinstance\\(db_row, pd\\.DataFrame\\)", py)),
-              info = "the duplicate case is at least detected before being collapsed")
+test_that("adversarial: the phone cross-reference cannot silently pick a row or drop the join", {
+  # The Python original failed both ways: iloc[0] collapsed duplicated NPIs by accident of
+  # row order, and the dtype-fragile `npi not in db_lookup.index` silently matched nothing
+  # when one side parsed as float. The R port must normalise keys through npi_key and must
+  # surface duplicates rather than hide them.
+  src <- readLines(p("cross_reference_phones.R"))
+  expect_true(any(grepl("npi_key", src)),
+              info = "join keys are normalised, so dtype/float-suffix drift cannot empty the join")
+  expect_true(any(grepl("duplicated", src)),
+              info = "duplicated NPIs are detected and reported, not silently collapsed")
+  expect_true(any(grepl("phone_verification\\(", src)),
+              info = "the counting rule is the shared helper, not a reimplementation")
 })

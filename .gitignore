@@ -28,6 +28,7 @@ redcap_physician_name_choices*.txt
 !analysis_manifest.csv
 !power_analysis_new_results.csv
 !manuscript/manuscript_claims.csv
+!timezone_reference.csv
 # Configuration, not data. The blanket *.csv rule above is aimed at cohort and derived data
 # files; anything under config/ is a contract the code reads and must ship with the repository.
 # config/derived_estimands.csv was silently excluded by that rule, and CI caught it: the
