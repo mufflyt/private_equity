@@ -9,20 +9,60 @@ import time
 
 # A list of common provider credentials to strip/identify during parsing
 CREDENTIALS_SET = {
-    'MD', 'DO', 'CNM', 'NP', 'PA', 'PAC', 'PA-C', 'RN', 'MSN', 'DNP', 'PHD', 
-    'FACS', 'FACOG', 'OBGYN', 'OB/GYN', 'MSCE', 'BSN', 'APRN', 'WHNP', 'LPN'
+    'MD', 'DO', 'CNM', 'NP', 'PA', 'PAC', 'PA-C', 'RN', 'MSN', 'DNP', 'PHD',
+    'FACS', 'FACOG', 'OBGYN', 'OB/GYN', 'MSCE', 'BSN', 'APRN', 'WHNP', 'LPN',
+    # Extended set unioned in from match_all_providers.py so one shared parser strips
+    # everything either pipeline's mid-level exclusion rule needs to see.
+    'WHNP-BC', 'FNP', 'FNP-C', 'DNP-FNP', 'ACNP-BC', 'ARNP', 'WHCNP', 'CRNP',
+    'APN', 'PMHNP-BC', 'MSPAS'
 }
+
+# Generational suffixes are part of a person's name, not credentials. They must be
+# captured separately: dropping them loses the suffix-agreement check, and gluing them
+# onto the surname ("Leyva Jr") breaks the NPPES query, because the registry indexes the
+# surname without the suffix.
+SUFFIXES = {'JR', 'SR', 'II', 'III', 'IV', 'V'}
+
+def _alpha(token):
+    return re.sub(r'[^a-zA-Z-]', '', token)
+
+def _is_credential(token, had_comma):
+    """
+    A token is a credential only if its letters are ALL UPPERCASE in the raw input.
+    Case is the only signal that separates the DO credential from the (very common,
+    mostly Vietnamese) surname 'Do', 'Pa' from the PA credential, and so on. A pure
+    case-insensitive test silently ate those surnames: 'Dr. Jennifer Do, MD' parsed to
+    last='' and the physician could never be matched. When the whole input is uppercased
+    by the source this test cannot help, and the positional guards in parse_provider_name
+    are what remains.
+    """
+    a = _alpha(token)
+    if not a or len(a) < 2:
+        return False
+    if a.upper() not in CREDENTIALS_SET:
+        return False
+    return a == a.upper()
+
+def _is_suffix(token):
+    return _alpha(token).upper().rstrip('.') in SUFFIXES or _alpha(token).upper() in SUFFIXES
 
 def parse_provider_name(name_str):
     """
     Parses a provider name string (e.g., 'Dr. Laxmi A. Kondapalli, MD, MSCE')
-    into prefix, first, middle, last, and credentials.
+    into prefix, first, middle, last, suffix, and credentials.
+
+    Invariants this parser must hold, each learned from a real loss:
+      * a surname that looks like a credential ('Do', 'Pa') is never eaten as one;
+      * a generational suffix is never glued onto the surname nor silently dropped;
+      * stripping never leaves the parse without a surname -- a parse with no
+        surname can never match anything downstream.
     """
+    empty = {'prefix': '', 'first': '', 'middle': '', 'last': '', 'suffix': '', 'credentials': ''}
     if not isinstance(name_str, str) or not name_str.strip():
-        return {'prefix': '', 'first': '', 'middle': '', 'last': '', 'credentials': ''}
-        
+        return dict(empty)
+
     original = name_str.strip()
-    
+
     # Remove common prefix titles
     prefix = ""
     prefix_match = re.match(r'^(Dr\.|Doctor|Dr|Mr\.|Ms\.|Mrs\.)\s+', original, re.IGNORECASE)
@@ -32,56 +72,69 @@ def parse_provider_name(name_str):
     else:
         name_str = original
 
-    # Split off credentials (normally after commas, e.g., 'Laxmi Kondapalli, MD, MSCE')
+    # Split off what follows the commas (e.g., 'Laxmi Kondapalli, MD, MSCE' or 'Leyva, Jr., MD')
     parts = [p.strip() for p in name_str.split(',')]
     core_name = parts[0]
-    
+
     credentials = []
+    suffix = ""
     for part in parts[1:]:
-        # check if it is a credential
-        clean_part = re.sub(r'[^a-zA-Z-]', '', part)
-        if clean_part.upper() in CREDENTIALS_SET:
-            credentials.append(clean_part.upper())
-            
-    # Also check if the core name has credentials at the end without a comma
-    name_tokens = core_name.split()
-    clean_tokens = []
-    for token in name_tokens:
-        clean_tok = re.sub(r'[^a-zA-Z-]', '', token)
-        if clean_tok.upper() in CREDENTIALS_SET:
-            credentials.append(clean_tok.upper())
-        else:
-            clean_tokens.append(token)
-            
-    # Reconstruct name without credentials
-    name_str = " ".join(clean_tokens)
-    
-    # Split remaining name into First, Middle, Last
-    tokens = name_str.split()
-    first = ""
-    middle = ""
-    last = ""
-    
+        if not part:
+            continue
+        if _is_suffix(part):
+            # 'Jr.' after a comma is a generational suffix, not a credential and not noise.
+            suffix = _alpha(part).rstrip('.').upper() or _alpha(part).upper()
+        elif _is_credential(part, had_comma=True):
+            credentials.append(_alpha(part).upper())
+        # anything else after a comma (a stray degree abbreviation in mixed case, etc.)
+        # is noise and is not allowed to contaminate the name.
+
+    # Within the core name, credentials can only appear as a TRAILING RUN (they follow
+    # the name, never precede or interrupt it), e.g. 'Laxmi Kondapalli MD'. Scanning
+    # from the end rather than testing every token is what keeps a middle token that
+    # happens to resemble a credential inside the name where it belongs.
+    tokens = core_name.split()
+    trailing_creds = []
+    while tokens and _is_credential(tokens[-1], had_comma=False):
+        trailing_creds.insert(0, _alpha(tokens.pop()).upper())
+
+    # Trailing generational suffix inside the core name, e.g. 'Luis P Leyva Jr' with no
+    # comma: capture it, do NOT glue it onto the surname. (Gluing produced last='Leyva
+    # Jr', which was then sent to the NPPES API as last_name and could match nothing,
+    # because the registry surnames carry no suffix.)
+    if tokens and _is_suffix(tokens[-1]):
+        if not suffix:
+            suffix = _alpha(tokens[-1]).rstrip('.').upper()
+        tokens.pop()
+
+    # If credential-stripping consumed every token but one, a collision surname may have
+    # been eaten: 'Jennifer DO' with no comma is a physician named Do far more often than
+    # it is a bare DO credential, and a parse with no surname cannot match anything at
+    # all. Restore it -- but only for the tokens that are real surnames in the physician
+    # population (Do, Pa). 'Smith MD' is a credential trailing a one-token name, not a
+    # person surnamed Md, so MD/RN/etc. are not restored.
+    COLLISION_SURNAMES = {'DO', 'PA'}
+    if len(tokens) == 1 and trailing_creds and trailing_creds[0] in COLLISION_SURNAMES:
+        tokens.append(trailing_creds.pop(0))
+
+    credentials.extend(trailing_creds)
+
+    first = middle = last = ""
     if len(tokens) == 1:
         first = tokens[0]
     elif len(tokens) == 2:
-        first = tokens[0]
-        last = tokens[1]
+        first, last = tokens
     elif len(tokens) >= 3:
         first = tokens[0]
-        # Check if the last token is a suffix (Jr., III, etc.)
-        if tokens[-1].lower() in ['jr', 'jr.', 'sr', 'sr.', 'ii', 'iii', 'iv']:
-            last = tokens[-2] + " " + tokens[-1]
-            middle = " ".join(tokens[1:-2])
-        else:
-            last = tokens[-1]
-            middle = " ".join(tokens[1:-1])
-            
+        last = tokens[-1]
+        middle = " ".join(tokens[1:-1])
+
     return {
         'prefix': prefix,
         'first': first,
         'middle': middle,
         'last': last,
+        'suffix': suffix,
         'credentials': ", ".join(credentials)
     }
 

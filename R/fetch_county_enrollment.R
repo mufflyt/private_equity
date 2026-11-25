@@ -34,7 +34,7 @@ cms <- utils::read.csv(f_csv, colClasses = ifelse(hdr %in% keep, "character", "N
                        check.names = FALSE)
 cms <- cms[cms$BENE_GEO_LVL == "County" & cms$MONTH == "Year", ]
 cms <- cms[cms$YEAR == max(cms$YEAR), ]
-medicare <- data.frame(county_fips = sprintf("%05s", cms$BENE_FIPS_CD),
+medicare <- data.frame(county_fips = sprintf("%05d", as.integer(cms$BENE_FIPS_CD)),
                        county_medicare_enrollment = suppressWarnings(as.numeric(cms$TOT_BENES)))
 
 # ---- Medicaid: ACS C27007 total "With Medicaid" by county -------------------

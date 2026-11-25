@@ -161,3 +161,74 @@ decode_redcap_transfers <- function(x) {
     stop("transfers has value(s) outside the documented 1-4 dropdown range.", call. = FALSE)
   data.frame(transfers = pmin(v - 1L, 3L), transfers_censored = !is.na(v) & v == 4L)
 }
+
+
+# ------------------------------------------------------------------ gazetteer
+#
+# normalize_gazetteer() is the shared, fail-loud version of the schema adapter the matching
+# pipeline documents inline in build_matched_control_group_psm.R. It exists because
+# mysterycall's city_state_to_lat_long dataset has shipped under two schemas (full state
+# names with latitude/longitude columns; state abbreviations with lat/long columns), and
+# `$` partial matching silently rescues the wrong column for months before anyone notices.
+# Everything downstream of this function sees exactly four columns -- city, state, lat,
+# long -- whatever the package happens to ship. It errors rather than guesses.
+#
+# state_map: named character vector mapping full state names to two-letter abbreviations,
+# used only when the gazetteer's state column is not already abbreviated. Base R's
+# state.abb/state.name cover the 50 states; DC/PR/VI must be added by the caller.
+
+#' Reduce any gazetteer schema to the pipeline contract: city, state, lat, long.
+normalize_gazetteer <- function(g, state_map) {
+  pick <- function(cands, what) {
+    hit <- cands[cands %in% names(g)]
+    if (!length(hit)) {
+      stop(sprintf(paste0("Gazetteer has no %s column. Looked for: %s. Found: %s.\n",
+                          "  The dependency's schema changed; extend normalize_gazetteer() ",
+                          "rather than\n  relying on partial matching."),
+                   what, paste(cands, collapse = ", "), paste(names(g), collapse = ", ")),
+           call. = FALSE)
+    }
+    g[[hit[1]]]
+  }
+
+  raw_state <- pick(c("state", "state_abbrev", "STATE"), "state")
+  out <- data.frame(
+    city  = toupper(trimws(pick(c("city", "CITY"), "city"))),
+    state = ifelse(nchar(trimws(raw_state)) == 2L, toupper(trimws(raw_state)),
+                   unname(state_map[raw_state])),
+    lat   = as.numeric(pick(c("lat", "latitude", "LAT"), "latitude")),
+    long  = as.numeric(pick(c("long", "longitude", "lon", "lng", "LONG"), "longitude")),
+    stringsAsFactors = FALSE
+  )
+  stopifnot(identical(names(out), c("city", "state", "lat", "long")))
+
+  # Rows with a missing city, state or coordinate cannot match anything, but they are not
+  # inert: an NA in the city column makes `df$city == x` evaluate to NA for that row, and
+  # R's `[` then emits a phantom all-NA row at that position for EVERY lookup. The shipped
+  # gazetteer carries exactly one NA-city row (position 17,364 of 31,909); because the
+  # phantom sorted ahead of any real match sitting later in the table, every city past
+  # that row silently resolved to NA coordinates even though its row was present. Drop
+  # them here, once, so no call site has to remember this again.
+  unusable <- is.na(out$city) | !nzchar(out$city) | is.na(out$state) | !nzchar(out$state) |
+              is.na(out$lat) | is.na(out$long)
+  if (any(unusable)) {
+    message(sprintf("normalize_gazetteer: dropping %d row(s) with missing city/state/coordinates",
+                    sum(unusable)))
+    out <- out[!unusable, , drop = FALSE]
+  }
+
+  if (nrow(out) == 0L) {
+    stop("Geocoding gazetteer is empty after normalisation: every row was dropped. ",
+         "Check that the gazetteer's state column and state_map use the same vocabulary.")
+  }
+  out
+}
+
+# Base R's state.name/state.abb cover the 50 states; the cohort also draws on DC and the
+# territories, which base R omits. Built once here rather than re-typed in every script
+# that geocodes -- the hand-copied 52-entry tables in calculate_pair_distances.R and
+# build_matched_control_group_psm.R had already drifted into two different orderings.
+STATE_ABB_BY_NAME <- c(setNames(state.abb, state.name),
+                       "District of Columbia" = "DC",
+                       "Puerto Rico" = "PR",
+                       "Virgin Islands" = "VI")

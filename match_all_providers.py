@@ -39,71 +39,12 @@ PLATFORM_STATES = {
     "OB Hospitalist Group": [] # Empty list means any state is allowed (nationwide)
 }
 
-def parse_provider_name(name_str):
-    """
-    Parses a provider name string into prefix, first, middle, last, and credentials.
-    """
-    if not isinstance(name_str, str) or not name_str.strip():
-        return {'prefix': '', 'first': '', 'middle': '', 'last': '', 'credentials': ''}
-        
-    original = name_str.strip()
-    
-    # Remove common prefix titles
-    prefix = ""
-    prefix_match = re.match(r'^(Dr\.|Doctor|Dr|Mr\.|Ms\.|Mrs\.)\s+', original, re.IGNORECASE)
-    if prefix_match:
-        prefix = prefix_match.group(1).strip()
-        name_str = original[prefix_match.end():]
-    else:
-        name_str = original
-
-    # Split off credentials (normally after commas)
-    parts = [p.strip() for p in name_str.split(',')]
-    core_name = parts[0]
-    
-    credentials = []
-    for part in parts[1:]:
-        clean_part = re.sub(r'[^a-zA-Z-]', '', part)
-        if clean_part.upper() in CREDENTIALS_SET or clean_part.upper() in EXCLUDED_CREDENTIALS:
-            credentials.append(clean_part.upper())
-            
-    # Also check if core name has credentials at the end without a comma
-    name_tokens = core_name.split()
-    clean_tokens = []
-    for token in name_tokens:
-        clean_tok = re.sub(r'[^a-zA-Z-]', '', token)
-        if clean_tok.upper() in CREDENTIALS_SET or clean_tok.upper() in EXCLUDED_CREDENTIALS:
-            credentials.append(clean_tok.upper())
-        else:
-            clean_tokens.append(token)
-            
-    name_str = " ".join(clean_tokens)
-    tokens = name_str.split()
-    first = ""
-    middle = ""
-    last = ""
-    
-    if len(tokens) == 1:
-        first = tokens[0]
-    elif len(tokens) == 2:
-        first = tokens[0]
-        last = tokens[1]
-    elif len(tokens) >= 3:
-        first = tokens[0]
-        if tokens[-1].lower() in ['jr', 'jr.', 'sr', 'sr.', 'ii', 'iii', 'iv']:
-            last = tokens[-2] + " " + tokens[-1]
-            middle = " ".join(tokens[1:-2])
-        else:
-            last = tokens[-1]
-            middle = " ".join(tokens[1:-1])
-            
-    return {
-        'prefix': prefix,
-        'first': first,
-        'middle': middle,
-        'last': last,
-        'credentials': ", ".join(credentials)
-    }
+# parse_provider_name() lives in nppes_matcher.py and is shared by both pipelines. This
+# file once carried a second copy of it; the copies had already drifted (different
+# credential sets) and the copy here inherited every parsing defect fixed there -- the
+# eaten 'Do'/'Pa' surnames, the suffix glued onto the queried last name, the silently
+# dropped 'Jr.' Delegating rather than maintaining two copies of a name parser.
+from nppes_matcher import parse_provider_name  # noqa: E402  (shared implementation)
 
 def query_nppes_registry(first_name, last_name, state=None):
     """
