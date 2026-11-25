@@ -19,9 +19,13 @@ if (!file.exists(study_db_path)) {
 df_db <- read_csv(study_db_path, show_col_types = FALSE)
 
 # Identify unique offices
+# Churn is a property of the office, not the arm. distinct() must NOT include PE_or_Not:
+# an office shared by a PE and a control clinician would otherwise produce two identical
+# rows in office_churn_metrics, and the address-keyed left_join at the bottom of this
+# script would then multiply rows of the study database.
 unique_offices <- df_db %>%
   filter(!is.na(`NPPES Address 1`) & !is.na(`NPPES Zip`)) %>%
-  distinct(`NPPES Address 1`, `NPPES Zip`, PE_or_Not) %>%
+  distinct(`NPPES Address 1`, `NPPES Zip`) %>%
   rename(Address = `NPPES Address 1`, Zip = `NPPES Zip`)
 
 cat(sprintf("Found %d unique clinic locations to query for churn...\n", nrow(unique_offices)))
@@ -112,7 +116,9 @@ for (i in 1:nrow(unique_offices)) {
   office_churn_metrics <- rbind(office_churn_metrics, data.frame(
     Address = off$Address,
     Zip = off$Zip,
-    Mean_Annual_Churn = if (length(churn_rates) > 0) round(mean(churn_rates), 3) else 0.0,
+    # A single observed year is unmeasurable, not zero-churn: no turnover could have been
+    # observed, so NA -- consistent with the no-data branch above -- rather than 0.0.
+    Mean_Annual_Churn = if (length(churn_rates) > 0) round(mean(churn_rates), 3) else NA_real_,
     Total_Exits = total_left,
     Total_Entries = total_joined,
     Max_Staff_Count = if (length(staff_counts) > 0) max(staff_counts) else 0

@@ -921,8 +921,23 @@ pe_map_df <- pe_matched_all[, c("NPI", "office_id")]
 # Map Matched_Pair_Group only for selected PE providers
 pe_selected_map <- pe_selected[, c("NPI", "Matched_Pair_Group")]
 
+# NPI is not unique in this cohort (the same clinician can appear at two offices), and
+# merge() multiplies rows silently when the key is duplicated on either side: each row of
+# pe_full_df with a duplicated NPI would match every row of the mapping table, fabricating
+# phantom clinician rows in the unified study database. First-occurrence dedupe matches the
+# semantics of match() used for the coordinates below, and the count is reported so the
+# arbitrariness is visible rather than silent.
+for (nm in c("pe_map_df", "pe_selected_map")) {
+  m <- get(nm)
+  ndup <- sum(duplicated(m$NPI))
+  if (ndup > 0)
+    cat(sprintf("  NOTE: %s has %d duplicated NPI rows; keeping first occurrence so the merge cannot multiply rows.\n", nm, ndup))
+  assign(nm, m[!duplicated(m$NPI), , drop = FALSE])
+}
+n_before <- nrow(pe_full_df)
 pe_full_df <- merge(pe_full_df, pe_map_df, by = "NPI", all.x = TRUE)
 pe_full_df <- merge(pe_full_df, pe_selected_map, by = "NPI", all.x = TRUE)
+stopifnot("merge multiplied rows: duplicated NPI slipped through" = nrow(pe_full_df) == n_before)
 pe_full_df$Matched_Pair_Group[is.na(pe_full_df$Matched_Pair_Group)] <- "N/A"
 
 # Union full PE cohort + control matched cohort
