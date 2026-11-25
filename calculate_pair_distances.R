@@ -4,29 +4,17 @@
 library(mysterycall)
 library(dplyr)
 
+source(file.path("R", "pe_helpers.R"))
+
+# Gazetteer access goes through normalize_gazetteer() (R/pe_helpers.R), never through
+# direct column access: this script previously read lat_long_ref$latitude/$longitude, and
+# when mysterycall renamed the dataset's columns to lat/long the `$` lookup returned NULL,
+# degrading every coordinate to NA silently -- the same failure mode the matching pipeline
+# documents for its own inline copy of this adapter.
 data(city_state_to_lat_long, package = "mysterycall")
-lat_long_ref <- city_state_to_lat_long
-
-abbrev_to_full <- c(
-  'AL'='Alabama', 'AK'='Alaska', 'AZ'='Arizona', 'AR'='Arkansas', 'CA'='California',
-  'CO'='Colorado', 'CT'='Connecticut', 'DE'='Delaware', 'DC'='District of Columbia',
-  'FL'='Florida', 'GA'='Georgia', 'HI'='Hawaii', 'ID'='Idaho', 'IL'='Illinois',
-  'IN'='Indiana', 'IA'='Iowa', 'KS'='Kansas', 'KY'='Kentucky', 'LA'='Louisiana',
-  'ME'='Maine', 'MD'='Maryland', 'MA'='Massachusetts', 'MI'='Michigan', 'MN'='Minnesota',
-  'MS'='Mississippi', 'MO'='Missouri', 'MT'='Montana', 'NE'='Nebraska', 'NV'='Nevada',
-  'NH'='New Hampshire', 'NJ'='New Jersey', 'NM'='New Mexico', 'NY'='New York',
-  'NC'='North Carolina', 'ND'='North Dakota', 'OH'='Ohio', 'OK'='Oklahoma', 'OR'='Oregon',
-  'PA'='Pennsylvania', 'RI'='Rhode Island', 'SC'='South Carolina', 'SD'='South Dakota',
-  'TN'='Tennessee', 'TX'='Texas', 'UT'='Utah', 'VT'='Vermont', 'VA'='Virginia',
-  'WA'='Washington', 'WV'='West Virginia', 'WI'='Wisconsin', 'WY'='Wyoming',
-  'PR'='Puerto Rico', 'VI'='Virgin Islands'
-)
-
-full_to_abbrev <- names(abbrev_to_full)
-names(full_to_abbrev) <- abbrev_to_full
-lat_long_ref$state_abbrev <- full_to_abbrev[lat_long_ref$state]
-lat_long_ref$city_upper <- toupper(trimws(lat_long_ref$city))
-lat_long_ref$state_upper <- toupper(trimws(lat_long_ref$state_abbrev))
+lat_long_ref <- normalize_gazetteer(city_state_to_lat_long, STATE_ABB_BY_NAME)
+lat_long_ref$city_upper  <- lat_long_ref$city
+lat_long_ref$state_upper <- lat_long_ref$state
 lat_long_ref <- lat_long_ref[!is.na(lat_long_ref$state_upper), ]
 lat_long_ref <- lat_long_ref[!duplicated(paste(lat_long_ref$city_upper, lat_long_ref$state_upper, sep="_")), ]
 
@@ -60,22 +48,18 @@ get_coords <- function(city, state) {
   
   match_row <- lat_long_ref[lat_long_ref$city_upper == city_clean & lat_long_ref$state_upper == state_clean, ]
   if (nrow(match_row) > 0) {
-    return(c(match_row$latitude[1], match_row$longitude[1]))
+    return(c(match_row[["lat"]][1], match_row[["long"]][1]))
   }
   return(c(NA, NA))
 }
 
-haversine_distance <- function(lat1, lon1, lat2, lon2) {
-  if (is.na(lat1) || is.na(lon1) || is.na(lat2) || is.na(lon2)) return(NA)
-  r <- 3959 # Earth's radius in miles
-  phi1 <- lat1 * pi / 180
-  phi2 <- lat2 * pi / 180
-  delta_phi <- (lat2 - lat1) * pi / 180
-  delta_lambda <- (lon2 - lon1) * pi / 180
-  
-  a <- sin(delta_phi / 2)^2 + cos(phi1) * cos(phi2) * sin(delta_lambda / 2)^2
-  c <- 2 * atan2(sqrt(a), sqrt(1 - a))
-  return(r * c)
+# Distance is geosphere::distHaversine() with the same spherical radius (3959 miles) the
+# historical hand-rolled copies used -- verified numerically identical to machine
+# precision, so this change is a delegation, not a respecification. Note geosphere takes
+# coordinates as (lon, lat) pairs, not (lat, lon).
+dist_miles <- function(lat1, lon1, lat2, lon2) {
+  if (any(is.na(c(lat1, lon1, lat2, lon2)))) return(NA_real_)
+  geosphere::distHaversine(c(lon1, lat1), c(lon2, lat2), r = 3959)
 }
 
 # Load the calling sheet
@@ -115,7 +99,7 @@ for (i in 1:nrow(different_cities)) {
   control_lats[i] <- coords_control[1]
   control_lons[i] <- coords_control[2]
   
-  distances[i] <- haversine_distance(coords_pe[1], coords_pe[2], coords_control[1], coords_control[2])
+  distances[i] <- dist_miles(coords_pe[1], coords_pe[2], coords_control[1], coords_control[2])
 }
 
 different_cities$Latitude_PE <- pe_lats
@@ -123,6 +107,16 @@ different_cities$Longitude_PE <- pe_lons
 different_cities$Latitude_Control <- control_lats
 different_cities$Longitude_Control <- control_lons
 different_cities$Distance_Miles <- round(distances, 2)
+
+# Unresolvable cities must surface, not pass silently: a pair with no real coordinate
+# cannot have a real distance, and how many of them there are is part of the output.
+n_unresolved <- sum(is.na(different_cities$Distance_Miles))
+if (n_unresolved) {
+  cat(sprintf("WARNING: %d pair(s) have at least one city the gazetteer could not resolve; their distances are NA.\n",
+              n_unresolved))
+  print(different_cities[is.na(different_cities$Distance_Miles),
+                         c("Matched Pair ID", "City_PE", "State_PE", "City_Control", "State_Control")])
+}
 
 # Sort by distance
 different_cities <- different_cities[order(different_cities$Distance_Miles, na.last = TRUE), ]

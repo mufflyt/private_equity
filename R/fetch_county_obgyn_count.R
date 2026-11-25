@@ -39,7 +39,7 @@ ndf <- data.table::fread(f_ndf, select = c("NPI", "pri_spec", "ZIP Code"),
                          colClasses = "character")
 data.table::setnames(ndf, c("NPI", "pri_spec", "ZIP Code"), c("npi", "spec", "zip9"))
 ob <- ndf[grepl("OBSTETR|GYNECOLOG", toupper(spec))]
-ob[, zip := sprintf("%05s", substr(gsub("[^0-9]", "", zip9), 1, 5))]
+ob[, zip := sprintf("%05d", as.integer(substr(gsub("[^0-9]", "", zip9), 1, 5)))]
 ob <- unique(ob[, .(npi, zip)])
 
 # 3) map to county and count distinct NPIs per county

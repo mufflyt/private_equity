@@ -12,6 +12,8 @@ suppressMessages({
   library(mysterycall)
 })
 
+source(file.path("R", "pe_helpers.R"))
+
 # Load the data
 calling_sheet_path <- "pe_obgyn_final_calling_sheet_200_dedup.csv"
 study_db_path <- "pe_obgyn_study_database.csv"
@@ -23,8 +25,16 @@ if (!file.exists(calling_sheet_path) || !file.exists(study_db_path)) {
 sheet200 <- read_csv(calling_sheet_path, show_col_types = FALSE)
 
 # 1. Calculate distances for all 200 pairs
+# Gazetteer access goes through normalize_gazetteer() (R/pe_helpers.R), never through
+# direct column access: the previous version read lat_long_ref$latitude/$longitude, which
+# returned NULL once mysterycall renamed the columns to lat/long and degraded every
+# coordinate silently -- the failure mode normalize_gazetteer() exists to make impossible.
 data(city_state_to_lat_long, package = "mysterycall")
-lat_long_ref <- city_state_to_lat_long
+lat_long_ref <- normalize_gazetteer(city_state_to_lat_long, STATE_ABB_BY_NAME)
+lat_long_ref$city_upper  <- lat_long_ref$city
+lat_long_ref$state_upper <- lat_long_ref$state
+lat_long_ref <- lat_long_ref[!is.na(lat_long_ref$state_upper), ]
+lat_long_ref <- lat_long_ref[!duplicated(paste(lat_long_ref$city_upper, lat_long_ref$state_upper, sep="_")), ]
 
 # Manual overrides helper
 manual_coords <- list(
@@ -50,20 +60,21 @@ get_coords <- function(city, state) {
   state_clean <- toupper(trimws(state))
   key <- paste0(city_clean, "_", state_clean)
   if (key %in% names(manual_coords)) return(manual_coords[[key]])
-  match_row <- lat_long_ref[toupper(trimws(lat_long_ref$city)) == city_clean & toupper(trimws(lat_long_ref$state)) == state_clean, ]
-  if (nrow(match_row) > 0) return(c(match_row$latitude[1], match_row$longitude[1]))
-  return(c(39.8283, -98.5795)) # Default to center of US
+  match_row <- lat_long_ref[lat_long_ref$city_upper == city_clean & lat_long_ref$state_upper == state_clean, ]
+  if (nrow(match_row) > 0) return(c(match_row[["lat"]][1], match_row[["long"]][1]))
+  # No fabricated default. This function previously returned the geographic center of the
+  # US for unresolvable cities, which means a pair whose city was missing got a REAL-looking
+  # distance to Kansas and was included in or excluded from the 5-mile/3-mile caliper
+  # subsets on a fiction. Unresolvable is NA, and the count is reported below.
+  return(c(NA, NA))
 }
 
-haversine_distance <- function(lat1, lon1, lat2, lon2) {
-  r <- 3959 # Earth's radius in miles
-  phi1 <- lat1 * pi / 180
-  phi2 <- lat2 * pi / 180
-  delta_phi <- (lat2 - lat1) * pi / 180
-  delta_lambda <- (lon2 - lon1) * pi / 180
-  a <- sin(delta_phi / 2)^2 + cos(phi1) * cos(phi2) * sin(delta_lambda / 2)^2
-  c <- 2 * atan2(sqrt(a), sqrt(1 - a))
-  return(r * c)
+# geosphere::distHaversine() with the same spherical radius (3959 miles) the hand-rolled
+# version used -- verified numerically identical to machine precision. geosphere takes
+# (lon, lat) pairs.
+dist_miles <- function(lat1, lon1, lat2, lon2) {
+  if (any(is.na(c(lat1, lon1, lat2, lon2)))) return(NA_real_)
+  geosphere::distHaversine(c(lon1, lat1), c(lon2, lat2), r = 3959)
 }
 
 # Split into PE and Control
@@ -87,10 +98,17 @@ for (i in 1:nrow(pair_distances)) {
   } else {
     c_pe <- get_coords(r$City_PE, r$State_PE)
     c_ctrl <- get_coords(r$City_Ctrl, r$State_Ctrl)
-    distances[i] <- haversine_distance(c_pe[1], c_pe[2], c_ctrl[1], c_ctrl[2])
+    distances[i] <- dist_miles(c_pe[1], c_pe[2], c_ctrl[1], c_ctrl[2])
   }
 }
 pair_distances$Distance <- distances
+
+n_unresolved <- sum(is.na(pair_distances$Distance))
+if (n_unresolved) {
+  cat(sprintf("\nWARNING: %d of %d pairs have at least one city the gazetteer could not resolve; their distances are NA and they drop out of the caliper subsets.\n",
+              n_unresolved, nrow(pair_distances)))
+  print(pair_distances[is.na(pair_distances$Distance), ])
+}
 
 # Map distance back to sheet
 sheet200 <- sheet200 %>%

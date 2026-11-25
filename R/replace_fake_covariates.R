@@ -34,7 +34,7 @@ if (file.exists(xw_path)) {
   xw <- read.csv(xw_path, colClasses = "character")
   z2c <- setNames(xw$county_fips, xw$zip)
   need <- !nzchar(geo$county_fips) & nzchar(geo$zip5)
-  geo$county_fips[need] <- unname(z2c[sprintf("%05s", geo$zip5[need])])
+  geo$county_fips[need] <- unname(z2c[sprintf("%05d", as.integer(geo$zip5[need]))])
   geo$county_fips[is.na(geo$county_fips)] <- ""
 }
 

@@ -113,9 +113,19 @@ names(geo)[c(1, 3, 9, 10, 11)] <- c("id", "status", "state_fips", "county_fips",
 geo$id <- as.integer(geo$id)
 geo <- geo[order(geo$id), ]
 
-# sprintf("%02s", x) pads with SPACES in R, not zeros, which is what silently produced a
-# zero-row join on the first attempt. formatC(flag = "0") is the padding that is meant here.
-pad <- function(x, w) formatC(trimws(x), width = w, flag = "0")
+# Zero-padding is a minefield in base R, and the pipeline has hit both sides of it:
+#   * sprintf("%02s", "3") zero-pads strings correctly on current R (4.x), but the 0 flag
+#     for the %s conversion was historically unreliable across versions, which is what
+#     silently produced a zero-row join on the first attempt.
+#   * formatC(x, width, flag = "0") does NOT zero-pad character input on ANY version --
+#     the flag applies only to numeric input; strings are space-padded. An earlier version
+#     of this line used formatC and was itself wrong for short strings, surviving only
+#     because the Census batch geocoder returns pre-padded fixed-width STATE/COUNTY/TRACT
+#     fields, which made the padding a no-op.
+# The only formulation that means the same thing on every R version for digit strings is
+# numeric conversion plus a numeric format, so that is what is used here and everywhere
+# else in this pipeline.
+pad <- function(x, w) sprintf(paste0("%0", w, "d"), as.integer(trimws(x)))
 
 geo$tract_fips <- ifelse(
   geo$status == "Match" & nzchar(geo$state_fips) & nzchar(geo$county_fips) & nzchar(geo$tract_code),
@@ -265,7 +275,9 @@ if (!file.exists(zcta_file) || file.info(zcta_file)$size < 1e6) {
 rel <- read.delim(zcta_file, sep = "|", colClasses = "character", quote = "")
 rel <- rel[nzchar(rel$GEOID_ZCTA5_20) & nzchar(rel$GEOID_TRACT_20), ]
 rel$area <- suppressWarnings(as.numeric(rel$AREALAND_PART))
-rel$rpl  <- svi$rpl[match(formatC(rel$GEOID_TRACT_20, width = 11, flag = "0"), svi$tract_fips)]
+# GEOID_TRACT_20 is character here (colClasses above), and formatC space-pads character
+# input regardless of flag -- the zero-padding applies to numerics only. Zero-pad explicitly.
+rel$rpl  <- svi$rpl[match(sprintf("%011.0f", as.numeric(rel$GEOID_TRACT_20)), svi$tract_fips)]
 rel <- rel[!is.na(rel$rpl) & !is.na(rel$area) & rel$area > 0, ]
 zip_svi <- tapply(seq_len(nrow(rel)), rel$GEOID_ZCTA5_20,
                   function(i) sum(rel$rpl[i] * rel$area[i]) / sum(rel$area[i]))

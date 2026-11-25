@@ -7,6 +7,12 @@
 
 suppressMessages(library(dplyr))
 
+# npi_key() is used in the matching loop below and lives in R/pe_helpers.R. This script
+# previously used it without ever sourcing the file -- it only ever ran in interactive
+# sessions where pe_helpers happened to be loaded already, and would fail on a fresh
+# batch run. Source it explicitly.
+source(file.path("R", "pe_helpers.R"))
+
 # Helper to classify subspecialties from taxonomy
 # Classify a CMS taxonomy within the OB-GYN family.
 #
@@ -160,7 +166,15 @@ cat(sprintf("Loaded %d PE providers, with %d NPI-matched generalist records havi
 # Load Candidates
 candidates_df <- read.csv(candidates_csv, stringsAsFactors = FALSE, na.strings = c("NA", "N/A", ""), check.names = FALSE)
 
-# Clean and validate candidate phones
+# Clean and validate candidate phones.
+#
+# NOT a delegation candidate today, verified rather than assumed: mysterycall's formatter
+# (format_phone_number) exists but is not exported from the package namespace, and
+# mysterycall_validate_phone -- which IS exported -- validates area-code/syntax against the
+# NANP but returns validity flags, not a formatted number. Using `:::` to reach the
+# unexported formatter would couple the pipeline to package internals that can change
+# without notice. If the formatter is ever exported, this function should become a thin
+# wrapper around it, the way assign_blinded_slots() in R/pe_helpers.R did.
 get_clean_phone <- function(raw_phone) {
   if (is.na(raw_phone) || raw_phone == "") return(NA)
   phone_digits <- gsub("[^0-9]", "", as.character(raw_phone))
@@ -305,15 +319,31 @@ candidates_df <- candidates_df %>%
   )
 
 # ACOG States Mapping (PR duplicate removed)
-STATE_TO_ACOG <- c(
-  'AL'=7, 'AK'=8, 'AZ'=8, 'AR'=7, 'CA'=9, 'CO'=8, 'CT'=1, 'DE'=3, 'DC'=4,
-  'FL'=12, 'GA'=4, 'HI'=8, 'ID'=8, 'IL'=6, 'IN'=5, 'IA'=6, 'KS'=7, 'KY'=5,
-  'LA'=7, 'ME'=1, 'MD'=4, 'MA'=1, 'MI'=5, 'MN'=6, 'MS'=7, 'MO'=7, 'MT'=8,
-  'NE'=6, 'NV'=8, 'NH'=1, 'NJ'=3, 'NM'=8, 'NY'=2, 'NC'=4, 'ND'=6, 'OH'=5,
-  'OK'=7, 'OR'=8, 'PA'=3, 'PR'=4, 'RI'=1, 'SC'=4, 'SD'=6, 'TN'=7, 'TX'=11,
-  'UT'=8, 'VT'=1, 'VA'=4, 'WA'=8, 'WV'=4, 'WI'=6, 'WY'=6,
-  'AE'=4, 'AP'=8, 'GU'=8, 'VI'=4
-)
+# ACOG district assignment is DELEGATED to mysterycall::mysterycall_assign_region() rather
+# than hand-rolled -- but not blindly. Verified against ACOG's own published district
+# structure (acog.org/membership/districts-and-sections, checked 2026-08-28):
+#   * the package misassigns Delaware to District IV; ACOG places Delaware in District III
+#     ("Representing Delaware, Dominican Republic, New Jersey, and Pennsylvania");
+#   * the package has no entries for the territories: Puerto Rico and the West Indies are
+#     District IV, Guam/American Samoa are District VIII, the armed-forces postal codes
+#     (AE/AP/AA) are District X;
+#   * the hand-rolled table this replaces was itself wrong for Wyoming (6; ACOG says VIII)
+#     -- neither source was correct alone, which is why the verification is written down here.
+# Output is the integer district number, matching the column's established format.
+ACOG_ROMAN_TO_INT <- c(I=1, II=2, III=3, IV=4, V=5, VI=6, VII=7, VIII=8, IX=9, X=10, XI=11, XII=12)
+ACOG_VERIFIED_OVERRIDE <- c(DE=3, PR=4, VI=4, GU=8, AS=8, MP=8, AE=10, AP=10, AA=10)
+
+state_to_acog_district <- function(state) {
+  st <- toupper(trimws(as.character(state)))
+  out <- rep(NA_real_, length(st))
+  reg <- mysterycall::mysterycall_assign_region(st, system = "acog", na_label = "Unknown")
+  roman <- sub("^District\\s+", "", reg)
+  out <- unname(ACOG_ROMAN_TO_INT[roman])
+  ov <- ACOG_VERIFIED_OVERRIDE[st]
+  has_override <- !is.na(ov)
+  out[has_override] <- ov[has_override]
+  unname(out)
+}
 
 # 4. Estimate Propensity Scores
 cat("\n=== Estimating Propensity Scores via Logistic Regression ===\n")
@@ -380,64 +410,21 @@ haversine_distance <- function(lat1, lon1, lat2, lon2) {
 # whatever the package happens to ship. `normalize_gazetteer()` accepts either the historical
 # abbreviated-state schema or the current full-name schema and errors rather than guessing.
 
-#' Reduce any gazetteer schema to the pipeline contract: city, state, lat, long.
-#'
-#' Column resolution is EXACT. `$` partial matching silently rescued `$lat` against a
-#' `latitude` column for months and would have stopped doing so the moment any other `lat*`
-#' column appeared; nothing downstream may rely on it.
-normalize_gazetteer <- function(g, full_to_abbrev) {
-  pick <- function(cands, what) {
-    hit <- cands[cands %in% names(g)]
-    if (!length(hit)) {
-      stop(sprintf(paste0("Gazetteer has no %s column. Looked for: %s. Found: %s.\n",
-                          "  The dependency's schema changed; extend normalize_gazetteer() ",
-                          "rather than\n  relying on partial matching."),
-                   what, paste(cands, collapse = ", "), paste(names(g), collapse = ", ")),
-           call. = FALSE)
-    }
-    g[[hit[1]]]
-  }
-
-  raw_state <- pick(c("state", "state_abbrev", "STATE"), "state")
-  out <- data.frame(
-    city  = toupper(trimws(pick(c("city", "CITY"), "city"))),
-    state = ifelse(nchar(trimws(raw_state)) == 2L, toupper(trimws(raw_state)),
-                   unname(full_to_abbrev[raw_state])),
-    lat   = as.numeric(pick(c("lat", "latitude", "LAT"), "latitude")),
-    long  = as.numeric(pick(c("long", "longitude", "lon", "lng", "LONG"), "longitude")),
-    stringsAsFactors = FALSE
-  )
-  stopifnot(identical(names(out), c("city", "state", "lat", "long")))
-  out
-}
-
+# normalize_gazetteer() is the SHARED implementation in R/pe_helpers.R (sourced at the top
+# of this script), not a local copy -- this file once carried its own version here, which is
+# how the NA-city phantom-row corruption fixed in the shared version would have survived
+# here undetected. The contract is the same one documented above: city, state, lat, long,
+# exact column resolution, error rather than guess. The shared version additionally drops
+# rows with missing city/state/coordinates, which corrupt every city lookup positioned
+# after them in the table.
+#
 # Set up lat/long lookup reference from package
 data(city_state_to_lat_long, package = "mysterycall")
 lat_long_raw <- city_state_to_lat_long
-full_to_abbrev <- names(c('AL'='Alabama', 'AK'='Alaska', 'AZ'='Arizona', 'AR'='Arkansas', 'CA'='California',
-  'CO'='Colorado', 'CT'='Connecticut', 'DE'='Delaware', 'DC'='District of Columbia',
-  'FL'='Florida', 'GA'='Georgia', 'HI'='Hawaii', 'ID'='Idaho', 'IL'='Illinois',
-  'IN'='Indiana', 'IA'='Iowa', 'KS'='Kansas', 'KY'='Kentucky', 'LA'='Louisiana',
-  'ME'='Maine', 'MD'='Maryland', 'MA'='Massachusetts', 'MI'='Michigan', 'MN'='Minnesota',
-  'MS'='Mississippi', 'MO'='Missouri', 'MT'='Montana', 'NE'='Nebraska', 'NV'='Nevada',
-  'NH'='New Hampshire', 'NJ'='New Jersey', 'NM'='New Mexico', 'NY'='New York',
-  'NC'='North Carolina', 'ND'='North Dakota', 'OH'='Ohio', 'OK'='Oklahoma', 'OR'='Oregon',
-  'PA'='Pennsylvania', 'RI'='Rhode Island', 'SC'='South Carolina', 'SD'='South Dakota',
-  'TN'='Tennessee', 'TX'='Texas', 'UT'='Utah', 'VT'='Vermont', 'VA'='Virginia',
-  'WA'='Washington', 'WV'='West Virginia', 'WI'='Wisconsin', 'WY'='Wyoming',
-  'PR'='Puerto Rico', 'VI'='Virgin Islands'))
-names(full_to_abbrev) <- c('Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California',
-  'Colorado', 'Connecticut', 'Delaware', 'District of Columbia',
-  'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois',
-  'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
-  'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
-  'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
-  'New Hampshire', 'New Jersey', 'New Mexico', 'New York',
-  'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon',
-  'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
-  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia',
-  'Washington', 'West Virginia', 'Wisconsin', 'Wyoming',
-  'Puerto Rico', 'Virgin Islands')
+# State-name normalisation is not re-typed here: STATE_ABB_BY_NAME comes from R/pe_helpers.R
+# (base R's state.name/state.abb plus DC/PR/VI), one canonical table instead of the two
+# hand-copied 52-entry orderings this file and calculate_pair_distances.R had drifted into.
+full_to_abbrev <- STATE_ABB_BY_NAME
 
 # city_state_to_lat_long$state already holds two-letter abbreviations ("AL", "AZ"), but
 # full_to_abbrev is keyed by full state names ("Alabama"). Mapping one through the other
@@ -522,8 +509,10 @@ used_npis <- numeric()
 city_match_count <- 0
 caliper_geo_match_count <- 0
 
-candidates_df$acog_district <- STATE_TO_ACOG[as.character(candidates_df$state)]
-candidates_df$acog_district[is.na(candidates_df$acog_district)] <- 4
+# Candidates in unmapped states previously fell silent-defaulted into District 4, which is
+# not a default but a misassignment. Unmapped is NA; the control-record writer below
+# records those as "N/A".
+candidates_df$acog_district <- state_to_acog_district(candidates_df$state)
 
 # Sort unique office IDs to be deterministic
 pe_unique_offices <- sort(unique(pe_matched_all$office_id))
@@ -639,12 +628,17 @@ cat(sprintf("Matched %d controls successfully. (City matches: %d, Caliper Geo Ma
 
 # 6. Standardize and Build Control DataFrame matching PE schema
 cat("\n=== Standardizing and exporting database files ===\n")
-TitleCase <- function(x) {
-  s <- tolower(x)
-  s <- gsub("\\b([a-z])", "\\U\\1", s, perl = TRUE)
-  return(s)
-}
+# Delegated to mysterymaps::mysterymaps_place_title_case(), verified against the local
+# implementation this replaces on the cohort's own strings. The package version is strictly
+# more correct for the cases where they differ ("McDonald" rather than "Mcdonald"; the
+# minor place-name word "of" lowercased) and is vectorized and NA-safe. Thin wrapper kept
+# so call sites do not change.
+TitleCase <- function(x) mysterymaps::mysterymaps_place_title_case(x)
 
+# State-level default time zones. EVERY state and territory must be present: the table
+# previously lacked PR/VI/GU/etc., and an unmapped state was silently overwritten with
+# "Eastern" -- for Puerto Rico (Atlantic time) that is not a default but an error, and
+# the calling window is part of the measurement protocol in a mystery-caller study.
 TIME_ZONES <- c(
   'CT'='Eastern', 'ME'='Eastern', 'MA'='Eastern', 'NH'='Eastern', 'RI'='Eastern', 'VT'='Eastern',
   'NY'='Eastern', 'NJ'='Eastern', 'PA'='Eastern', 'DE'='Eastern', 'DC'='Eastern', 'MD'='Eastern',
@@ -656,18 +650,86 @@ TIME_ZONES <- c(
   'CO'='Mountain', 'MT'='Mountain', 'NM'='Mountain', 'UT'='Mountain', 'WY'='Mountain', 'ID'='Mountain',
   'AZ'='Mountain',
   'CA'='Pacific', 'NV'='Pacific', 'OR'='Pacific', 'WA'='Pacific',
-  'AK'='Alaska', 'HI'='Hawaii'
+  'AK'='Alaska', 'HI'='Hawaii',
+  'PR'='Atlantic', 'VI'='Atlantic',
+  'GU'='Chamorro', 'MP'='Chamorro', 'AS'='Samoa'
 )
 
-get_subspecialty_from_tax <- function(tax) {
-  if (is.na(tax) || tax == "") return("Generalist")
-  t <- toupper(trimws(tax))
-  if (t == "207VE0102X") return("Reproductive Endocrinology/Infertility")
-  if (t == "207VX0201X") return("Gynecologic Oncology")
-  if (t == "207VM2500X") return("Maternal-Fetal Medicine")
-  if (t == "207VF0040X") return("Female Pelvic Medicine and Reconstructive Surgery")
-  return("Generalist")
+# Cities inside the minority time zone of a split-timezone state, for the states in which
+# the minority zone contains a meaningful share of the population. The state table alone
+# mis-times these offices (e.g. Pensacola FL is Central, not Eastern; El Paso TX is
+# Mountain, not Central; Memphis TN is Central, which the state default already covers).
+# Not exhaustive -- county-level granularity without a ZIP-to-timezone reference is not
+# possible here -- but covers the population centers a sample is likely to draw.
+TZ_MINORITY_CITIES <- list(
+  FL = list(zone = "Central", cities = c(
+    "PENSACOLA", "PANAMA CITY", "DESTIN", "FORT WALTON BEACH", "CRESTVIEW", "NICEVILLE",
+    "MILTON", "GULF BREEZE", "NAVARRE", "DEFUNIAK SPRINGS", "CHIPLEY", "MARIANNA",
+    "BONIFAY", "PENSACOLA BEACH", "MARY ESTHER", "SHALIMAR", "VALPARAISO")),
+  IN = list(zone = "Central", cities = c(
+    "GARY", "HAMMOND", "EVANSVILLE", "MERRILLVILLE", "VALPARAISO", "MUNSTER", "HIGHLAND",
+    "SCHERERVILLE", "CROWN POINT", "GRIFFITH", "EAST CHICAGO", "HOBART", "JASPER",
+    "VINCENNES", "WASHINGTON", "PRINCETON", "MOUNT VERNON", "BOONVILLE", "NEWBURGH")),
+  MI = list(zone = "Central", cities = c(
+    "IRON MOUNTAIN", "IRONWOOD", "MENOMINEE", "KINGSFORD", "NORWAY", "IRON RIVER",
+    "CRYSTAL FALLS", "STEPHENSON", "DAGGETT", "POWERS")),
+  TX = list(zone = "Mountain", cities = c(
+    "EL PASO", "SOCORRO", "HORIZON CITY", "SAN ELIZARIO", "FABENS", "FORT BLISS")),
+  TN = list(zone = "Eastern", cities = c(
+    "KNOXVILLE", "CHATTANOOGA", "JOHNSON CITY", "KINGSPORT", "BRISTOL", "OAK RIDGE",
+    "CLEVELAND", "MARYVILLE", "MORRISTOWN", "GREENEVILLE", "SEVIERVILLE", "GATLINBURG",
+    "PIGEON FORGE", "ATHENS", "HARRIMAN", "LENOIR CITY")),
+  KY = list(zone = "Central", cities = c(
+    "BOWLING GREEN", "OWENSBORO", "HOPKINSVILLE", "PADUCAH", "MURRAY", "MAYFIELD",
+    "MADISONVILLE", "HENDERSON", "ELIZABETHTOWN", "FORT CAMPBELL", "GLASGOW", "RUSSELLVILLE")),
+  ND = list(zone = "Mountain", cities = c(
+    "DICKINSON", "WILLISTON", "BOWMAN", "BELFIELD", "KILLDEER", "BEULAH", "HAZEN", "CENTER")),
+  SD = list(zone = "Mountain", cities = c(
+    "RAPID CITY", "STURGIS", "SPEARFISH", "DEADWOOD", "LEAD", "HOT SPRINGS", "CUSTER",
+    "HILL CITY", "WALL", "PHILIP", "WINNER", "MISSION", "MARTIN")),
+  NE = list(zone = "Mountain", cities = c(
+    "SCOTTSBLUFF", "GERING", "ALLIANCE", "CHADRON", "SIDNEY", "KIMBALL", "BRIDGEPORT",
+    "OGALLALA", "IMPERIAL", "MCCOOK")),
+  KS = list(zone = "Mountain", cities = c(
+    "GOODLAND", "COLBY", "OAKLEY", "SHARON SPRINGS", "TRIBUNE", "LEOTI")),
+  OR = list(zone = "Mountain", cities = c(
+    "ONTARIO", "NYSSA", "VALE", "JORDAN VALLEY", "ADRIAN", "BURNS")),
+  ID = list(zone = "Pacific", cities = c(
+    "COEUR D'ALENE", "MOSCOW", "POST FALLS", "LEWISTON", "SANDPOINT", "HAYDEN",
+    "RATHDRUM", "KELLOGG", "WALLACE", "OROFINO", "GRANGEVILLE"))
+)
+
+# Canonical time-zone assignment for BOTH arms. The PE roster's own Time Zone column is
+# scrape-era data and is wrong in practice (the fielded sheet carries an Arlington TX
+# office labelled "Eastern" and a Memphis TN office labelled "Eastern" whose own matched
+# control is correctly "Central"), so it is not consulted: geography decides, not the
+# scrape. An unmapped state stops the script rather than silently defaulting to Eastern,
+# which is how the silent-default defect must never come back.
+assign_time_zone <- function(state, city = NA_character_) {
+  st <- toupper(trimws(ifelse(is.na(state), "", state)))
+  ci <- toupper(trimws(ifelse(is.na(city), "", city)))
+  out <- rep(NA_character_, length(st))
+  for (i in seq_along(st)) {
+    if (!nzchar(st[i]) || !(st[i] %in% names(TIME_ZONES))) {
+      stop(sprintf("No time zone mapping for state '%s' (city '%s'). Add it to TIME_ZONES ",
+                   st[i], ci[i]),
+           "deliberately rather than inheriting a default; the calling window depends on it.",
+           call. = FALSE)
+    }
+    z <- TIME_ZONES[[st[i]]]
+    exc <- TZ_MINORITY_CITIES[[st[i]]]
+    if (!is.null(exc) && nzchar(ci[i]) && ci[i] %in% exc$cities) z <- exc$zone
+    out[i] <- z
+  }
+  out
 }
+
+# NOTE: get_subspecialty_from_tax() is intentionally NOT redefined here. This file once
+# carried a second, fail-open copy at this spot (no 207V family test; NA/blank/unknown all
+# returned "Generalist") which silently replaced the fail-closed version defined at the
+# top of the script for every downstream use -- the exact defect the top-of-file comment
+# identifies as the root cause of the non-OB-GYN clinicians in the fielded frame. The
+# fail-closed definition at the top is the only one now.
 
 control_records <- list()
 start_id <- 2001
@@ -694,10 +756,9 @@ for (i in 1:nrow(controls_matched_df)) {
   gender <- crow$Gender_clean
   
   state <- ifelse(is.na(crow$state) || crow$state == "", "N/A", toupper(trimws(crow$state)))
-  acog <- STATE_TO_ACOG[state]
+  acog <- state_to_acog_district(state)
   if (is.na(acog)) acog <- "N/A"
-  tz <- TIME_ZONES[state]
-  if (is.na(tz)) tz <- "Eastern"
+  tz <- assign_time_zone(state, crow$city)
   
   adr1 <- ifelse(is.na(crow$adr_ln_1), "", toupper(trimws(crow$adr_ln_1)))
   adr2 <- ifelse(is.na(crow$adr_ln_2), "", toupper(trimws(crow$adr_ln_2)))
@@ -811,6 +872,16 @@ pe_selected$Practice_State <- toupper(ifelse(!is.na(pe_selected[["DAC State"]]) 
 control_df$Practice_City <- control_df[["NPPES City"]]
 control_df$Practice_State <- control_df[["NPPES State"]]
 
+# Time zone is assigned canonically from practice geography for BOTH arms, overwriting
+# whatever the scrape carried. The roster's own Time Zone column is not trustworthy --
+# the fielded sheet inherited an Arlington TX office labelled "Eastern" and a Memphis TN
+# office labelled "Eastern" while its own matched control was correctly "Central" -- and
+# in a mystery-caller study the calling window is part of the measurement protocol, so a
+# wrong zone is a measurement error, not a cosmetic one. Blank zones likewise cannot
+# survive this assignment: assign_time_zone() stops on any state it cannot map.
+pe_selected[["Time Zone"]] <- assign_time_zone(pe_selected$Practice_State, pe_selected$Practice_City)
+control_df[["Time Zone"]]  <- assign_time_zone(control_df$Practice_State,  control_df$Practice_City)
+
 # Overwrite Subspecialty to "Generalist" for all since the cohort is filtered strictly to Generalists only
 pe_selected$Subspecialty <- "Generalist"
 control_df$Subspecialty <- "Generalist"
@@ -850,8 +921,23 @@ pe_map_df <- pe_matched_all[, c("NPI", "office_id")]
 # Map Matched_Pair_Group only for selected PE providers
 pe_selected_map <- pe_selected[, c("NPI", "Matched_Pair_Group")]
 
+# NPI is not unique in this cohort (the same clinician can appear at two offices), and
+# merge() multiplies rows silently when the key is duplicated on either side: each row of
+# pe_full_df with a duplicated NPI would match every row of the mapping table, fabricating
+# phantom clinician rows in the unified study database. First-occurrence dedupe matches the
+# semantics of match() used for the coordinates below, and the count is reported so the
+# arbitrariness is visible rather than silent.
+for (nm in c("pe_map_df", "pe_selected_map")) {
+  m <- get(nm)
+  ndup <- sum(duplicated(m$NPI))
+  if (ndup > 0)
+    cat(sprintf("  NOTE: %s has %d duplicated NPI rows; keeping first occurrence so the merge cannot multiply rows.\n", nm, ndup))
+  assign(nm, m[!duplicated(m$NPI), , drop = FALSE])
+}
+n_before <- nrow(pe_full_df)
 pe_full_df <- merge(pe_full_df, pe_map_df, by = "NPI", all.x = TRUE)
 pe_full_df <- merge(pe_full_df, pe_selected_map, by = "NPI", all.x = TRUE)
+stopifnot("merge multiplied rows: duplicated NPI slipped through" = nrow(pe_full_df) == n_before)
 pe_full_df$Matched_Pair_Group[is.na(pe_full_df$Matched_Pair_Group)] <- "N/A"
 
 # Union full PE cohort + control matched cohort
